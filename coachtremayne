@@ -1,0 +1,865 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach TreMayne | Fit Over 40 | Stay Fit On The Road</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+--gold: #C9A84C;
+--gold-light: #E8C96A;
+--gold-dark: #9B7A2E;
+--black: #0A0A0A;
+--dark: #111111;
+--dark2: #1A1A1A;
+--dark3: #222222;
+--white: #F5F0E8;
+--gray: #888880;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+background: var(--black);
+color: var(--white);
+font-family: 'Barlow', sans-serif;
+overflow-x: hidden;
+cursor: default;
+}
+
+/* NOISE TEXTURE OVERLAY */
+body::before {
+content: '';
+position: fixed;
+inset: 0;
+background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+pointer-events: none;
+z-index: 999;
+opacity: 0.4;
+}
+
+/* HERO */
+.hero {
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+position: relative;
+overflow: hidden;
+padding: 40px 20px;
+}
+
+.hero-bg {
+position: absolute;
+inset: 0;
+background:
+radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.12) 0%, transparent 60%),
+radial-gradient(ellipse 50% 40% at 80% 100%, rgba(201,168,76,0.06) 0%, transparent 50%),
+var(--black);
+}
+
+.hero-lines {
+position: absolute;
+inset: 0;
+background-image:
+linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+background-size: 60px 60px;
+}
+
+.hero-content {
+position: relative;
+z-index: 2;
+text-align: center;
+max-width: 800px;
+}
+
+.hero-label {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 11px;
+letter-spacing: 6px;
+text-transform: uppercase;
+color: var(--gold);
+margin-bottom: 24px;
+opacity: 0;
+animation: fadeUp 0.8s 0.2s forwards;
+}
+
+.hero-name {
+font-family: 'Playfair Display', serif;
+font-size: clamp(56px, 12vw, 120px);
+font-weight: 900;
+line-height: 0.9;
+color: var(--white);
+margin-bottom: 8px;
+opacity: 0;
+animation: fadeUp 0.8s 0.4s forwards;
+}
+
+.hero-name span {
+color: var(--gold);
+display: block;
+}
+
+.hero-tagline {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: clamp(18px, 4vw, 32px);
+font-weight: 600;
+letter-spacing: 4px;
+text-transform: uppercase;
+color: var(--gray);
+margin: 20px 0 40px;
+opacity: 0;
+animation: fadeUp 0.8s 0.6s forwards;
+}
+
+.hero-badges {
+display: flex;
+gap: 16px;
+justify-content: center;
+flex-wrap: wrap;
+margin-bottom: 48px;
+opacity: 0;
+animation: fadeUp 0.8s 0.8s forwards;
+}
+
+.badge {
+border: 1px solid rgba(201,168,76,0.3);
+padding: 8px 20px;
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 12px;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(--gold);
+background: rgba(201,168,76,0.05);
+}
+
+.hero-cta {
+display: flex;
+gap: 16px;
+justify-content: center;
+flex-wrap: wrap;
+opacity: 0;
+animation: fadeUp 0.8s 1s forwards;
+}
+
+.btn-gold {
+background: var(--gold);
+color: var(--black);
+padding: 16px 40px;
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 3px;
+text-transform: uppercase;
+text-decoration: none;
+border: none;
+cursor: pointer;
+transition: all 0.2s;
+display: inline-block;
+}
+
+.btn-gold:hover {
+background: var(--gold-light);
+transform: translateY(-2px);
+}
+
+.btn-outline {
+background: transparent;
+color: var(--gold);
+padding: 16px 40px;
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 3px;
+text-transform: uppercase;
+text-decoration: none;
+border: 1px solid var(--gold);
+cursor: pointer;
+transition: all 0.2s;
+display: inline-block;
+}
+
+.btn-outline:hover {
+background: rgba(201,168,76,0.1);
+transform: translateY(-2px);
+}
+
+/* DIVIDER */
+.gold-divider {
+width: 100%;
+height: 1px;
+background: linear-gradient(90deg, transparent, var(--gold), transparent);
+opacity: 0.4;
+}
+
+/* SECTIONS */
+section {
+padding: 80px 20px;
+max-width: 1100px;
+margin: 0 auto;
+}
+
+.section-label {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 11px;
+letter-spacing: 6px;
+text-transform: uppercase;
+color: var(--gold);
+margin-bottom: 16px;
+}
+
+.section-title {
+font-family: 'Playfair Display', serif;
+font-size: clamp(32px, 5vw, 52px);
+font-weight: 700;
+line-height: 1.1;
+margin-bottom: 24px;
+}
+
+/* SERVICES */
+.services-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+gap: 2px;
+margin-top: 48px;
+background: rgba(201,168,76,0.1);
+}
+
+.service-card {
+background: var(--dark);
+padding: 40px 32px;
+transition: background 0.3s;
+position: relative;
+overflow: hidden;
+}
+
+.service-card::before {
+content: '';
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+background: var(--gold);
+transform: scaleX(0);
+transition: transform 0.3s;
+}
+
+.service-card:hover { background: var(--dark2); }
+.service-card:hover::before { transform: scaleX(1); }
+
+.service-icon {
+font-size: 32px;
+margin-bottom: 16px;
+}
+
+.service-title {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 18px;
+font-weight: 700;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(--gold);
+margin-bottom: 12px;
+}
+
+.service-desc {
+font-size: 14px;
+line-height: 1.7;
+color: var(--gray);
+}
+
+/* STATS */
+.stats-row {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+gap: 2px;
+background: rgba(201,168,76,0.1);
+margin: 60px 0;
+}
+
+.stat-box {
+background: var(--dark);
+padding: 40px 24px;
+text-align: center;
+}
+
+.stat-num {
+font-family: 'Playfair Display', serif;
+font-size: 48px;
+font-weight: 900;
+color: var(--gold);
+line-height: 1;
+}
+
+.stat-label {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 11px;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(--gray);
+margin-top: 8px;
+}
+
+/* PAYMENT */
+.payment-section {
+background: var(--dark);
+border: 1px solid rgba(201,168,76,0.2);
+padding: 48px;
+margin-top: 48px;
+text-align: center;
+}
+
+.payment-title {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 13px;
+letter-spacing: 4px;
+text-transform: uppercase;
+color: var(--gold);
+margin-bottom: 24px;
+}
+
+.payment-methods {
+display: flex;
+gap: 24px;
+justify-content: center;
+flex-wrap: wrap;
+}
+
+.payment-pill {
+background: var(--dark2);
+border: 1px solid rgba(201,168,76,0.3);
+padding: 12px 28px;
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 14px;
+letter-spacing: 2px;
+color: var(--white);
+}
+
+.payment-pill span { color: var(--gold); }
+
+/* CHAT WIDGET */
+.chat-section {
+padding: 80px 20px;
+background: var(--dark);
+border-top: 1px solid rgba(201,168,76,0.15);
+border-bottom: 1px solid rgba(201,168,76,0.15);
+}
+
+.chat-container {
+max-width: 800px;
+margin: 0 auto;
+}
+
+.chat-header {
+text-align: center;
+margin-bottom: 40px;
+}
+
+.chat-modes {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 2px;
+background: rgba(201,168,76,0.1);
+margin-bottom: 2px;
+}
+
+@media (min-width: 600px) {
+.chat-modes { grid-template-columns: repeat(4, 1fr); }
+}
+
+.mode-btn {
+background: var(--dark2);
+border: none;
+padding: 16px 8px;
+cursor: pointer;
+transition: all 0.2s;
+text-align: center;
+color: var(--gray);
+}
+
+.mode-btn:hover { background: var(--dark3); color: var(--gold); }
+
+.mode-btn.active {
+background: var(--dark3);
+color: var(--gold);
+position: relative;
+}
+
+.mode-btn.active::after {
+content: '';
+position: absolute;
+bottom: 0; left: 0; right: 0;
+height: 2px;
+background: var(--gold);
+}
+
+.mode-icon { font-size: 20px; margin-bottom: 4px; }
+
+.mode-label {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 10px;
+letter-spacing: 2px;
+text-transform: uppercase;
+display: block;
+}
+
+.chat-box {
+background: var(--dark2);
+border: 1px solid rgba(201,168,76,0.15);
+border-top: none;
+}
+
+.chat-messages {
+height: 360px;
+overflow-y: auto;
+padding: 24px;
+display: flex;
+flex-direction: column;
+gap: 16px;
+scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-track { background: var(--dark); }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--gold-dark); }
+
+.msg {
+max-width: 85%;
+animation: fadeUp 0.3s forwards;
+}
+
+.msg-user {
+align-self: flex-end;
+background: rgba(201,168,76,0.15);
+border: 1px solid rgba(201,168,76,0.3);
+padding: 12px 18px;
+font-size: 14px;
+line-height: 1.6;
+}
+
+.msg-coach {
+align-self: flex-start;
+background: var(--dark3);
+border-left: 2px solid var(--gold);
+padding: 12px 18px;
+font-size: 14px;
+line-height: 1.7;
+color: var(--white);
+}
+
+.msg-coach strong {
+color: var(--gold);
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 11px;
+letter-spacing: 3px;
+text-transform: uppercase;
+display: block;
+margin-bottom: 6px;
+}
+
+.typing-indicator {
+display: flex;
+gap: 4px;
+align-items: center;
+padding: 4px 0;
+}
+
+.typing-dot {
+width: 6px; height: 6px;
+background: var(--gold);
+border-radius: 50%;
+animation: typingBounce 1.2s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+30% { transform: translateY(-6px); opacity: 1; }
+}
+
+.chat-input-row {
+display: flex;
+border-top: 1px solid rgba(201,168,76,0.15);
+}
+
+.chat-input {
+flex: 1;
+background: transparent;
+border: none;
+padding: 18px 20px;
+color: var(--white);
+font-family: 'Barlow', sans-serif;
+font-size: 14px;
+outline: none;
+resize: none;
+}
+
+.chat-input::placeholder { color: var(--gray); }
+
+.chat-send {
+background: var(--gold);
+border: none;
+padding: 18px 28px;
+cursor: pointer;
+color: var(--black);
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 12px;
+font-weight: 700;
+letter-spacing: 2px;
+text-transform: uppercase;
+transition: background 0.2s;
+flex-shrink: 0;
+}
+
+.chat-send:hover { background: var(--gold-light); }
+.chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* FOOTER */
+footer {
+padding: 48px 20px;
+text-align: center;
+border-top: 1px solid rgba(201,168,76,0.15);
+}
+
+.footer-name {
+font-family: 'Playfair Display', serif;
+font-size: 28px;
+color: var(--gold);
+margin-bottom: 8px;
+}
+
+.footer-tagline {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 11px;
+letter-spacing: 5px;
+text-transform: uppercase;
+color: var(--gray);
+margin-bottom: 28px;
+}
+
+.footer-links {
+display: flex;
+gap: 24px;
+justify-content: center;
+flex-wrap: wrap;
+margin-bottom: 28px;
+}
+
+.footer-link {
+font-family: 'Barlow Condensed', sans-serif;
+font-size: 11px;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(--gray);
+text-decoration: none;
+transition: color 0.2s;
+}
+
+.footer-link:hover { color: var(--gold); }
+
+.footer-copy {
+font-size: 11px;
+color: rgba(136,136,128,0.4);
+}
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: var(--gold-dark); }
+
+/* MOBILE */
+@media (max-width: 600px) {
+section { padding: 60px 16px; }
+.payment-section { padding: 32px 20px; }
+.chat-messages { height: 280px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+<div class="hero-bg"></div>
+<div class="hero-lines"></div>
+<div class="hero-content">
+<p class="hero-label">Online Fitness &amp; Travel Coach</p>
+<h1 class="hero-name">Coach<span>TreMayne</span></h1>
+<p class="hero-tagline">Stay Fit On The Road</p>
+<div class="hero-badges">
+<span class="badge">Fit Over 40</span>
+<span class="badge">Travel Fitness</span>
+<span class="badge">Custom Programs</span>
+</div>
+<div class="hero-cta">
+<a href="https://linktr.ee/CoachTreMayne" target="_blank" class="btn-gold">Work With Me</a>
+<a href="#chat" class="btn-outline">Ask Coach AI</a>
+</div>
+</div>
+</div>
+
+<div class="gold-divider"></div>
+
+<!-- STATS -->
+<div style="background: var(--dark); padding: 0 20px;">
+<div class="stats-row" style="max-width:1100px; margin: 0 auto;">
+<div class="stat-box">
+<div class="stat-num">40+</div>
+<div class="stat-label">Age Is Just A Number</div>
+</div>
+<div class="stat-box">
+<div class="stat-num">100%</div>
+<div class="stat-label">Online Coaching</div>
+</div>
+<div class="stat-box">
+<div class="stat-num">24/7</div>
+<div class="stat-label">AI Coach Access</div>
+</div>
+<div class="stat-box">
+<div class="stat-num">∞</div>
+<div class="stat-label">Travel Ready Plans</div>
+</div>
+</div>
+</div>
+
+<div class="gold-divider"></div>
+
+<!-- SERVICES -->
+<section>
+<p class="section-label">What I Offer</p>
+<h2 class="section-title">Built For Life<br><span style="color:var(--gold)">In Motion</span></h2>
+<div class="services-grid">
+<div class="service-card">
+<div class="service-icon">🏋️</div>
+<div class="service-title">Custom Workout Plans</div>
+<p class="service-desc">Tailored programs for your body, your schedule, and wherever you are in the world. No excuses, just results.</p>
+</div>
+<div class="service-card">
+<div class="service-icon">✈️</div>
+<div class="service-title">Travel Fitness</div>
+<p class="service-desc">Hotel room workouts, airport routines, bodyweight circuits. Stay consistent no matter the timezone.</p>
+</div>
+<div class="service-card">
+<div class="service-icon">🔥</div>
+<div class="service-title">Fit Over 40</div>
+<p class="service-desc">Specialized programming for the 40+ athlete. Train smart, recover right, and perform at your peak.</p>
+</div>
+<div class="service-card">
+<div class="service-icon">🥗</div>
+<div class="service-title">Nutrition Guidance</div>
+<p class="service-desc">Practical eating strategies that work on the road — no meal prep required, just smart choices.</p>
+</div>
+</div>
+</section>
+
+<!-- AI CHAT -->
+<div class="chat-section" id="chat">
+<div class="chat-container">
+<div class="chat-header">
+<p class="section-label" style="text-align:center">AI-Powered</p>
+<h2 class="section-title" style="text-align:center">Ask Coach<br><span style="color:var(--gold)">TreMayne</span></h2>
+<p style="color:var(--gray); font-size:14px; max-width:500px; margin: 0 auto; line-height:1.7;">Get instant coaching advice, workout plans, and travel fitness tips — powered by AI, guided by Coach TreMayne's philosophy.</p>
+</div>
+
+<div class="chat-modes">
+<button class="mode-btn active" data-mode="workout" onclick="setMode(this, 'workout')">
+<div class="mode-icon">🏋️</div>
+<span class="mode-label">Workout Plan</span>
+</button>
+<button class="mode-btn" data-mode="ask" onclick="setMode(this, 'ask')">
+<div class="mode-icon">💬</div>
+<span class="mode-label">Ask Coach</span>
+</button>
+<button class="mode-btn" data-mode="new" onclick="setMode(this, 'new')">
+<div class="mode-icon">⭐</div>
+<span class="mode-label">New Client</span>
+</button>
+<button class="mode-btn" data-mode="content" onclick="setMode(this, 'content')">
+<div class="mode-icon">📱</div>
+<span class="mode-label">Content</span>
+</button>
+</div>
+
+<div class="chat-box">
+<div class="chat-messages" id="chatMessages">
+<div class="msg msg-coach">
+<strong>Coach TreMayne</strong>
+What's good! I'm Coach TreMayne — your Fit Over 40 fitness and travel coach. Select a mode above and let's get to work. Whether you need a workout plan, travel fitness tips, or just want to talk goals — I got you. 💪
+</div>
+</div>
+<div class="chat-input-row">
+<textarea class="chat-input" id="chatInput" placeholder="Type your question..." rows="1" onkeydown="handleKey(event)"></textarea>
+<button class="chat-send" id="sendBtn" onclick="sendMessage()">Send</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- WORK WITH ME -->
+<section>
+<p class="section-label">Ready To Start</p>
+<h2 class="section-title">Let's Build<br><span style="color:var(--gold)">Your Program</span></h2>
+<p style="color:var(--gray); font-size:15px; line-height:1.8; max-width:600px; margin-bottom:40px;">Whether you're 40+ and looking to get serious, a frequent traveler who can't keep a routine, or someone who just needs a real coach in their corner — I build programs that actually work for your life.</p>
+
+<div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:48px;">
+<a href="https://linktr.ee/CoachTreMayne" target="_blank" class="btn-gold">Get Started — Linktree</a>
+</div>
+
+<div class="payment-section">
+<p class="payment-title">Payment Methods</p>
+<div class="payment-methods">
+<div class="payment-pill">Cash App <span>$CoachTreMayne</span></div>
+<div class="payment-pill">Venmo <span>@CoachTreMayne</span></div>
+</div>
+</div>
+</section>
+
+<div class="gold-divider"></div>
+
+<!-- FOOTER -->
+<footer>
+<div class="footer-name">Coach TreMayne</div>
+<div class="footer-tagline">Stay Fit On The Road</div>
+<div class="footer-links">
+<a href="https://linktr.ee/CoachTreMayne" target="_blank" class="footer-link">Linktree</a>
+<a href="#chat" class="footer-link">Ask Coach AI</a>
+<a href="#" class="footer-link">Fit Over 40</a>
+</div>
+<p class="footer-copy">© 2026 Coach TreMayne. All rights reserved.</p>
+</footer>
+
+<script>
+const WORKER_URL = 'https://coach-tremayne-api.quantumflexpt.workers.dev';
+
+const modePrompts = {
+workout: "The user wants a custom workout plan. Ask about their fitness level, available equipment, how many days per week, and any travel/location constraints. Then provide a detailed, actionable workout program.",
+ask: "The user has a general fitness or travel coaching question. Answer as Coach TreMayne — direct, motivating, practical, and expert. Focus on Fit Over 40 principles and travel-friendly solutions.",
+new: "The user is a potential new client. Welcome them warmly, ask about their goals, current fitness level, lifestyle, and travel schedule. Explain how Coach TreMayne's program works and guide them toward booking a discovery call.",
+content: "The user wants help with fitness content ideas for social media. Generate engaging post ideas, captions, or content strategies that align with Coach TreMayne's Fit Over 40 and travel fitness brand."
+};
+
+let currentMode = 'workout';
+let conversationHistory = [];
+let isLoading = false;
+
+function setMode(btn, mode) {
+document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+btn.classList.add('active');
+currentMode = mode;
+
+const labels = {
+workout: "Workout Plan mode — tell me your fitness level, equipment, and how many days you can train.",
+ask: "Ask Coach mode — what's on your mind? Fitness, travel, nutrition — ask me anything.",
+new: "New Client mode — welcome! Tell me about your goals and I'll explain how we can work together.",
+content: "Content mode — let's create some fire content for your fitness brand. What's your niche or platform?"
+};
+
+addMessage('coach', labels[mode]);
+conversationHistory = [];
+}
+
+function handleKey(e) {
+if (e.key === 'Enter' && !e.shiftKey) {
+e.preventDefault();
+sendMessage();
+}
+}
+
+function addMessage(type, text) {
+const container = document.getElementById('chatMessages');
+const div = document.createElement('div');
+div.className = `msg msg-${type}`;
+
+if (type === 'coach') {
+div.innerHTML = `<strong>Coach TreMayne</strong>${text}`;
+} else {
+div.textContent = text;
+}
+
+container.appendChild(div);
+container.scrollTop = container.scrollHeight;
+return div;
+}
+
+function addTyping() {
+const container = document.getElementById('chatMessages');
+const div = document.createElement('div');
+div.className = 'msg msg-coach';
+div.id = 'typingIndicator';
+div.innerHTML = `<strong>Coach TreMayne</strong><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+container.appendChild(div);
+container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+const t = document.getElementById('typingIndicator');
+if (t) t.remove();
+}
+
+async function sendMessage() {
+if (isLoading) return;
+const input = document.getElementById('chatInput');
+const text = input.value.trim();
+if (!text) return;
+
+input.value = '';
+isLoading = true;
+document.getElementById('sendBtn').disabled = true;
+
+addMessage('user', text);
+conversationHistory.push({ role: 'user', content: text });
+
+addTyping();
+
+try {
+const systemPrompt = `You are Coach TreMayne, an expert online fitness and travel coach specializing in Fit Over 40. Your tagline is "Stay Fit On The Road." You help clients with custom workout plans, travel fitness routines, nutrition advice, and motivation. You are direct, encouraging, and results-focused. Keep responses practical and actionable. Current mode context: ${modePrompts[currentMode]}`;
+
+const response = await fetch(WORKER_URL, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+messages: conversationHistory,
+system: systemPrompt
+})
+});
+
+const data = await response.json();
+removeTyping();
+
+let reply = '';
+if (data.content && data.content[0] && data.content[0].text) {
+reply = data.content[0].text;
+} else if (data.error) {
+reply = `Something went wrong: ${data.error.message || 'Please try again.'}`;
+} else {
+reply = "I'm having trouble connecting right now. DM me directly at linktr.ee/CoachTreMayne!";
+}
+
+conversationHistory.push({ role: 'assistant', content: reply });
+addMessage('coach', reply);
+
+} catch (err) {
+removeTyping();
+addMessage('coach', "Connection issue — hit me up directly at linktr.ee/CoachTreMayne to get started! 💪");
+}
+
+isLoading = false;
+document.getElementById('sendBtn').disabled = false;
+input.focus();
+}
+</script>
+</body>
+</html>
+
