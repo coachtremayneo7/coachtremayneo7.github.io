@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jurassic Bark — AI Front Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   AFTERHOURS AI FRONT DESK  —  Jurassic Bark
+   ============================================================
+   >>> COACH: The ONLY thing you edit per client is the BUSINESS
+   >>> object and QUESTIONS array down in the <script> block.
+   >>> Everything with $XX is a placeholder — swap in her real
+   >>> prices once she sends them. Nothing else needs touching.
+   ============================================================ */
+:root{
+  --night:#10201C; --night-2:#173029; --panel:#1d3b32;
+  --bone:#F4ECDD; --bone-dim:#AFC0B4;
+  --gold:#EBAB3B; --gold-soft:#f6d089;
+  --coral:#E4633B; --jade:#49B48C;
+  --line:rgba(244,236,221,.12);
+  --shadow:0 20px 60px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(235,171,59,.10), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(228,99,59,.10), transparent 55%),
+    var(--night);
+  color:var(--bone); font-family:"Nunito",system-ui,sans-serif;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 20px 60px}
+
+/* ---- top brand bar ---- */
+.brandbar{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.mark{
+  width:46px;height:46px;border-radius:14px;flex:none;
+  background:linear-gradient(150deg,var(--gold),var(--coral));
+  display:grid;place-items:center;font-size:24px;
+  box-shadow:0 6px 18px rgba(228,99,59,.35);
+}
+.brandbar h1{font-family:"Fredoka";font-weight:700;font-size:22px;letter-spacing:.2px}
+.brandbar .sub{color:var(--bone-dim);font-size:12.5px;font-weight:600;margin-top:-2px}
+.live{
+  margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--night);background:var(--gold);padding:6px 11px;border-radius:999px;
+}
+.live .dot{width:7px;height:7px;border-radius:50%;background:var(--night);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---- hero line ---- */
+.hero{margin:8px 0 30px;max-width:680px}
+.hero .eyebrow{color:var(--gold);font-weight:800;font-size:12.5px;letter-spacing:1.4px;text-transform:uppercase}
+.hero h2{font-family:"Fredoka";font-weight:600;font-size:clamp(26px,5vw,40px);line-height:1.08;margin:8px 0 10px}
+.hero h2 b{color:var(--gold);font-weight:700}
+.hero p{color:var(--bone-dim);font-size:16px;max-width:560px}
+
+/* ---- layout ---- */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:26px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+
+/* ---- phone ---- */
+.phone{
+  background:#0b1613;border:1px solid var(--line);border-radius:30px;
+  padding:12px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.phone::before{content:"";position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:96px;height:5px;border-radius:99px;background:rgba(244,236,221,.18)}
+.pt-head{
+  display:flex;align-items:center;gap:10px;padding:20px 10px 12px;border-bottom:1px solid var(--line)
+}
+.pt-avatar{width:34px;height:34px;border-radius:50%;flex:none;
+  background:linear-gradient(150deg,var(--gold),var(--coral));display:grid;place-items:center;font-size:17px}
+.pt-name{font-family:"Fredoka";font-weight:600;font-size:15px;line-height:1.1}
+.pt-name small{display:block;color:var(--jade);font-family:"Nunito";font-weight:700;font-size:11px}
+.thread{
+  height:430px;overflow-y:auto;padding:16px 10px 8px;
+  display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth;
+}
+.thread::-webkit-scrollbar{width:6px}
+.thread::-webkit-scrollbar-thumb{background:rgba(244,236,221,.14);border-radius:9px}
+.msg{max-width:82%;padding:10px 13px;border-radius:16px;font-size:14.5px;animation:pop .28s ease}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.bot{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:5px}
+.me{align-self:flex-end;background:var(--gold);color:#20140a;font-weight:700;border-bottom-right-radius:5px}
+.msg a{color:var(--gold-soft);font-weight:800}
+.me a{color:#3a2408}
+.typing{align-self:flex-start;background:var(--panel);border:1px solid var(--line);
+  border-bottom-left-radius:5px;padding:13px 15px;border-radius:16px;display:inline-flex;gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--bone-dim);animation:bounce 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* inline routing cards inside thread */
+.routecard{align-self:flex-start;max-width:88%;border-radius:16px;padding:12px 14px;font-size:13.5px;border:1px solid}
+.route-book{background:rgba(73,180,140,.12);border-color:rgba(73,180,140,.5)}
+.route-flag{background:rgba(228,99,59,.13);border-color:rgba(228,99,59,.55)}
+.routecard b{font-family:"Fredoka";display:block;margin-bottom:3px;font-size:14px}
+.route-book b{color:var(--jade)}.route-flag b{color:var(--coral)}
+
+/* chips + input */
+.chips{display:flex;flex-wrap:wrap;gap:7px;padding:10px 10px 4px}
+.chip{background:transparent;border:1px solid var(--line);color:var(--bone);
+  font-family:"Nunito";font-weight:700;font-size:13px;padding:7px 12px;border-radius:999px;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--gold);color:var(--gold)}
+.chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.inputbar{display:flex;gap:8px;padding:8px 10px 12px}
+.inputbar input{flex:1;background:#0b1613;border:1px solid var(--line);color:var(--bone);
+  font-family:"Nunito";font-size:14.5px;padding:11px 14px;border-radius:14px}
+.inputbar input:focus{outline:none;border-color:var(--gold)}
+.send{background:var(--gold);color:#20140a;border:none;font-size:18px;width:44px;border-radius:14px;cursor:pointer;flex:none}
+.send:focus-visible{outline:2px solid var(--bone);outline-offset:2px}
+
+/* ---- right column ---- */
+.side{display:flex;flex-direction:column;gap:18px}
+.card{background:var(--night-2);border:1px solid var(--line);border-radius:20px;padding:18px 18px 20px}
+.card h3{font-family:"Fredoka";font-weight:600;font-size:16px;margin-bottom:4px}
+.card .hint{color:var(--bone-dim);font-size:13px;margin-bottom:14px}
+
+/* inbox lead card */
+.inbox{min-height:120px;display:flex;flex-direction:column;gap:10px}
+.empty{color:var(--bone-dim);font-size:13.5px;border:1px dashed var(--line);border-radius:14px;
+  padding:22px 16px;text-align:center}
+.lead{border-radius:14px;padding:13px 14px;border:1px solid var(--line);background:#0e211c;animation:pop .3s ease}
+.lead .tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;margin-bottom:8px}
+.tag-new{background:rgba(73,180,140,.18);color:var(--jade)}
+.tag-flag{background:rgba(228,99,59,.2);color:var(--coral)}
+.lead .row{display:flex;font-size:13.5px;padding:2px 0}
+.lead .row span{color:var(--bone-dim);width:74px;flex:none}
+.lead .row b{font-weight:700}
+
+/* how it works mini */
+.mini{display:flex;gap:11px;align-items:flex-start;font-size:13.5px;color:var(--bone-dim);padding:7px 0}
+.mini .n{width:24px;height:24px;border-radius:8px;flex:none;background:rgba(235,171,59,.15);
+  color:var(--gold);font-family:"Fredoka";font-weight:700;display:grid;place-items:center;font-size:13px}
+.mini b{color:var(--bone);font-weight:700}
+
+.footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;color:var(--bone-dim);font-size:13px}
+.footer .ah{font-family:"Fredoka";color:var(--gold);font-weight:600}
+.reset{margin-left:auto;background:none;border:1px solid var(--line);color:var(--bone-dim);
+  font-family:"Nunito";font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:999px;cursor:pointer}
+.reset:hover{border-color:var(--gold);color:var(--gold)}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brandbar">
+    <div class="mark">🦕</div>
+    <div>
+      <h1>Jurassic Bark</h1>
+      <div class="sub">Pet Grooming · 2736 Scottsville Rd</div>
+    </div>
+    <span class="live"><span class="dot"></span> Live demo</span>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">AfterHours AI Front Desk</div>
+    <h2>Every message answered. <b>Even the tricky ones.</b></h2>
+    <p>This is your front desk — it replies to every DM in your voice, books the easy grooms straight into Goldie, and flags the dogs that need your personal touch. Try it below. 👇</p>
+  </div>
+
+  <div class="grid">
+    <!-- PHONE -->
+    <div class="phone">
+      <div class="pt-head">
+        <div class="pt-avatar">🐾</div>
+        <div class="pt-name">Jurassic Bark <small>● Front desk · replies instantly</small></div>
+      </div>
+      <div class="thread" id="thread" aria-live="polite"></div>
+      <div class="chips" id="chips"></div>
+      <div class="inputbar">
+        <input id="input" type="text" placeholder="Type a message…" autocomplete="off" aria-label="Message" />
+        <button class="send" id="send" aria-label="Send">➤</button>
+      </div>
+    </div>
+
+    <!-- SIDE -->
+    <div class="side">
+      <div class="card">
+        <h3>What lands in your inbox</h3>
+        <div class="hint">The AI does the talking. You just get a ready-to-book lead — flagged if it needs care.</div>
+        <div class="inbox" id="inbox">
+          <div class="empty">No leads yet — start the chat to watch one come through.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>How the aggressive-dog handling works</h3>
+        <div style="margin-top:6px">
+          <div class="mini"><span class="n">1</span><div>Every booking chat asks about your pup's <b>temperament</b> — something Meta's AI never does.</div></div>
+          <div class="mini"><span class="n">2</span><div>Calm dogs get booked <b>straight into Goldie</b>, no wait.</div></div>
+          <div class="mini"><span class="n">3</span><div>Reactive or nervous dogs are <b>held for your personal OK</b> — never auto-booked. You stay in control of the tough ones.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="ah">AfterHours AI Front Desk</span>
+    <span>· built by Coach TreMayne</span>
+    <span>· 270-202-0517</span>
+    <button class="reset" id="reset">↺ Restart demo</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   >>>>>  EDIT ONLY THIS BLOCK PER CLIENT  <<<<<
+   Swap every $XX for her real price once she sends them.
+   ============================================================ */
+const BUSINESS = {
+  name: "Jurassic Bark",
+  bookingLink: "https://book.heygoldie.com/Jurassic-Bark-grooming",
+  phone: "(270) 780-4560",
+  address: "2736 Scottsville Rd, Bowling Green, 42104",
+  hours: "10am–4pm",                  // <-- confirm which DAYS (assumed Tue–Sat)
+  pets: "dogs and cats",
+  priceBy: "weight",
+  // >>> Mirrors her REAL Goldie catalog so quotes match booking exactly. <<<
+  // Dog grooming is size-based, using her branded tier names.
+  dogServices: [
+    { name: "Petite Paws · XS (1–12 lb)",   price: "$55–$65" },
+    { name: "Sassy Paws · S (13–25 lb)",    price: "$65–$75" },
+    { name: "Just Cute Paws · M (26–45 lb)", price: "$65–$75" },
+    { name: "Fluffy Paws · L (46–70 lb)",   price: "$75–$95" },
+    { name: "XL (71+ lb)",                  price: "$80–$100" }  // <-- CONFIRM: not shown in Goldie screenshots, inferred from her text
+  ],
+  // Cats — from her texts (confirm these are set up in Goldie too).
+  catServices: [
+    { name: "Full Groom (short / long hair)", price: "$85–$95" },
+    { name: "Bath & Brush (kitten / short / long)", price: "$60–$85" }
+  ],
+  addOns: "De-shed, matting, and behavior fees are extra, added on top based on your pet's needs.",
+  // Stated up front during booking — this is what cuts no-shows.
+  cancelPolicy: "Heads up on our cancellation policy: if you cancel last-minute or no-show, you'll owe for the missed appointment AND prepay your next one before coming in.",
+  // Aggressive / special-handling routing (Option A: owner confirms)
+  specialHandling: {
+    enabled: true,
+    fee: "$XX",                       // behavior fee, if any (or leave $XX to hide)
+    triggers: ["aggress","bite","bit ","reactive","nervous","anxious","nippy","muzzle","snap","fear","scared","difficult"]
+  }
+};
+
+// Questions the front desk collects before handing you the lead
+const QUESTIONS = ["Owner name", "Best phone number", "Pet name & breed", "Dog or cat", "Service wanted", "Temperament"];
+/* ===================== END EDIT BLOCK ===================== */
+
+
+/* ---------- demo engine (guaranteed to work standalone) -----------
+   To go LIVE on your Cloudflare Worker later, set USE_LIVE_WORKER = true.
+   The Worker at frontdesk-api.quantumflexpt.workers.dev should accept
+   { business, history } and return { reply }. Until then this local
+   engine runs the exact same flow so you can demo on any connection. */
+const USE_LIVE_WORKER = false;
+const WORKER_URL = "https://frontdesk-api.quantumflexpt.workers.dev";
+
+const thread = document.getElementById('thread');
+const chips  = document.getElementById('chips');
+const input  = document.getElementById('input');
+const inbox  = document.getElementById('inbox');
+
+let state = 'greet';
+let lead  = { owner:"", phone:"", pet:"", type:"", service:"", flagged:false };
+
+function listFor(kind){
+  const arr = kind==='cat' ? BUSINESS.catServices : BUSINESS.dogServices;
+  return arr.map(s => `• ${s.name} — ${s.price}`).join("<br>");
+}
+function servicesList(){
+  return `<b>Dogs:</b><br>${listFor('dog')}<br><br><b>Cats:</b><br>${listFor('cat')}`;
+}
+function petFirst(){ return (lead.pet.split(/[ ,]/)[0]||'').trim(); }
+function esc(t){return t.replace(/</g,"&lt;")}
+
+function add(role, html){
+  const d = document.createElement('div');
+  d.className = 'msg ' + (role==='me'?'me':'bot');
+  d.innerHTML = html;
+  thread.appendChild(d);
+  thread.scrollTop = thread.scrollHeight;
+}
+function routeCard(kind, title, body){
+  const d=document.createElement('div');
+  d.className='routecard '+(kind==='book'?'route-book':'route-flag');
+  d.innerHTML=`<b>${title}</b>${body}`;
+  thread.appendChild(d); thread.scrollTop=thread.scrollHeight;
+}
+function typing(cb){
+  const t=document.createElement('div');
+  t.className='typing';t.innerHTML='<i></i><i></i><i></i>';
+  thread.appendChild(t);thread.scrollTop=thread.scrollHeight;
+  setTimeout(()=>{t.remove();cb();},700);
+}
+function botSay(html){ typing(()=>add('bot',html)); }
+
+function setChips(arr){
+  chips.innerHTML='';
+  arr.forEach(txt=>{
+    const b=document.createElement('button');
+    b.className='chip';b.textContent=txt;
+    b.onclick=()=>handle(txt);
+    chips.appendChild(b);
+  });
+}
+
+function renderLead(){
+  inbox.innerHTML='';
+  const el=document.createElement('div');
+  el.className='lead';
+  el.innerHTML =
+    `<span class="tag ${lead.flagged?'tag-flag':'tag-new'}">${lead.flagged?'⚠ Aggressive — needs your OK':'✓ New lead — ready to book'}</span>`+
+    `<div class="row"><span>Owner</span><b>${esc(lead.owner||'—')}</b></div>`+
+    `<div class="row"><span>Phone</span><b>${esc(lead.phone||'—')}</b></div>`+
+    `<div class="row"><span>Pet</span><b>${esc(lead.pet||'—')}${lead.type?` (${lead.type})`:''}</b></div>`+
+    `<div class="row"><span>Service</span><b>${esc(lead.service||'—')}</b></div>`+
+    `<div class="row"><span>Status</span><b>${lead.flagged?'Held for you to confirm':'Sent to Goldie booking'}</b></div>`;
+  inbox.appendChild(el);
+}
+
+function isAggressive(t){
+  t=' '+t.toLowerCase()+' ';
+  return BUSINESS.specialHandling.enabled &&
+         BUSINESS.specialHandling.triggers.some(k=>t.includes(k)) &&
+         !/no |not |never |calm|friendly|sweet|great with/.test(t);
+}
+
+/* ---- conversation flow ---- */
+function handle(text){
+  text=text.trim(); if(!text) return;
+  add('me', esc(text));
+  input.value='';
+  const t=text.toLowerCase();
+
+  // price / service questions anytime
+  if(/price|cost|how much|service|groom|bath|nail|much/.test(t) && state!=='ask_service'){
+    botSay(`Here's what we offer at Jurassic Bark:<br><br>${servicesList()}<br><br>Final price depends on your pet's ${BUSINESS.priceBy}. ${BUSINESS.addOns} Want to book? 🐶`);
+    state='offer_book'; setChips(["Book an appointment","What are your hours?"]); return;
+  }
+  if(/hour|open|close|when/.test(t)){
+    botSay(`We're open ${BUSINESS.hours}, at ${BUSINESS.address}. Want to grab a spot?`);
+    setChips(["Book an appointment","See prices"]); return;
+  }
+
+  switch(state){
+    case 'greet':
+    case 'offer_book':
+      if(/book|appoint|yes|spot|schedul|sign/.test(t)){ startBooking(); }
+      else { botSay("I can help you book a groom, check prices, or answer questions about Jurassic Bark. What do you need? 🐾");
+             setChips(["Book an appointment","See prices","What are your hours?"]); }
+      break;
+
+    case 'ask_owner':
+      lead.owner=text; renderLead();
+      botSay(`Thanks ${esc(text.split(' ')[0])}! What's the best phone number to reach you?`);
+      state='ask_phone'; setChips([]); break;
+
+    case 'ask_phone':
+      lead.phone=text; renderLead();
+      botSay("Got it. And who's the lucky pet — what's their name and breed?");
+      state='ask_pet'; setChips([]); break;
+
+    case 'ask_pet':
+      lead.pet=text; renderLead();
+      botSay("Is this for a dog or a cat? 🐶🐱");
+      state='ask_type'; setChips(["Dog","Cat"]); break;
+
+    case 'ask_type':
+      lead.type = /cat/.test(t) ? "cat" : "dog"; renderLead();
+      if(lead.type==='dog'){
+        botSay(`About how much does ${esc(petFirst()||'your pup')} weigh? Pick their size and I'll grab the price 🐕<br><br>${listFor('dog')}<br><br><i>Final price depends on coat & condition — ${esc(BUSINESS.addOns)}</i>`);
+      } else {
+        botSay(`Which service for ${esc(petFirst()||'your cat')}? 🐱<br><br>${listFor('cat')}<br><br><i>Final price depends on coat — ${esc(BUSINESS.addOns)}</i>`);
+      }
+      state='ask_service';
+      setChips((lead.type==='cat'?BUSINESS.catServices:BUSINESS.dogServices).map(s=>s.name)); break;
+
+    case 'ask_service':
+      lead.service=text; renderLead();
+      botSay("Last thing so we can prep the right way — has your pet ever shown any aggression, fear, or trouble during grooming before? Totally okay either way. 💛");
+      state='ask_temperament'; setChips(["No, they're easygoing","They can get nervous/aggressive"]); break;
+
+    case 'ask_temperament':
+      if(isAggressive(t)){
+        lead.flagged=true; renderLead();
+        botSay("Thank you for letting us know — that really helps us keep your pet safe and comfortable. 🐾");
+        setTimeout(()=>botSay(BUSINESS.cancelPolicy),1000);
+        setTimeout(()=>routeCard('flag','Held for the owner',
+          `Because ${esc(petFirst()||'your pet')} needs a little extra care, the owner wants to personally confirm the time and go over the details with you. She'll reach out shortly at ${esc(lead.phone)}.${BUSINESS.specialHandling.fee!=="$XX"?` A special-handling fee of ${BUSINESS.specialHandling.fee} applies.`:''}`),2000);
+        state='done';
+        setChips(["Restart demo"]);
+      } else {
+        lead.flagged=false; renderLead();
+        botSay("Perfect! You're all set. 🎉");
+        setTimeout(()=>botSay(BUSINESS.cancelPolicy),1000);
+        setTimeout(()=>routeCard('book','Ready to book',
+          `Pick your time here and you're locked in:<br><a href="${BUSINESS.bookingLink}" target="_blank" rel="noopener">Book with Jurassic Bark →</a><br><br>You'll get a confirmation right after — no more missed messages.`),2000);
+        state='done';
+        setChips(["Restart demo"]);
+      }
+      break;
+
+    case 'done':
+      if(/restart|again|reset/.test(t)) resetDemo();
+      else botSay("You're all booked! Tap Restart demo to run it again. 🦴");
+      break;
+  }
+}
+
+function startBooking(){
+  botSay("Awesome — let's get your pup on the schedule! 🐕 First, what's your name?");
+  state='ask_owner'; setChips([]);
+  inbox.innerHTML='<div class="empty">Collecting details… watch this fill in ↓</div>';
+}
+
+/* ---- boot ---- */
+function resetDemo(){
+  thread.innerHTML=''; state='greet';
+  lead={owner:"",phone:"",pet:"",service:"",flagged:false};
+  inbox.innerHTML='<div class="empty">No leads yet — start the chat to watch one come through.</div>';
+  botSay("Hey there! 🦕 Welcome to Jurassic Bark. I'm the front desk — I can book your pup a groom, check prices, or answer anything. How can I help?");
+  setChips(["Book an appointment","See prices","What are your hours?"]);
+}
+document.getElementById('send').onclick=()=>handle(input.value);
+input.addEventListener('keydown',e=>{if(e.key==='Enter')handle(input.value)});
+document.getElementById('reset').onclick=resetDemo;
+resetDemo();
+</script>
+</body>
+</html>
