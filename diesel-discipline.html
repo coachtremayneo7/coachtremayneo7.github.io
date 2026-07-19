@@ -131,10 +131,10 @@ section{padding:88px 0}
 @media(max-width:820px){.ladder{grid-template-columns:1fr}}
 
 /* ---------- coach terminal ---------- */
-.coach{background:var(--steel);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.coach{background:var(--ink);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .term{
-max-width:760px;margin:0 auto;border:1px solid var(--line);border-radius:8px;overflow:hidden;
-background:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.5);
+max-width:760px;margin:0 auto;border:1px solid rgba(255,255,255,.14);border-radius:8px;overflow:hidden;
+background:var(--steel);box-shadow:0 30px 80px rgba(0,0,0,.5);
 }
 .term-top{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
 .term-top .dot{width:10px;height:10px;border-radius:50%;background:var(--redline)}
@@ -156,7 +156,7 @@ padding:8px 13px;border-radius:2px;cursor:pointer;transition:.15s;
 .msg.coach-msg .bubble{color:var(--chrome)}
 .row{display:flex;gap:10px;padding:14px 18px 18px;border-top:1px solid var(--line)}
 .row input{
-flex:1;background:var(--panel);border:1px solid var(--line);border-radius:3px;
+flex:1;background:var(--ink);border:1px solid var(--line);border-radius:3px;
 color:#fff;padding:13px 15px;font-family:"Inter",sans-serif;font-size:15px;
 }
 .row input:focus{outline:none;border-color:var(--amber)}
@@ -179,6 +179,15 @@ footer{border-top:1px solid var(--line);padding:40px 0;background:var(--steel)}
 .foot-links a:hover{color:var(--amber)}
 .copy{font-family:"Space Mono",monospace;font-size:12px;color:var(--smoke)}
 
+@media(max-width:640px){
+section{padding:52px 0}
+.hero{padding:56px 0 28px}
+.cluster{margin-top:36px}
+.sec-head{margin-bottom:32px}
+.log{min-height:130px;max-height:300px}
+.term{max-width:100%}
+.msg{max-width:100%}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 :focus-visible{outline:2px solid var(--amber);outline-offset:3px}
 </style>
@@ -207,7 +216,7 @@ footer{border-top:1px solid var(--line);padding:40px 0;background:var(--steel)}
 <div class="cluster">
 <div class="gauge"><div class="num" data-count="4">0</div><div class="lbl">Weeks free to start</div></div>
 <div class="gauge"><div class="num" data-count="10">0</div><div class="lbl">Min per truck-stop set</div></div>
-<div class="gauge"><div class="num">$0</div><div class="lbl">Gym or gear needed</div></div>
+<div class="gauge"><div class="num">$0</div><div class="lbl">Cost to start</div></div>
 <div class="gauge"><div class="num">24/7</div><div class="lbl">AI coach access</div></div>
 </div>
 </div>
