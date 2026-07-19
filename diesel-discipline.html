@@ -354,7 +354,9 @@ section{padding:52px 0}
 CONFIG — point this at your live coaching Cloudflare Worker.
 Leave "" to use the built-in offline coach responses below.
 =========================================================== */
-const API_ENDPOINT = ""; // e.g. "https://your-coach-api.quantumflexpt.workers.dev"
+// 👇 PASTE YOUR LIVE COACH WORKER URL BETWEEN THE QUOTES. This is the ONLY thing
+// that makes the coach answer real questions. Blank = canned offline answers.
+const API_ENDPOINT = "https://coach-tremayne-api.quantumflexpt.workers.dev";
 
 // odometer count-up on the gauges
 const io = new IntersectionObserver((entries)=>{
@@ -389,22 +391,33 @@ log.appendChild(wrap);
 log.scrollTop = log.scrollHeight;
 }
 
+// route a free-typed question to the closest offline blurb (fallback only)
+function routeMode(text){
+const t = text.toLowerCase();
+if(/\b(eat|meal|food|hungry|snack|wendy|mcdonald|burger|breakfast|lunch|dinner|calorie|protein|drink)\b/.test(t)) return 'food';
+if(/\b(dot|physical|blood pressure|\bbp\b|medical card|exam|numbers)\b/.test(t)) return 'dot';
+if(/\b(start|begin|sign ?up|join|free program|enroll)\b/.test(t)) return 'start';
+if(/\b(workout|exercise|train|push|squat|lunge|plank|move|sore|muscle|circuit|stretch)\b/.test(t)) return 'workout';
+return mode; // fall back to last-selected mode
+}
+
 async function ask(text){
 add(text,'you');
 input.value='';
+const fallback = PLAYBOOK[routeMode(text)];
 if(API_ENDPOINT){
 add('…','coach');
 const pending = log.lastChild.querySelector('.bubble');
 try{
 const r = await fetch(API_ENDPOINT,{
 method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({message:text,brand:'diesel-discipline'})
+body:JSON.stringify({message:text,prompt:text,question:text,text:text,brand:'diesel-discipline',mode:mode})
 });
 const data = await r.json();
-pending.textContent = data.reply || data.response || PLAYBOOK[mode];
-}catch(err){ pending.textContent = PLAYBOOK[mode]; }
+pending.textContent = data.reply || data.response || data.message || fallback;
+}catch(err){ pending.textContent = fallback; }
 } else {
-setTimeout(()=>add(PLAYBOOK[mode],'coach'),350);
+setTimeout(()=>add(fallback,'coach'),350);
 }
 }
 
