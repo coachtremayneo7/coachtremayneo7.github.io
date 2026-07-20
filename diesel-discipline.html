@@ -401,6 +401,9 @@ if(/\b(workout|exercise|train|push|squat|lunge|plank|move|sore|muscle|circuit|st
 return mode; // fall back to last-selected mode
 }
 
+// trucker-voice system prompt sent to the shared coach worker
+const DD_SYSTEM = "You are Coach TreMayne of Diesel & Discipline, a fitness coach for CDL truck drivers who drove the truck yourself. Give practical, motivating advice for life on the road: quick no-gym workouts a driver can do at a truck stop, smart truck-stop and fast-food eating, and DOT physical prep. Talk plain and direct like a driver, not a gym bro. Answer in 2-3 sentences. Never use markdown. When it fits naturally, add a short nudge that the first 4 weeks are free to start (DM DRIVER on Instagram @tremaynepillow) — do not pitch on every reply.";
+
 async function ask(text){
 add(text,'you');
 input.value='';
@@ -411,10 +414,11 @@ const pending = log.lastChild.querySelector('.bubble');
 try{
 const r = await fetch(API_ENDPOINT,{
 method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({message:text,prompt:text,question:text,text:text,brand:'diesel-discipline',mode:mode})
+body:JSON.stringify({ system: DD_SYSTEM, messages:[{role:'user',content:text}] })
 });
 const data = await r.json();
-pending.textContent = data.reply || data.response || data.message || fallback;
+const answer = data && data.content && data.content[0] && data.content[0].text;
+pending.textContent = answer || fallback;
 }catch(err){ pending.textContent = fallback; }
 } else {
 setTimeout(()=>add(fallback,'coach'),350);
