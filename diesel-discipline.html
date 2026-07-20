@@ -429,10 +429,10 @@ document.getElementById('modes').addEventListener('click',(e)=>{
 const b = e.target.closest('.mode'); if(!b) return;
 document.querySelectorAll('.mode').forEach(m=>m.classList.remove('active'));
 b.classList.add('active'); mode = b.dataset.mode;
-ask({workout:'Give me a quick workout I can do at a truck stop.',
+ask({workout:'Give me a 10-minute workout I can do right now at a truck stop.',
 food:'What should I eat at a truck stop today?',
 dot:'Help me get ready for my DOT physical.',
-start:'How do I start the free program?'}[mode]);
+start:"I'm ready to start the free 4 weeks — what's my first step?"}[mode]);
 });
 document.getElementById('send').addEventListener('click',()=>{ if(input.value.trim()) ask(input.value.trim()); });
 input.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&input.value.trim()) ask(input.value.trim()); });
