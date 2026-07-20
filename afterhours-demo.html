@@ -77,6 +77,7 @@ text-align:right;font-size:11px;line-height:1.5;
 }
 .status-pill .closed{color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:600}
 .status-pill .answering{color:var(--live);font-weight:600}
+.status-pill .saved{color:var(--gold-soft);font-weight:600;margin-top:2px;font-size:10.5px}
 
 .switch-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
 font-weight:600;margin:2px 2px -4px}
@@ -170,7 +171,8 @@ cursor:pointer;transition:.15s;
 </div>
 <div class="status-pill">
 <div class="closed" id="bizStatus">BUSINESS CLOSED</div>
-<div class="answering">● Front desk answering</div>
+<div class="answering">● Booking customers anyway</div>
+<div class="saved" id="savedLine">1 booking caught tonight</div>
 </div>
 </div>
 </div>
@@ -196,7 +198,7 @@ cursor:pointer;transition:.15s;
 </div>
 </div>
 
-<div class="foot">Running on your own front desk · one system, <b>any business</b></div>
+<div class="foot">Every message answered in seconds — <b>even after you close</b></div>
 </div>
 
 <script>
@@ -321,6 +323,13 @@ questions:["How much to file my taxes?","Can you do my LLC's books?","Do you han
 const el = id => document.getElementById(id);
 let current = NICHES[0];
 let busy = false;
+let caught = 1; // bookings caught after hours — ticks up as they play
+
+function bumpCaught(){
+caught++;
+const line = el("savedLine");
+if(line) line.textContent = caught + " booking" + (caught === 1 ? "" : "s") + " caught tonight";
+}
 
 // live clock — proves the desk is awake right now
 function tick(){
@@ -347,6 +356,9 @@ wrap.appendChild(b);
 
 function selectNiche(n){
 current = n;
+caught = 1;
+const line = el("savedLine");
+if(line) line.textContent = "1 booking caught tonight";
 buildNiches();
 el("avatar").textContent = n.avatar;
 el("bizName").textContent = n.name;
@@ -399,7 +411,7 @@ busy = true; el("send").disabled = true;
 showTyping();
 
 askFrontDesk(text)
-.then(reply => { hideTyping(); addMsg("bot", reply); })
+.then(reply => { hideTyping(); addMsg("bot", reply); bumpCaught(); })
 .catch(err => {
 hideTyping();
 addMsg("bot", "Give me one sec and try that again.");
