@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lead Board — Coach TreMayne</title>
+<style>
+:root{
+--base:#14161a; --panel:#1d2127; --panel2:#232830; --line:#2c313a;
+--text:#e8eaed; --muted:#8b929e; --dim:#5c6472;
+--amber:#f4a723; --amber-dim:#7a5a15;
+--go:#37b26b; --cold:#d9544d;
+--ah:#4a9be0; /* AfterHours tag */ --dd:#f4a723; /* Diesel tag */
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;background:var(--base);color:var(--text);
+font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px calc(120px + env(safe-area-inset-bottom));}
+
+/* ---- header / funnel ---- */
+header{position:sticky;top:0;z-index:20;background:var(--base);
+padding:14px 0 10px;border-bottom:1px solid var(--line);}
+.title{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+.title h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;
+font-weight:700;margin:0;color:var(--text);}
+.title .sub{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);}
+
+.filter{display:flex;gap:6px;margin-bottom:12px;}
+.filter button{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--muted);
+font-family:inherit;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+padding:9px 0;border-radius:8px;cursor:pointer;}
+.filter button:active{transform:scale(.97);}
+.filter button.on{background:var(--panel2);color:var(--text);border-color:var(--dim);}
+.filter button.on.AH{color:var(--ah);border-color:var(--ah);}
+.filter button.on.DD{color:var(--dd);border-color:var(--dd);}
+
+.funnel{display:flex;align-items:stretch;gap:0;}
+.leg{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;
+padding:6px 2px;position:relative;}
+.leg .n{font-size:26px;font-weight:700;line-height:1;}
+.leg .l{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:5px;}
+.leg.won .n{color:var(--go);}
+.rate{width:34px;flex:none;display:flex;flex-direction:column;
+align-items:center;justify-content:center;color:var(--amber);}
+.rate .pct{font-size:12px;font-weight:700;}
+.rate .arw{font-size:11px;color:var(--dim);line-height:1;margin-bottom:2px;}
+
+/* ---- follow-up strip ---- */
+.due{margin:14px 0 6px;}
+.due h2, .list h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+color:var(--muted);margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+.badge{background:var(--amber);color:#14161a;font-weight:700;border-radius:20px;
+padding:1px 8px;font-size:11px;letter-spacing:.02em;}
+.empty{color:var(--dim);font-size:13px;padding:10px 2px;}
+
+/* ---- lead card ---- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+margin-bottom:8px;overflow:hidden;}
+.card.duehit{border-color:var(--amber-dim);}
+.card.won{opacity:.72;}
+.card.lost{opacity:.5;}
+.row{display:flex;align-items:center;gap:10px;padding:12px 13px;cursor:pointer;}
+.tag{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+padding:3px 6px;border-radius:5px;flex:none;}
+.tag.AH{background:rgba(74,155,224,.16);color:var(--ah);}
+.tag.DD{background:rgba(244,167,35,.16);color:var(--dd);}
+.nm{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stg{font-size:11px;color:var(--muted);letter-spacing:.04em;flex:none;}
+.stg.won{color:var(--go);} .stg.lost{color:var(--cold);}
+.duetag{font-size:10px;font-weight:700;color:var(--amber);flex:none;letter-spacing:.03em;}
+
+.panel{display:none;padding:0 13px 13px;border-top:1px solid var(--line);}
+.card.open .panel{display:block;}
+.panel .grp{margin-top:12px;}
+.panel .glab{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
+.btns{display:flex;flex-wrap:wrap;gap:6px;}
+.b{border:1px solid var(--line);background:var(--panel2);color:var(--text);
+font-size:13px;font-weight:600;padding:9px 12px;border-radius:8px;cursor:pointer;
+font-family:inherit;}
+.b:active{transform:scale(.96);}
+.b.on{background:var(--amber);color:#14161a;border-color:var(--amber);}
+.b.go{border-color:var(--go);color:var(--go);}
+.b.go.on{background:var(--go);color:#0e1712;}
+.b.cold{border-color:#4a2e2c;color:var(--cold);}
+.b.sm{font-size:12px;padding:7px 10px;}
+.note{width:100%;background:var(--base);border:1px solid var(--line);border-radius:8px;
+color:var(--text);padding:9px 10px;font-family:inherit;font-size:13px;margin-top:4px;resize:vertical;}
+.meta{font-size:11px;color:var(--dim);margin-top:10px;display:flex;justify-content:space-between;align-items:center;}
+.del{color:var(--cold);background:none;border:none;font-size:12px;cursor:pointer;font-family:inherit;padding:4px;}
+
+/* ---- add bar ---- */
+.addbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);
+border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
+.addbar .inr{max-width:640px;margin:0 auto;display:flex;gap:8px;align-items:center;}
+.addbar input{flex:1;min-width:0;background:var(--base);border:1px solid var(--line);
+border-radius:9px;color:var(--text);padding:12px 12px;font-family:inherit;font-size:16px;}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none;}
+.seg button{background:var(--base);color:var(--muted);border:none;font-family:inherit;
+font-weight:700;font-size:12px;padding:0 12px;height:44px;cursor:pointer;letter-spacing:.04em;}
+.seg button.on.AH{background:var(--ah);color:#0d1620;}
+.seg button.on.DD{background:var(--dd);color:#1a1405;}
+.add{flex:none;width:44px;height:44px;border-radius:9px;border:none;background:var(--amber);
+color:#14161a;font-size:26px;font-weight:700;cursor:pointer;line-height:1;}
+.add:active{transform:scale(.94);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="title">
+<h1>Lead Board</h1>
+<span class="sub" id="today"></span>
+</div>
+<div class="filter" id="filter">
+<button data-f="ALL" onclick="setFilter('ALL')">All</button>
+<button data-f="AH" class="AH" onclick="setFilter('AH')">AfterHours</button>
+<button data-f="DD" class="DD" onclick="setFilter('DD')">Diesel</button>
+</div>
+<div class="funnel" id="funnel"></div>
+</header>
+
+<section class="due">
+<h2>Follow up <span class="badge" id="dueCount">0</span></h2>
+<div id="dueList"></div>
+</section>
+
+<section class="list">
+<h2>All leads <span id="allCount" style="color:var(--dim);font-weight:700;">0</span></h2>
+<div id="allList"></div>
+</section>
+</div>
+
+<div class="addbar">
+<div class="inr">
+<div class="seg">
+<button id="segAH" class="AH on" onclick="setBrand('AH')">AH</button>
+<button id="segDD" class="DD" onclick="setBrand('DD')">DD</button>
+</div>
+<input id="nameIn" placeholder="Add lead name…" enterkeyhint="done"
+onkeydown="if(event.key==='Enter')addLead()">
+<button class="add" onclick="addLead()">+</button>
+</div>
+</div>
+
+<script>
+const KEY='ct_leadboard_v1';
+const STAGES=['Outreach','Replied','Booked','Showed']; // reached index 0..3 ; won handled separately
+let brand='AH';
+let leads=load();
+let activeFilter=localStorage.getItem(KEY+'_filter')||'ALL';
+function view(){return leads.filter(l=>activeFilter==='ALL'||l.brand===activeFilter);}
+function setFilter(f){activeFilter=f;localStorage.setItem(KEY+'_filter',f);
+document.querySelectorAll('#filter button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
+render();}
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(leads));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function iso(d){return d.toISOString().slice(0,10);}
+function addDays(n){const d=today();d.setDate(d.getDate()+n);return iso(d);}
+function fmt(s){if(!s)return'';const[y,m,dd]=s.split('-');return m+'/'+dd;}
+function daysTo(s){if(!s)return null;const t=today();const d=new Date(s+'T00:00:00');return Math.round((d-t)/864e5);}
+
+function setBrand(b){brand=b;
+document.getElementById('segAH').classList.toggle('on',b==='AH');
+document.getElementById('segDD').classList.toggle('on',b==='DD');}
+
+function addLead(){
+const inp=document.getElementById('nameIn');
+const name=inp.value.trim(); if(!name)return;
+leads.unshift({id:uid(),name,brand,reached:0,status:'open',
+next:addDays(2),note:'',created:iso(today())});
+inp.value='';save();render();
+}
+
+function setStage(id,idx){const l=leads.find(x=>x.id===id);if(!l)return;
+l.reached=Math.max(l.reached,idx);l.status='open';
+// auto next-touch cadence off current stage if still open & unbooked
+save();render(true,id);}
+function win(id){const l=leads.find(x=>x.id===id);if(!l)return;
+l.reached=Math.max(l.reached,3);l.status=l.status==='won'?'open':'won';save();render(true,id);}
+function lose(id){const l=leads.find(x=>x.id===id);if(!l)return;
+l.status=l.status==='lost'?'open':'lost';save();render(true,id);}
+function setNext(id,n){const l=leads.find(x=>x.id===id);if(!l)return;
+l.next=n===null?'':addDays(n);save();render(true,id);}
+function setNote(id,v){const l=leads.find(x=>x.id===id);if(l){l.note=v;save();}}
+function del(id){if(!confirm('Delete this lead?'))return;
+leads=leads.filter(x=>x.id!==id);save();render();}
+function toggle(id){const l=leads.find(x=>x.id===id);if(l){l._open=!l._open;render(false,l._open?id:null);}}
+
+function stageLabel(l){
+if(l.status==='won')return{t:'Closed / Won',c:'won'};
+if(l.status==='lost')return{t:'Lost',c:'lost'};
+return{t:STAGES[l.reached],c:''};
+}
+
+function metrics(){
+const src=view();
+const sent=src.length;
+const rep=src.filter(l=>l.reached>=1||l.status==='won').length;
+const booked=src.filter(l=>l.reached>=2||l.status==='won').length;
+const showed=src.filter(l=>l.reached>=3||l.status==='won').length;
+const won=src.filter(l=>l.status==='won').length;
+return{sent,rep,booked,showed,won};
+}
+function pct(a,b){if(!b)return'–';return Math.round(a/b*100)+'%';}
+
+function renderFunnel(){
+const m=metrics();
+const legs=[
+{n:m.sent,l:'Sent'},{r:pct(m.rep,m.sent)},
+{n:m.rep,l:'Replied'},{r:pct(m.booked,m.rep)},
+{n:m.booked,l:'Booked'},{r:pct(m.showed,m.booked)},
+{n:m.showed,l:'Showed'},{r:pct(m.won,m.showed)},
+{n:m.won,l:'Closed',won:true}
+];
+document.getElementById('funnel').innerHTML=legs.map(x=>{
+if(x.r!==undefined)return`<div class="rate"><span class="arw">▸</span><span class="pct mono">${x.r}</span></div>`;
+return`<div class="leg ${x.won?'won':''}"><span class="n mono">${x.n}</span><span class="l">${x.l}</span></div>`;
+}).join('');
+}
+
+function cardHTML(l){
+const s=stageLabel(l);
+const dt=daysTo(l.next);
+const open=l.status==='open';
+let duetag='';
+if(open){
+if(dt!==null&&dt<=0)duetag='<span class="duetag">DUE</span>';
+else if(dt!==null&&dt===1)duetag='<span class="duetag" style="color:var(--muted)">1d</span>';
+}
+const duehit=open&&dt!==null&&dt<=0;
+return `<div class="card ${l._open?'open':''} ${l.status} ${duehit?'duehit':''}">
+<div class="row" onclick="toggle('${l.id}')">
+<span class="tag ${l.brand}">${l.brand==='AH'?'AH':'DD'}</span>
+<span class="nm">${esc(l.name)}</span>
+${duetag}
+<span class="stg ${s.c}">${s.t}</span>
+</div>
+<div class="panel">
+<div class="grp"><div class="glab">Stage</div><div class="btns">
+${STAGES.map((st,i)=>`<button class="b sm ${open&&l.reached===i?'on':''}" onclick="setStage('${l.id}',${i})">${st}</button>`).join('')}
+<button class="b sm go ${l.status==='won'?'on':''}" onclick="win('${l.id}')">✓ Won</button>
+<button class="b sm cold ${l.status==='lost'?'on':''}" onclick="lose('${l.id}')">Lost</button>
+</div></div>
+<div class="grp"><div class="glab">Next touch ${l.next?'· '+fmt(l.next):'· none'}</div><div class="btns">
+<button class="b sm" onclick="setNext('${l.id}',2)">+2d</button>
+<button class="b sm" onclick="setNext('${l.id}',4)">+4d</button>
+<button class="b sm" onclick="setNext('${l.id}',7)">Day 7 · breakup</button>
+<button class="b sm" onclick="setNext('${l.id}',null)">Clear</button>
+</div></div>
+<div class="grp"><div class="glab">Note</div>
+<textarea class="note" rows="2" placeholder="Last touch, context, quote…"
+oninput="setNote('${l.id}',this.value)">${esc(l.note||'')}</textarea>
+</div>
+<div class="meta"><span>Added ${fmt(l.created)}</span>
+<button class="del" onclick="del('${l.id}')">Delete</button></div>
+</div>
+</div>`;
+}
+
+function render(keepScroll,focusId){
+renderFunnel();
+const t=today();
+document.getElementById('today').textContent=t.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+const v=view();
+const openLeads=v.filter(l=>l.status==='open');
+const due=openLeads.filter(l=>{const d=daysTo(l.next);return d!==null&&d<=0;})
+.sort((a,b)=>(a.next||'').localeCompare(b.next||''));
+document.getElementById('dueCount').textContent=due.length;
+document.getElementById('dueList').innerHTML=due.length
+? due.map(cardHTML).join('')
+: '<div class="empty">Nothing due. Add leads or set next-touch dates.</div>';
+
+document.getElementById('allCount').textContent=v.length;
+document.getElementById('allList').innerHTML=v.length
+? v.map(cardHTML).join('')
+: '<div class="empty">No leads yet. Add your first one below.</div>';
+}
+function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+document.querySelectorAll('#filter button').forEach(b=>b.classList.toggle('on',b.dataset.f===activeFilter));
+render();
+</script>
+</body>
+</html>
+
