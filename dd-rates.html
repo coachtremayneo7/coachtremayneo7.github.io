@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Diesel &amp; Discipline — Rate Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow+Condensed:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+--cab:#0d0f12; /* cab-at-night black */
+--panel:#15181d; /* dash panel */
+--panel-2:#1c2027; /* raised panel */
+--line:#2a2f38; /* hairline */
+--amber:#ffab2e; /* dash gauge amber */
+--amber-dim:#c9821f; /* dimmed amber */
+--amber-glow:rgba(255,171,46,.14);
+--steel:#8a94a3; /* muted steel text */
+--steel-dim:#5b636f;
+--white:#f2f0eb;
+--green:#3ddc84; /* "save" positive */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+background:var(--cab);
+color:var(--white);
+font-family:'Barlow Condensed',system-ui,sans-serif;
+line-height:1.35;
+padding:0 0 env(safe-area-inset-bottom);
+background-image:
+radial-gradient(120% 60% at 50% -10%, rgba(255,171,46,.07), transparent 60%),
+repeating-linear-gradient(0deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px);
+min-height:100vh;
+}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px}
+
+/* ---- header ---- */
+header{padding:26px 0 14px;text-align:center}
+.stencil{
+font-family:'Oswald',sans-serif;font-weight:700;
+letter-spacing:.06em;line-height:.98;
+font-size:clamp(30px,9vw,42px);
+text-transform:uppercase;
+}
+.stencil .amp{color:var(--amber);font-weight:600}
+.kicker{
+font-family:'Share Tech Mono',monospace;
+color:var(--steel);font-size:12px;letter-spacing:.32em;
+text-transform:uppercase;margin-top:8px;
+}
+.rule{
+height:2px;margin:16px 0 6px;
+background:linear-gradient(90deg,transparent,var(--amber-dim),transparent);
+opacity:.6;
+}
+.hint{
+font-family:'Share Tech Mono',monospace;
+color:var(--steel-dim);font-size:11px;letter-spacing:.12em;
+text-align:center;text-transform:uppercase;margin-bottom:18px;
+}
+
+/* ---- tier card ---- */
+.tier{
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:14px;
+margin-bottom:14px;
+overflow:hidden;
+position:relative;
+}
+.tier::before{
+content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+background:var(--amber);opacity:.85;
+}
+.tier.road::before{background:var(--steel)}
+.tier-head{
+width:100%;background:none;border:none;color:inherit;
+text-align:left;cursor:pointer;
+padding:16px 16px 15px 20px;
+display:flex;align-items:center;gap:12px;
+font-family:inherit;
+}
+.tier-head:focus-visible{outline:2px solid var(--amber);outline-offset:-3px}
+.th-main{flex:1;min-width:0}
+.tier-name{
+font-family:'Oswald',sans-serif;font-weight:600;
+text-transform:uppercase;letter-spacing:.04em;
+font-size:21px;line-height:1;
+}
+.tier-sub{color:var(--steel);font-size:14.5px;margin-top:5px}
+.th-price{text-align:right;flex-shrink:0}
+.price-num{
+font-family:'Share Tech Mono',monospace;
+color:var(--amber);font-size:26px;line-height:1;
+text-shadow:0 0 18px var(--amber-glow);
+}
+.price-unit{
+font-family:'Share Tech Mono',monospace;
+color:var(--steel);font-size:10px;letter-spacing:.14em;
+text-transform:uppercase;margin-top:4px;
+}
+.chev{
+flex-shrink:0;width:22px;height:22px;
+color:var(--amber-dim);
+transition:transform .28s ease;
+display:grid;place-items:center;
+}
+.tier.open .chev{transform:rotate(180deg)}
+
+/* ---- prepay drawer ---- */
+.prepay{
+display:grid;grid-template-rows:0fr;
+transition:grid-template-rows .32s ease;
+}
+.prepay-inner{overflow:hidden}
+.prepay-pad{padding:2px 14px 14px}
+.pp-label{
+font-family:'Share Tech Mono',monospace;
+color:var(--steel-dim);font-size:10px;letter-spacing:.22em;
+text-transform:uppercase;padding:4px 6px 10px;
+}
+.haul{
+display:flex;align-items:baseline;gap:10px;
+padding:11px 6px;
+border-top:1px solid var(--line);
+}
+.haul:first-of-type{border-top:none}
+.marker{
+font-family:'Share Tech Mono',monospace;
+font-size:12px;color:var(--steel);
+width:56px;flex-shrink:0;letter-spacing:.04em;
+}
+.haul-mo{
+font-family:'Share Tech Mono',monospace;
+color:var(--white);font-size:17px;flex:1;
+}
+.haul-mo b{color:var(--amber);font-weight:400}
+.haul-save{
+font-family:'Barlow Condensed',sans-serif;
+color:var(--green);font-size:13.5px;
+text-align:right;flex-shrink:0;white-space:nowrap;
+}
+.haul-total{
+display:block;color:var(--steel-dim);font-size:11px;
+font-family:'Share Tech Mono',monospace;margin-top:2px;
+}
+.haul.best{
+background:var(--amber-glow);
+margin:0 -6px;padding:11px 12px;border-radius:8px;border-top:none;
+}
+.haul.best + .haul{border-top:none}
+.best-tag{
+font-family:'Share Tech Mono',monospace;
+font-size:9px;letter-spacing:.16em;color:var(--amber);
+text-transform:uppercase;display:block;margin-bottom:3px;
+}
+
+/* ---- footer blocks ---- */
+.note{
+background:var(--panel-2);border:1px solid var(--line);
+border-radius:12px;padding:14px 16px;margin:6px 0 14px;
+}
+.note-h{
+font-family:'Oswald',sans-serif;text-transform:uppercase;
+letter-spacing:.05em;font-size:14px;color:var(--amber);
+margin-bottom:6px;
+}
+.note p{color:var(--steel);font-size:15px}
+.note p + p{margin-top:7px}
+.note b{color:var(--white);font-weight:600}
+
+details.founding{margin:6px 0 22px}
+details.founding summary{
+list-style:none;cursor:pointer;
+font-family:'Share Tech Mono',monospace;
+font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+color:var(--steel-dim);padding:10px 4px;
+display:flex;align-items:center;gap:8px;
+}
+details.founding summary::-webkit-details-marker{display:none}
+details.founding summary::before{content:"▸";color:var(--amber-dim);transition:transform .2s}
+details.founding[open] summary::before{transform:rotate(90deg)}
+.locked-row{
+display:flex;justify-content:space-between;align-items:baseline;
+padding:9px 6px;border-top:1px solid var(--line);
+font-size:14.5px;color:var(--steel);
+}
+.locked-row b{color:var(--white);font-family:'Share Tech Mono',monospace;font-size:14px}
+.foot{
+text-align:center;color:var(--steel-dim);
+font-family:'Share Tech Mono',monospace;
+font-size:10px;letter-spacing:.14em;padding:8px 0 30px;
+}
+
+@media (prefers-reduced-motion:reduce){
+*{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+<div class="stencil">Diesel <span class="amp">&amp;</span> Discipline</div>
+<div class="kicker">Coach TreMayne · Rate Card</div>
+<div class="rule"></div>
+</header>
+
+<p class="hint">Tap a tier to see prepay</p>
+
+<!-- TIER 0 -->
+<div class="tier road" data-tier>
+<button class="tier-head" aria-expanded="false">
+<div class="th-main">
+<div class="tier-name">Road Only</div>
+<div class="tier-sub">Custom road / truck-stop programming + check-ins. No in-person.</div>
+</div>
+<div class="th-price">
+<div class="price-num">$200</div>
+<div class="price-unit">/ month</div>
+</div>
+<span class="chev" aria-hidden="true">▾</span>
+</button>
+<div class="prepay"><div class="prepay-inner"><div class="prepay-pad">
+<div class="pp-label">Pay up front — longer haul, better rate</div>
+<div class="haul"><span class="marker">3&nbsp;MO</span><span class="haul-mo"><b>$190</b>/mo</span><span class="haul-save">save $30<span class="haul-total">$570 total</span></span></div>
+<div class="haul best"><span class="best-tag">◆ Sweet spot</span><span class="marker">6&nbsp;MO</span><span class="haul-mo"><b>$180</b>/mo</span><span class="haul-save">save $120<span class="haul-total">$1,080 total</span></span></div>
+<div class="haul"><span class="marker">9&nbsp;MO</span><span class="haul-mo"><b>$176</b>/mo</span><span class="haul-save">save $216<span class="haul-total">$1,584 total</span></span></div>
+<div class="haul"><span class="marker">12&nbsp;MO</span><span class="haul-mo"><b>$170</b>/mo</span><span class="haul-save">save $360<span class="haul-total">$2,040 total</span></span></div>
+</div></div></div>
+</div>
+
+<!-- TIER 1 -->
+<div class="tier" data-tier>
+<button class="tier-head" aria-expanded="false">
+<div class="th-main">
+<div class="tier-name">Home Base</div>
+<div class="tier-sub">1 in-person session / week + accountability check-ins.</div>
+</div>
+<div class="th-price">
+<div class="price-num">$300</div>
+<div class="price-unit">/ month</div>
+</div>
+<span class="chev" aria-hidden="true">▾</span>
+</button>
+<div class="prepay"><div class="prepay-inner"><div class="prepay-pad">
+<div class="pp-label">Pay up front — longer haul, better rate</div>
+<div class="haul"><span class="marker">3&nbsp;MO</span><span class="haul-mo"><b>$285</b>/mo</span><span class="haul-save">save $45<span class="haul-total">$855 total</span></span></div>
+<div class="haul best"><span class="best-tag">◆ Sweet spot</span><span class="marker">6&nbsp;MO</span><span class="haul-mo"><b>$270</b>/mo</span><span class="haul-save">save $180<span class="haul-total">$1,620 total</span></span></div>
+<div class="haul"><span class="marker">9&nbsp;MO</span><span class="haul-mo"><b>$264</b>/mo</span><span class="haul-save">save $324<span class="haul-total">$2,376 total</span></span></div>
+<div class="haul"><span class="marker">12&nbsp;MO</span><span class="haul-mo"><b>$255</b>/mo</span><span class="haul-save">save $540<span class="haul-total">$3,060 total</span></span></div>
+</div></div></div>
+</div>
+
+<!-- TIER 2 -->
+<div class="tier" data-tier>
+<button class="tier-head" aria-expanded="false">
+<div class="th-main">
+<div class="tier-name">Long Haul</div>
+<div class="tier-sub">3 in-person days on home rotation + road programming + check-ins.</div>
+</div>
+<div class="th-price">
+<div class="price-num">$700</div>
+<div class="price-unit">/ month</div>
+</div>
+<span class="chev" aria-hidden="true">▾</span>
+</button>
+<div class="prepay"><div class="prepay-inner"><div class="prepay-pad">
+<div class="pp-label">Pay up front — longer haul, better rate</div>
+<div class="haul"><span class="marker">3&nbsp;MO</span><span class="haul-mo"><b>$665</b>/mo</span><span class="haul-save">save $105<span class="haul-total">$1,995 total</span></span></div>
+<div class="haul best"><span class="best-tag">◆ Sweet spot</span><span class="marker">6&nbsp;MO</span><span class="haul-mo"><b>$630</b>/mo</span><span class="haul-save">save $420<span class="haul-total">$3,780 total</span></span></div>
+<div class="haul"><span class="marker">9&nbsp;MO</span><span class="haul-mo"><b>$616</b>/mo</span><span class="haul-save">save $756<span class="haul-total">$5,544 total</span></span></div>
+<div class="haul"><span class="marker">12&nbsp;MO</span><span class="haul-mo"><b>$595</b>/mo</span><span class="haul-save">save $1,260<span class="haul-total">$7,140 total</span></span></div>
+</div></div></div>
+</div>
+
+<div class="note">
+<div class="note-h">Closing the prepay</div>
+<p>Lead with the <b>monthly + the savings</b>, never the lump sum. "$595 a month instead of $700, locked for the year" &mdash; not "$7,140."</p>
+<p>Push the <b>6-month</b>. Enough to matter, small enough to say yes to.</p>
+</div>
+
+<div class="note">
+<div class="note-h">Prepay terms</div>
+<p>Non-refundable, but <b>transferable / can pause</b> if life happens on the road. Say it up front so it's a rule, not a fight later.</p>
+</div>
+
+<details class="founding">
+<summary>Founding clients — locked rates</summary>
+<div class="locked-row"><span>Gary &middot; Home Base founding</span><b>$50 / session</b></div>
+<div class="locked-row"><span>Road driver &middot; Long Haul founding</span><b>$400 / mo</b></div>
+<p style="color:var(--steel-dim);font-size:13px;padding:10px 6px 2px;font-family:'Barlow Condensed'">Locked as long as they stay. New drivers pay the real rates above.</p>
+</details>
+
+<div class="foot">KEEP YOUR CARD · KEEP YOUR CAREER</div>
+
+</div>
+
+<script>
+document.querySelectorAll('[data-tier]').forEach(function(tier){
+var btn = tier.querySelector('.tier-head');
+btn.addEventListener('click', function(){
+var open = tier.classList.toggle('open');
+btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+var drawer = tier.querySelector('.prepay');
+drawer.style.gridTemplateRows = open ? '1fr' : '0fr';
+});
+});
+</script>
+</body>
+</html>
+
