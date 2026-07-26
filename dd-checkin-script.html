@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Check-In Script — Diesel &amp; Discipline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow+Condensed:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+--cab:#0d0f12;--panel:#15181d;--panel-2:#1c2027;--line:#2a2f38;
+--amber:#ffab2e;--amber-dim:#c9821f;--amber-glow:rgba(255,171,46,.14);
+--steel:#8a94a3;--steel-dim:#5b636f;--white:#f2f0eb;
+--green:#3ddc84;--red:#ff5c5c;--blue:#5aa9ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--cab);color:var(--white);
+font-family:'Barlow Condensed',system-ui,sans-serif;line-height:1.4;
+padding:0 0 env(safe-area-inset-bottom);
+background-image:
+radial-gradient(120% 55% at 50% -10%, rgba(255,171,46,.07), transparent 60%),
+repeating-linear-gradient(0deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px);
+min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px}
+header{padding:22px 0 8px;text-align:center}
+.stencil{font-family:'Oswald';font-weight:700;letter-spacing:.05em;
+font-size:clamp(24px,7vw,34px);text-transform:uppercase;line-height:1}
+.stencil .amp{color:var(--amber);font-weight:600}
+.kicker{font-family:'Share Tech Mono';color:var(--steel);font-size:12px;
+letter-spacing:.24em;text-transform:uppercase;margin-top:8px}
+.rule{height:2px;margin:14px 0 4px;
+background:linear-gradient(90deg,transparent,var(--amber-dim),transparent);opacity:.6}
+
+.client{background:var(--panel-2);border:1px solid var(--amber-dim);border-radius:12px;
+padding:13px 14px;margin:14px 0}
+.client label{font-family:'Share Tech Mono';font-size:9.5px;letter-spacing:.14em;
+text-transform:uppercase;color:var(--amber);display:block;margin-bottom:5px}
+.client input{width:100%;background:var(--cab);border:1px solid var(--line);border-radius:8px;
+color:var(--white);font-family:'Barlow Condensed';font-size:16px;padding:9px 11px}
+.client input:focus{outline:none;border-color:var(--amber)}
+.client .gap{margin-top:10px}
+.client .why-note{font-family:'Barlow Condensed';font-size:12.5px;color:var(--steel-dim);margin-top:5px}
+
+.hint{font-family:'Share Tech Mono';color:var(--steel-dim);font-size:11px;
+letter-spacing:.1em;text-align:center;text-transform:uppercase;margin:6px 0 16px}
+
+.rules{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:16px}
+.rules-h{font-family:'Oswald';text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--amber);margin-bottom:7px}
+.rules p{color:var(--steel);font-size:14.5px}
+.rules p+p{margin-top:5px}
+.rules b{color:var(--white);font-weight:600}
+
+.sec{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.2em;color:var(--steel-dim);
+text-transform:uppercase;margin:20px 4px 10px;display:flex;align-items:center;gap:8px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.format{background:var(--panel);border:1px solid var(--amber-dim);border-radius:12px;padding:14px 15px;margin-bottom:8px}
+.format .lbl{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.14em;color:var(--amber);text-transform:uppercase;margin-bottom:8px}
+.format .msg{font-family:'Share Tech Mono';font-size:15px;color:var(--white);line-height:1.7}
+
+.msgcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;position:relative}
+.msgcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--steel-dim)}
+.msgcard.good::before{background:var(--green)}
+.msgcard.flare::before{background:var(--red)}
+.msgcard.miss::before{background:var(--amber-dim)}
+.msgcard.low::before{background:var(--blue)}
+.msgcard.win::before{background:var(--amber)}
+.msgcard.quiet::before{background:var(--red)}
+.mc-head{padding:12px 14px 10px 18px}
+.mc-title{font-family:'Oswald';font-weight:600;text-transform:uppercase;letter-spacing:.03em;font-size:15.5px;line-height:1.1}
+.mc-cue{color:var(--steel);font-size:13px;margin-top:2px}
+.mc-body{padding:0 14px 12px 18px}
+.bubble{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;border-top-left-radius:4px;
+padding:11px 13px;font-family:'Barlow Condensed';font-size:15.5px;color:var(--white);line-height:1.45;white-space:pre-line}
+.bubble .tok{color:var(--amber);font-weight:600}
+.copybtn{margin-top:9px;width:100%;background:var(--amber-glow);border:1px solid var(--amber-dim);border-radius:9px;
+color:var(--amber);font-family:'Share Tech Mono';font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:10px;cursor:pointer;transition:background .15s}
+.copybtn:active{background:rgba(255,171,46,.28)}
+.copybtn.done{color:var(--green);border-color:var(--green)}
+.foot{text-align:center;color:var(--steel-dim);font-family:'Share Tech Mono';font-size:10px;letter-spacing:.14em;padding:20px 0 30px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="stencil">Check-In <span class="amp">·</span> Script</div>
+<div class="kicker">Diesel &amp; Discipline · Coach TreMayne</div>
+<div class="rule"></div>
+</header>
+
+<div class="client">
+<label>Client name (drops into the messages)</label>
+<input id="cname" placeholder="Type driver's name…" autocomplete="off">
+<div class="gap"></div>
+<label>Their "why" — one phrase (used in the low-day message)</label>
+<input id="cwhy" placeholder="e.g. quit smoking · keep the DOT card · his kids">
+<div class="why-note">Fills the <span style="color:var(--amber)">[why]</span> blank so the rough-day message hits personal.</div>
+</div>
+
+<p class="hint">Tap the situation → copy → send</p>
+
+<div class="rules">
+<div class="rules-h">The rhythm — tell them day one</div>
+<p><b>Every day</b> they send one line (format below). <b>Same day</b> you fire one back. Miss days and you chase them — that's the job.</p>
+<p>Their daily line is also <b>your loading gauge</b> — back number next day tells you if last session earned more.</p>
+</div>
+
+<div class="sec">Set the terms — send once</div>
+<div class="msgcard" data-card>
+<div class="mc-head"><div class="mc-title">Day-1 setup</div><div class="mc-cue">After first session — locks the rhythm</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>Alright {name}, here's how we run it. Every day you shoot me one line: moved yes or no, back out of 10, and how you ate. Takes 10 seconds from the cab. I'll hit you right back same day. Miss a day and I'm coming for you — that's what you're paying me for. Deal?</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="sec">What they send daily</div>
+<div class="format">
+<div class="lbl">Their one-liner — keep it this simple</div>
+<div class="msg">Moved ✅ / ❌<br>Back __ /10<br>Food: ____</div>
+</div>
+<div class="msgcard" data-card>
+<div class="mc-head"><div class="mc-title">Send them the template</div><div class="mc-cue">So they copy the format, not guess</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>Copy this each day and fill it in:
+
+Moved: ✅ / ❌
+Back: __/10
+Food: __</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="sec">Your reply bank</div>
+
+<div class="msgcard good" data-card>
+<div class="mc-head"><div class="mc-title">Good day — moved, back solid</div><div class="mc-cue">Reinforce + bank it</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>That's the one, {name}. Back holding that number after a full drive is exactly what we want — bank it. Same again tomorrow. 💪</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="msgcard flare" data-card>
+<div class="mc-head"><div class="mc-title">Back flared up</div><div class="mc-cue">Pull back, reassure, no panic</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>Good you told me. We're not pushing through that. Today = walk + the truck-stop reset only, no loading. We back off, let it settle, I'll adjust the next session. This is normal — this is why we go slow. Keep me posted tomorrow.</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="msgcard miss" data-card>
+<div class="mc-head"><div class="mc-title">Missed it — no time / on the road</div><div class="mc-cue">Zero guilt, give the micro-win</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>No guilt, the road's the road. But we don't take zeros — next stop, 5 minutes: hip stretch, glute bridges off the tailgate, 20 bodyweight squats. That counts. Send me a ✅ when it's done.</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="msgcard low" data-card>
+<div class="mc-head"><div class="mc-title">Low / rough day</div><div class="mc-cue">Connect to their why</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>Heard, {name}. Remember why you started — {why}. That's bigger than one rough day. Don't think about the whole thing, just today's one line. What can you get done in the next hour?</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="msgcard win" data-card>
+<div class="mc-head"><div class="mc-title">Win / did extra</div><div class="mc-cue">Celebrate — testimonial fuel</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>THAT'S what I'm talking about, {name}. A month ago that back wouldn't let you. You're building something real — keep stacking days. Proud of you.</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="msgcard quiet" data-card>
+<div class="mc-head"><div class="mc-title">Went quiet — 2+ days silent</div><div class="mc-cue">The chase. This IS the accountability.</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>{name}. Two days no word. I told you I'd come looking — here I am. Don't need a workout, just need to hear from you. Where's your head at? One line back.</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="sec">Before their weekly session</div>
+<div class="msgcard" data-card>
+<div class="mc-head"><div class="mc-title">Session-day recap</div><div class="mc-cue">Send the morning of — sets up the 45 min</div></div>
+<div class="mc-body">
+<div class="bubble" data-msg>Session today 💪 Looking at your week — [good streak / back solid / rough patch]. We'll [progress the load / keep it light and clean] off that. Roll in ready. What time works?</div>
+<button class="copybtn" data-copy>⧉ Copy message</button>
+</div>
+</div>
+
+<div class="foot">KEEP YOUR CARD · KEEP YOUR CAREER</div>
+</div>
+
+<script>
+var cname=document.getElementById('cname'), cwhy=document.getElementById('cwhy');
+try{cname.value=localStorage.getItem('ddci_name')||'';cwhy.value=localStorage.getItem('ddci_why')||'';}catch(e){}
+
+function render(){
+var n=cname.value.trim(), w=cwhy.value.trim();
+document.querySelectorAll('[data-msg]').forEach(function(el){
+var raw=el.getAttribute('data-raw')||el.textContent;
+el.setAttribute('data-raw',raw);
+var out=raw
+.replace(/\{name\}/g, n ? n : 'there')
+.replace(/\{why\}/g, w ? w : 'what you set out to do');
+// highlight tokens visually only where filled
+el.innerHTML = out
+.replace(new RegExp('('+(n?escapeRe(n):'\\u0000')+')','g'), n?'<span class="tok">$1</span>':'$1');
+});
+}
+function escapeRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+
+cname.addEventListener('input',function(){try{localStorage.setItem('ddci_name',cname.value)}catch(e){};render();});
+cwhy.addEventListener('input',function(){try{localStorage.setItem('ddci_why',cwhy.value)}catch(e){};render();});
+render();
+
+document.querySelectorAll('[data-copy]').forEach(function(btn){
+btn.addEventListener('click',function(){
+var txt=btn.closest('.mc-body').querySelector('.bubble').innerText;
+var done=function(){var o=btn.textContent;btn.textContent='✓ Copied';btn.classList.add('done');
+setTimeout(function(){btn.textContent=o;btn.classList.remove('done')},1400);};
+if(navigator.clipboard&&navigator.clipboard.writeText){
+navigator.clipboard.writeText(txt).then(done).catch(function(){fallback(txt);done()});
+}else{fallback(txt);done()}
+});
+});
+function fallback(t){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);}
+</script>
+</body>
+</html>
+
