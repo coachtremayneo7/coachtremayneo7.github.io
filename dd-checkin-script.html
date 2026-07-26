@@ -200,7 +200,15 @@ Food: __</div>
 
 <script>
 var cname=document.getElementById('cname'), cwhy=document.getElementById('cwhy');
-try{cname.value=localStorage.getItem('ddci_name')||'';cwhy.value=localStorage.getItem('ddci_why')||'';}catch(e){}
+function slug(s){return (s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_')||'unnamed';}
+function loadDriver(){
+// load this driver's saved "why" (each driver stored separately)
+try{cwhy.value=localStorage.getItem('ddci_why_'+slug(cname.value))||'';}catch(e){}
+render();
+}
+// reopen the last driver you had open
+try{var last=localStorage.getItem('ddci_last'); if(last){cname.value=last;}}catch(e){}
+try{cwhy.value=localStorage.getItem('ddci_why_'+slug(cname.value))||'';}catch(e){}
 
 function render(){
 var n=cname.value.trim(), w=cwhy.value.trim();
@@ -217,8 +225,14 @@ el.innerHTML = out
 }
 function escapeRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
-cname.addEventListener('input',function(){try{localStorage.setItem('ddci_name',cname.value)}catch(e){};render();});
-cwhy.addEventListener('input',function(){try{localStorage.setItem('ddci_why',cwhy.value)}catch(e){};render();});
+cname.addEventListener('input',function(){
+try{localStorage.setItem('ddci_last',cname.value)}catch(e){}
+loadDriver(); // switch to that driver's saved why
+});
+cwhy.addEventListener('input',function(){
+try{localStorage.setItem('ddci_why_'+slug(cname.value),cwhy.value)}catch(e){}
+render();
+});
 render();
 
 document.querySelectorAll('[data-copy]').forEach(function(btn){
