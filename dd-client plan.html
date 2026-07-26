@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Client Plan — Diesel &amp; Discipline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow+Condensed:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+--cab:#0d0f12;--panel:#15181d;--panel-2:#1c2027;--line:#2a2f38;
+--amber:#ffab2e;--amber-dim:#c9821f;--amber-glow:rgba(255,171,46,.14);
+--steel:#8a94a3;--steel-dim:#5b636f;--white:#f2f0eb;--green:#3ddc84;--red:#ff5c5c;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--cab);color:var(--white);
+font-family:'Barlow Condensed',system-ui,sans-serif;line-height:1.38;
+padding:0 0 env(safe-area-inset-bottom);
+background-image:
+radial-gradient(120% 55% at 50% -10%, rgba(255,171,46,.07), transparent 60%),
+repeating-linear-gradient(0deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px);
+min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px}
+header{padding:22px 0 8px;text-align:center}
+.stencil{font-family:'Oswald';font-weight:700;letter-spacing:.05em;
+font-size:clamp(24px,7vw,34px);text-transform:uppercase;line-height:1}
+.stencil .amp{color:var(--amber);font-weight:600}
+.kicker{font-family:'Share Tech Mono';color:var(--steel);font-size:12px;
+letter-spacing:.24em;text-transform:uppercase;margin-top:8px}
+.rule{height:2px;margin:14px 0 4px;
+background:linear-gradient(90deg,transparent,var(--amber-dim),transparent);opacity:.6}
+
+/* client bar */
+.client{background:var(--panel-2);border:1px solid var(--amber-dim);border-radius:12px;
+padding:13px 14px;margin:14px 0}
+.client label{font-family:'Share Tech Mono';font-size:9.5px;letter-spacing:.14em;
+text-transform:uppercase;color:var(--amber);display:block;margin-bottom:5px}
+.client input,.client textarea{width:100%;background:var(--cab);border:1px solid var(--line);
+border-radius:8px;color:var(--white);font-family:'Barlow Condensed';font-size:16px;
+padding:9px 11px;resize:vertical}
+.client input:focus,.client textarea:focus{outline:none;border-color:var(--amber)}
+.client .gap{margin-top:10px}
+.client textarea{min-height:44px;line-height:1.35}
+
+.rhythm{display:flex;gap:8px;margin:14px 0}
+.rcell{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+padding:11px 8px;text-align:center}
+.rcell .big{font-family:'Oswald';font-weight:600;font-size:16px;text-transform:uppercase;
+color:var(--amber);line-height:1.1}
+.rcell .sm{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.1em;
+color:var(--steel);text-transform:uppercase;margin-top:5px}
+
+.card{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+padding:13px 15px;margin-bottom:12px}
+.card.rail{border-color:rgba(255,92,92,.35);background:rgba(255,92,92,.06)}
+.card-h{font-family:'Oswald';text-transform:uppercase;letter-spacing:.05em;
+font-size:14px;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.card.rail .card-h{color:var(--red)}
+.card p{color:var(--steel);font-size:15px}
+.card p+p{margin-top:6px}
+.card b{color:var(--white);font-weight:600}
+.thesis{text-align:center;color:var(--steel);font-size:15px;padding:2px 6px 16px;line-height:1.45}
+.thesis b{color:var(--amber);font-weight:600}
+.sec-label{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.2em;
+color:var(--steel-dim);text-transform:uppercase;margin:6px 4px 10px}
+
+.week{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+margin-bottom:12px;overflow:hidden;position:relative}
+.week::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--amber-dim)}
+.week.money::before{background:var(--green)}
+.whead{width:100%;background:none;border:none;color:inherit;text-align:left;cursor:pointer;
+padding:15px 15px 15px 19px;display:flex;align-items:center;gap:12px;font-family:inherit}
+.whead:focus-visible{outline:2px solid var(--amber);outline-offset:-3px}
+.wtag{font-family:'Share Tech Mono';font-size:12px;color:var(--cab);background:var(--amber-dim);
+border-radius:5px;padding:5px 8px;flex-shrink:0;letter-spacing:.04em}
+.week.money .wtag{background:var(--green)}
+.wmain{flex:1;min-width:0}
+.wname{font-family:'Oswald';font-weight:600;text-transform:uppercase;letter-spacing:.03em;
+font-size:18px;line-height:1.05}
+.wsub{color:var(--steel);font-size:13.5px;margin-top:3px}
+.chev{flex-shrink:0;width:20px;color:var(--amber-dim);transition:transform .28s;text-align:center}
+.week.open .chev{transform:rotate(180deg)}
+.wbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s ease}
+.wbody-in{overflow:hidden}
+.wbody-pad{padding:2px 16px 15px 19px}
+.step{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14.5px}
+.step:first-child{border-top:none}
+.step .t{font-family:'Share Tech Mono';color:var(--amber);font-size:12px;width:52px;flex-shrink:0;padding-top:2px}
+.step .d{color:var(--white)}
+.step .d span{color:var(--steel);display:block;font-size:13.5px;margin-top:1px}
+
+.track{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px}
+.track-h{font-family:'Oswald';text-transform:uppercase;letter-spacing:.04em;font-size:17px;color:var(--white);margin-bottom:3px}
+.track-sub{color:var(--steel);font-size:13.5px;margin-bottom:14px}
+.mark{margin-bottom:14px}
+.mark-name{font-family:'Barlow Condensed';font-weight:600;font-size:15.5px;color:var(--white);margin-bottom:7px}
+.mark-row{display:flex;gap:10px}
+.field{flex:1}
+.field label{font-family:'Share Tech Mono';font-size:9.5px;letter-spacing:.14em;
+text-transform:uppercase;color:var(--steel-dim);display:block;margin-bottom:4px}
+.field.w4 label{color:var(--green)}
+.field input{width:100%;background:var(--cab);border:1px solid var(--line);border-radius:8px;
+color:var(--white);font-family:'Share Tech Mono';font-size:16px;padding:9px 10px;text-align:center}
+.field.w4 input{border-color:rgba(61,220,132,.4)}
+.field input:focus{outline:none;border-color:var(--amber)}
+.arrow{display:grid;place-items:center;color:var(--steel-dim);font-size:18px;padding-top:16px;flex-shrink:0}
+.track-note{font-family:'Share Tech Mono';font-size:10.5px;color:var(--steel-dim);letter-spacing:.06em;text-align:center;margin-top:4px}
+.saved{color:var(--green);opacity:0;transition:opacity .3s;font-size:10px}
+.saved.show{opacity:1}
+.foot{text-align:center;color:var(--steel-dim);font-family:'Share Tech Mono';font-size:10px;letter-spacing:.14em;padding:14px 0 30px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+<div class="stencil" id="hdr">Client <span class="amp">·</span> Month 1</div>
+<div class="kicker">Diesel &amp; Discipline · Coach TreMayne</div>
+<div class="rule"></div>
+</header>
+
+<div class="client">
+<label>Client name (sets who this plan saves under)</label>
+<input id="cname" placeholder="Type driver's name…" autocomplete="off">
+<div class="gap"></div>
+<label>Working around / notes (cleared? flares? history?)</label>
+<textarea id="cnotes" placeholder="e.g. cleared to train, back flares — load light, watch next-day…"></textarea>
+</div>
+
+<div class="rhythm">
+<div class="rcell"><div class="big">1×/wk</div><div class="sm">In-person · 45 min</div></div>
+<div class="rcell"><div class="big">Daily</div><div class="sm">Check-in</div></div>
+<div class="rcell"><div class="big">4-wk</div><div class="sm">Retest cycle</div></div>
+</div>
+
+<div class="card rail">
+<div class="card-h">⚠ Loading rail</div>
+<p>Cleared means you <b>can</b> load — flares mean load light and watch. Anything that reproduces pain gets <b>pulled that day</b>.</p>
+<p>The <b>next-day check-in is your gauge</b> — pain-free tomorrow = earn the next notch. Flare = back off. That's how you find the line.</p>
+</div>
+
+<p class="thesis">Long-haul driver = <b>hours seated daily</b>. That's the root — locked hips, dead glutes, compressed spine. <b>Every session fights the truck.</b></p>
+
+<div class="sec-label">The 4-week build — tap a week</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 1</span>
+<div class="wmain"><div class="wname">Screen &amp; Baseline</div>
+<div class="wsub">Find the floor. Light load if quality holds.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="step"><span class="t">5 min</span><span class="d">Talk<span>Back today? What hurts? Walk through the driving day.</span></span></div>
+<div class="step"><span class="t">8 min</span><span class="d">Screen<span>Hinge, sit-to-stand, brace — pain-free ranges only. No weight.</span></span></div>
+<div class="step"><span class="t">7 min</span><span class="d">Baseline<span>Log the 3 marks below. These are month-one proof.</span></span></div>
+<div class="step"><span class="t">15 min</span><span class="d">Load light<span>Goblet/box squat · KB deadlift or hip thrust · carry. Watch the back, not the number.</span></span></div>
+<div class="step"><span class="t">10 min</span><span class="d">Teach + wrap<span>Solo homework, truck-stop reset, how check-ins run.</span></span></div>
+</div></div></div>
+</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 2</span>
+<div class="wmain"><div class="wname">Add Where It Held</div>
+<div class="wsub">Nudge load where week-1 check-ins said fine.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="step"><span class="t">Warm</span><span class="d">Undo the drive<span>Hip flexor opener, t-spine, glute activation.</span></span></div>
+<div class="step"><span class="t">Main</span><span class="d">Same patterns, small notch up<span>Only where the back was quiet next day. Quality over sweat.</span></span></div>
+<div class="step"><span class="t">Core</span><span class="d">Anti-extension<span>Dead-bug, plank, brace. Never loaded crunches.</span></span></div>
+<div class="step"><span class="t">Finish</span><span class="d">Short carry conditioning<span>Something copyable at a truck stop.</span></span></div>
+</div></div></div>
+</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 3</span>
+<div class="wmain"><div class="wname">Progress + One New</div>
+<div class="wsub">Load up what's holding, add one pattern.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="step"><span class="t">Warm</span><span class="d">Same de-drive warm-up<span>It's becoming the habit — reinforce it.</span></span></div>
+<div class="step"><span class="t">Main</span><span class="d">Progress the holds<span>More load or reps where the back earned it.</span></span></div>
+<div class="step"><span class="t">New</span><span class="d">Introduce one pattern<span>Split squat, row, or step-up — the back gets a vote.</span></span></div>
+<div class="step"><span class="t">Core</span><span class="d">Add a carry variation<span>Suitcase carry hits the anti-sitting need hard.</span></span></div>
+</div></div></div>
+</div>
+
+<div class="week money" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 4</span>
+<div class="wmain"><div class="wname">Retest — Money Week</div>
+<div class="wsub">Re-run baseline. Numbers moved = testimonial.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="step"><span class="t">Warm</span><span class="d">Now-standard warm-up<span>Note out loud how much easier it moves than week 1.</span></span></div>
+<div class="step"><span class="t">Retest</span><span class="d">Re-run all 3 marks<span>Log the Week-4 column. Show the jump.</span></span></div>
+<div class="step"><span class="t">Capture</span><span class="d">Get the testimonial<span>Quick video: "how's the back vs a month ago?" Sells the next driver.</span></span></div>
+<div class="step"><span class="t">Next</span><span class="d">Set month-2 targets<span>New baselines, heavier. Cycle repeats.</span></span></div>
+</div></div></div>
+</div>
+
+<div class="track">
+<div class="track-h">Baseline → Retest</div>
+<div class="track-sub">Log Week 1, re-run Week 4. The gap is the proof.</div>
+<div class="mark"><div class="mark-name">Farmer carry — distance</div>
+<div class="mark-row">
+<div class="field"><label>Week 1</label><input data-k="carry1" placeholder="—"></div>
+<div class="arrow">→</div>
+<div class="field w4"><label>Week 4</label><input data-k="carry4" placeholder="—"></div>
+</div></div>
+<div class="mark"><div class="mark-name">Plank / dead-bug — hold</div>
+<div class="mark-row">
+<div class="field"><label>Week 1</label><input data-k="core1" placeholder="—"></div>
+<div class="arrow">→</div>
+<div class="field w4"><label>Week 4</label><input data-k="core4" placeholder="—"></div>
+</div></div>
+<div class="mark"><div class="mark-name">Timed walk — pace / distance</div>
+<div class="mark-row">
+<div class="field"><label>Week 1</label><input data-k="walk1" placeholder="—"></div>
+<div class="arrow">→</div>
+<div class="field w4"><label>Week 4</label><input data-k="walk4" placeholder="—"></div>
+</div></div>
+<div class="track-note">Saves per client on this device <span class="saved" id="saved">✓ saved</span></div>
+</div>
+
+<div class="card">
+<div class="card-h">Between sessions — what they're paying for</div>
+<p><b>Daily:</b> walk after the shift · a one-line text back ("moved ✅ / back feeling ___").</p>
+<p><b>Truck-stop reset (5 min):</b> hip-flexor stretch → t-spine → glute bridge. Undo the seat.</p>
+<p><b>You send back:</b> a short reply, same day. One line keeps them paying.</p>
+</div>
+
+<div class="foot">KEEP YOUR CARD · KEEP YOUR CAREER</div>
+</div>
+
+<script>
+// week toggles
+document.querySelectorAll('[data-week]').forEach(function(w){
+var btn=w.querySelector('.whead');
+btn.addEventListener('click',function(){
+var open=w.classList.toggle('open');
+btn.setAttribute('aria-expanded',open?'true':'false');
+w.querySelector('.wbody').style.gridTemplateRows=open?'1fr':'0fr';
+});
+});
+var saved=document.getElementById('saved');
+var cname=document.getElementById('cname'), cnotes=document.getElementById('cnotes'), hdr=document.getElementById('hdr');
+function slug(s){return (s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_')||'unnamed';}
+function flash(){try{saved.classList.add('show');clearTimeout(window._st);window._st=setTimeout(function(){saved.classList.remove('show')},1200);}catch(e){}}
+function keyBase(){return 'ddplan_'+slug(cname.value)+'_';}
+
+function loadClient(){
+var b=keyBase();
+try{cnotes.value=localStorage.getItem(b+'notes')||'';}catch(e){}
+document.querySelectorAll('.track input').forEach(function(inp){
+try{var v=localStorage.getItem(b+inp.dataset.k);inp.value=(v!==null?v:'');}catch(e){}
+});
+hdr.innerHTML=(cname.value.trim()? cname.value.trim() : 'Client')+' <span class="amp">·</span> Month 1';
+}
+// remember last client opened
+try{var last=localStorage.getItem('ddplan_last'); if(last){cname.value=last;}}catch(e){}
+loadClient();
+
+cname.addEventListener('input',function(){
+try{localStorage.setItem('ddplan_last',cname.value);}catch(e){}
+loadClient();
+});
+cnotes.addEventListener('input',function(){try{localStorage.setItem(keyBase()+'notes',cnotes.value);flash();}catch(e){}});
+document.querySelectorAll('.track input').forEach(function(inp){
+inp.addEventListener('input',function(){try{localStorage.setItem(keyBase()+inp.dataset.k,inp.value);flash();}catch(e){}});
+});
+</script>
+</body>
+</html>
+
