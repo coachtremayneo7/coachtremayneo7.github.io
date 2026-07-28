@@ -378,10 +378,22 @@ try{localStorage.setItem('dd_roadbuild_unlocked','1');
 if(name) localStorage.setItem('dd_roadbuild_name',name);}catch(e){}
 }
 
-// returning visitor: skip the gate
-try{ if(localStorage.getItem('dd_roadbuild_unlocked')==='1'){
-reveal(localStorage.getItem('dd_roadbuild_name')||'driver');
-}}catch(e){}
+// read a URL query param safely (lets the email link skip the gate)
+function ddGetParam(k){try{return new URLSearchParams(location.search).get(k);}catch(e){return null;}}
+
+// Skip the gate if EITHER:
+// - this browser already unlocked before (localStorage), OR
+// - they arrived from the email link, which carries ?unlocked=1
+// The email-link case is the fix for "tapped the email and saw the form again" —
+// the email opens in a fresh browser with no saved memory, so the URL flag is
+// what tells the page they've already signed up.
+try{
+var ddFromEmail = ddGetParam('unlocked')==='1';
+var ddSaved = localStorage.getItem('dd_roadbuild_unlocked')==='1';
+if(ddFromEmail || ddSaved){
+reveal(ddGetParam('n') || localStorage.getItem('dd_roadbuild_name') || 'driver');
+}
+}catch(e){}
 
 btn.addEventListener('click', function(){
 err.style.display='none';
