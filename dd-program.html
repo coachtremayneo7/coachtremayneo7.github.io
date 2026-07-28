@@ -132,6 +132,28 @@ font-size:14.5px;color:var(--amber);margin-bottom:6px;padding-bottom:5px;border-
 .ex .s{font-family:'Share Tech Mono';color:var(--steel);font-size:13.5px;flex-shrink:0}
 .wnote{color:var(--steel);font-size:13.5px;margin-top:10px;font-style:italic}
 
+/* on-board coach */
+.coachbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:6px 0 18px}
+.coachbox-top{display:flex;align-items:center;gap:8px;padding:13px 15px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.cdot{width:9px;height:9px;border-radius:50%;background:var(--steel-dim)}
+.cdot.on{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.coachbox-title{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-left:5px}
+.cmodes{display:flex;gap:7px;flex-wrap:wrap;padding:13px 14px 3px}
+.cmode{font-family:'Share Tech Mono';font-size:12px;letter-spacing:.03em;border:1px solid var(--line);color:var(--white);background:transparent;padding:8px 11px;border-radius:7px;cursor:pointer;transition:.15s}
+.cmode:hover,.cmode.active{border-color:var(--amber);color:var(--amber)}
+.clog{padding:11px 15px 3px;max-height:340px;overflow-y:auto}
+.cmsg{margin:11px 0;font-size:15px;max-width:90%}
+.cmsg .cwho{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-dim);margin-bottom:4px}
+.cmsg.coach .cwho{color:var(--amber)}
+.cmsg.me{margin-left:auto;text-align:right}
+.cmsg.me .cbub{background:var(--panel-2);display:inline-block;padding:9px 13px;border-radius:9px 9px 2px 9px;text-align:left;color:var(--white)}
+.cmsg.coach .cbub{color:var(--white);white-space:pre-line}
+.crow{display:flex;gap:9px;padding:13px 15px;border-top:1px solid var(--line)}
+.crow input{flex:1;background:var(--cab);border:1px solid var(--line);border-radius:8px;color:var(--white);font-family:'Barlow Condensed';font-size:16px;padding:11px 13px}
+.crow input:focus{outline:none;border-color:var(--amber)}
+.csend{background:var(--amber);color:var(--cab);border:none;padding:0 17px;border-radius:8px;font-family:'Oswald';font-weight:700;letter-spacing:.04em;cursor:pointer;font-size:14px}
+.csend:active{filter:brightness(.9)}
+
 /* upsell */
 .next{background:linear-gradient(160deg,var(--panel-2),var(--panel));
 border:1px solid var(--amber-dim);border-radius:16px;padding:22px 18px;margin:22px 0 10px;text-align:center}
@@ -297,6 +319,28 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 </div></div></div>
 </div>
 
+<!-- ON-BOARD COACH -->
+<div class="sec-label">Your on-board coach — ask anything</div>
+<div class="coachbox">
+<div class="coachbox-top">
+<span class="cdot on"></span><span class="cdot"></span><span class="cdot"></span>
+<span class="coachbox-title">DD-COACH // CHANNEL 19</span>
+</div>
+<div class="cmodes" id="cmodes">
+<button class="cmode active" data-cmode="workout">🏋️ Quick workout</button>
+<button class="cmode" data-cmode="food">🥗 Truck-stop meal</button>
+<button class="cmode" data-cmode="dot">🩺 DOT physical</button>
+</div>
+<div class="clog" id="clog">
+<div class="cmsg coach"><div class="cwho">Coach TreMayne</div>
+<div class="cbub">10-4, driver. You've got the program — I'm right here for the parts it doesn't cover. Move bugging your back, need a meal call at the pump, prepping for your DOT? Tap a button or just type it. 💪</div></div>
+</div>
+<div class="crow">
+<input id="cinput" type="text" placeholder="Ask it — e.g. swap for a move that won't hurt my back" aria-label="Ask Coach">
+<button class="csend" id="csend">SEND</button>
+</div>
+</div>
+
 <!-- UPSELL -->
 <div class="next">
 <div class="next-k">You finished. Want more?</div>
@@ -381,6 +425,52 @@ deferredPrompt.userChoice.finally(function(){ deferredPrompt=null; installBtn.st
 });
 }
 window.addEventListener('appinstalled',function(){ if(installBtn) installBtn.style.display='none'; });
+
+// ===== ON-BOARD AI COACH — same worker as the landing page =====
+var COACH_API = "https://coach-tremayne-api.quantumflexpt.workers.dev";
+var DD_SYSTEM = "You are Coach TreMayne of Diesel & Discipline, a fitness coach for CDL truck drivers who drove the truck yourself. Give practical, motivating advice for life on the road: quick no-gym workouts a driver can do at a truck stop, smart truck-stop and fast-food eating, and DOT physical prep. Talk plain and direct like a driver, not a gym bro. Answer in 2-3 sentences. Never use markdown.";
+var CPLAY = {
+workout:"Quick one, no gear:\n1) 20 squats\n2) 15 incline push-ups on the tailgate\n3) 20 walking lunges around the truck\n4) 40-sec plank in the sleeper\nRun it twice. Done before the fuel's topped off.",
+food:"Truck-stop call: skip the fried case. Grilled or rotisserie chicken, a bag of cut veggies, unsalted nuts. Water or black coffee over soda. Late and hungry? Jerky + string cheese holds you.",
+dot:"Pre-DOT, three fast levers: cut the sugary drinks, walk 10 min every fuel stop, sleep on a real schedule in the sleeper. Three to four weeks of that and your numbers show up better."
+};
+var clog=document.getElementById('clog'), cinput=document.getElementById('cinput');
+function cadd(text,who){
+var d=document.createElement('div');
+d.className='cmsg '+(who==='me'?'me':'coach');
+d.innerHTML='<div class="cwho">'+(who==='me'?'You':'Coach TreMayne')+'</div><div class="cbub"></div>';
+d.querySelector('.cbub').textContent=text;
+clog.appendChild(d); clog.scrollTop=clog.scrollHeight;
+}
+function crouteMode(t){
+t=t.toLowerCase();
+if(/\b(eat|meal|food|hungry|snack|burger|breakfast|lunch|dinner|calorie|protein|drink)\b/.test(t))return'food';
+if(/\b(dot|physical|blood pressure|\bbp\b|medical card|exam|numbers)\b/.test(t))return'dot';
+return 'workout';
+}
+function cask(text){
+cadd(text,'me'); cinput.value='';
+var fb=CPLAY[crouteMode(text)];
+cadd('…','coach');
+var pending=clog.lastChild.querySelector('.cbub');
+fetch(COACH_API,{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({system:DD_SYSTEM,messages:[{role:'user',content:text}]})})
+.then(function(r){return r.json();})
+.then(function(data){
+var ans=data&&data.content&&data.content[0]&&data.content[0].text;
+pending.textContent=ans||fb;
+}).catch(function(){ pending.textContent=fb; });
+}
+document.getElementById('cmodes').addEventListener('click',function(e){
+var b=e.target.closest('.cmode'); if(!b)return;
+document.querySelectorAll('.cmode').forEach(function(m){m.classList.remove('active');});
+b.classList.add('active');
+cask({workout:'Give me a quick workout I can do right now at a truck stop.',
+food:'What should I eat at a truck stop today?',
+dot:'Help me get ready for my DOT physical.'}[b.dataset.cmode]);
+});
+document.getElementById('csend').addEventListener('click',function(){if(cinput.value.trim())cask(cinput.value.trim());});
+cinput.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&cinput.value.trim())cask(cinput.value.trim());});
 </script>
 </body>
 </html>
