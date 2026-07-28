@@ -1,0 +1,449 @@
+(no subject)
+Inbox
+
+Gabe Pillow <quantumflexpt@gmail.com>
+8:47 PM (0 minutes ago)
+to me
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diesel &amp; Discipline | Coach TreMayne | Fitness For CDL Drivers</title>
+<meta name="description" content="Built by a former driver. Truck-stop workouts, cab strength, and real nutrition for CDL truck drivers. Start the 4-week free program.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+DIESEL & DISCIPLINE — driver landing page
+CONFIG: set your live coaching worker endpoint below.
+Leave blank to run the built-in offline coach responses.
+============================================================ */
+:root{
+--ink:#0C0D0F;
+--steel:#15181C;
+--panel:#1B1F24;
+--amber:#FFB020;
+--amber-hot:#FF7A00;
+--chrome:#D6DBE1;
+--smoke:#7A828C;
+--line:rgba(255,255,255,.08);
+--redline:#E4453A;
+--maxw:1120px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+background:var(--ink);
+color:var(--chrome);
+font-family:"Inter",system-ui,sans-serif;
+line-height:1.6;
+-webkit-font-smoothing:antialiased;
+overflow-x:hidden;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+.mono{font-family:"Space Mono",monospace}
+.eyebrow{
+font-family:"Space Mono",monospace;
+font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+color:var(--amber);display:inline-flex;align-items:center;gap:10px;
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--amber)}
+h1,h2,h3{font-family:"Bricolage Grotesque",sans-serif;line-height:1.02;letter-spacing:-.01em}
+
+/* ---------- top bar ---------- */
+header.bar{
+position:sticky;top:0;z-index:50;
+background:rgba(12,13,15,.82);backdrop-filter:blur(10px);
+border-bottom:1px solid var(--line);
+}
+.bar-in{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:19px;letter-spacing:-.02em}
+.logo b{color:var(--amber)}
+.bar-cta{
+font-family:"Space Mono",monospace;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+border:1px solid var(--amber);color:var(--amber);padding:9px 16px;border-radius:2px;
+transition:.15s;
+}
+.bar-cta:hover{background:var(--amber);color:var(--ink)}
+@media(max-width:640px){.bar-cta{display:none}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;padding:76px 0 40px;overflow:hidden}
+.hero::before{ /* redline horizon */
+content:"";position:absolute;left:0;right:0;top:210px;height:1px;
+background:linear-gradient(90deg,transparent,var(--redline),transparent);opacity:.5;
+}
+.hero-grid{position:absolute;inset:0;
+background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+background-size:52px 52px;mask-image:radial-gradient(ellipse 80% 60% at 50% 20%,#000,transparent 75%);opacity:.5;
+}
+.hero-in{position:relative}
+.hero h1{
+font-weight:800;font-size:clamp(48px,10vw,116px);margin:20px 0 6px;text-transform:uppercase;
+color:#fff;
+}
+.hero h1 .amp{color:var(--amber);font-weight:600}
+.hero .sub{font-size:clamp(17px,2.4vw,22px);color:var(--chrome);max-width:560px;margin-top:14px}
+.hero .sub b{color:#fff;font-weight:600}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}
+.btn{
+display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:15px;
+padding:15px 26px;border-radius:2px;transition:.16s;font-family:"Inter",sans-serif;
+}
+.btn-solid{background:var(--amber);color:var(--ink)}
+.btn-solid:hover{background:#fff;transform:translateY(-2px)}
+.btn-ghost{border:1px solid var(--line);color:var(--chrome)}
+.btn-ghost:hover{border-color:var(--amber);color:#fff}
+
+/* ---------- gauge cluster ---------- */
+.cluster{
+display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+margin-top:56px;border:1px solid var(--line);background:var(--line);border-radius:4px;overflow:hidden;
+}
+.gauge{background:var(--steel);padding:26px 22px;position:relative}
+.gauge::after{content:"";position:absolute;top:14px;right:14px;width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.gauge .num{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(30px,5vw,46px);color:#fff;line-height:1}
+.gauge .lbl{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--smoke);margin-top:10px}
+@media(max-width:720px){.cluster{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------- sections ---------- */
+section{padding:88px 0}
+.sec-head{max-width:640px;margin-bottom:44px}
+.sec-head h2{font-weight:800;font-size:clamp(32px,5.5vw,54px);color:#fff;margin-top:16px;text-transform:uppercase}
+.sec-head p{color:var(--smoke);margin-top:14px;font-size:17px}
+
+/* offerings */
+.offers{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.offer{background:var(--steel);padding:34px 30px;transition:.18s}
+.offer:hover{background:var(--panel)}
+.offer .tag{font-family:"Space Mono",monospace;font-size:12px;color:var(--amber);letter-spacing:.14em}
+.offer h3{font-weight:600;font-size:23px;color:#fff;margin:12px 0 10px}
+.offer p{color:var(--smoke);font-size:15.5px}
+@media(max-width:720px){.offers{grid-template-columns:1fr}}
+
+/* program ladder — real sequence, so numbered */
+.ladder{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.rung{border:1px solid var(--line);border-radius:4px;padding:30px 26px;background:var(--steel);position:relative}
+.rung .mile{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.16em;color:var(--smoke)}
+.rung .price{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.14em;padding:4px 10px;border-radius:2px;display:inline-block;margin-top:14px}
+.free{background:rgba(255,176,32,.14);color:var(--amber);border:1px solid rgba(255,176,32,.4)}
+.paid{background:rgba(255,255,255,.05);color:var(--chrome);border:1px solid var(--line)}
+.rung h3{font-weight:800;font-size:27px;color:#fff;margin:16px 0 8px;text-transform:uppercase}
+.rung p{color:var(--smoke);font-size:15px}
+.rung.hot{border-color:rgba(255,176,32,.45)}
+@media(max-width:820px){.ladder{grid-template-columns:1fr}}
+
+/* ---------- coach terminal ---------- */
+.coach{background:var(--ink);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.term{
+max-width:760px;margin:0 auto;border:1px solid rgba(255,255,255,.14);border-radius:8px;overflow:hidden;
+background:var(--steel);box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+.term-top{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.term-top .dot{width:10px;height:10px;border-radius:50%;background:var(--redline)}
+.term-top .dot.on{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.term-top .title{font-family:"Space Mono",monospace;font-size:12.5px;letter-spacing:.14em;color:var(--smoke);text-transform:uppercase;margin-left:6px}
+.modes{display:flex;gap:8px;flex-wrap:wrap;padding:16px 18px 4px}
+.mode{
+font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.06em;
+border:1px solid var(--line);color:var(--chrome);background:transparent;
+padding:8px 13px;border-radius:2px;cursor:pointer;transition:.15s;
+}
+.mode:hover,.mode.active{border-color:var(--amber);color:var(--amber)}
+.log{padding:12px 18px 4px;min-height:210px;max-height:340px;overflow-y:auto}
+.msg{margin:12px 0;font-size:15px;max-width:88%}
+.msg .who{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);margin-bottom:4px}
+.msg.coach-msg .who{color:var(--amber)}
+.msg.you{margin-left:auto;text-align:right}
+.msg.you .bubble{background:var(--panel);display:inline-block;padding:10px 14px;border-radius:8px 8px 2px 8px;text-align:left}
+.msg.coach-msg .bubble{color:var(--chrome)}
+.row{display:flex;gap:10px;padding:14px 18px 18px;border-top:1px solid var(--line)}
+.row input{
+flex:1;background:var(--ink);border:1px solid var(--line);border-radius:3px;
+color:#fff;padding:13px 15px;font-family:"Inter",sans-serif;font-size:15px;
+}
+.row input:focus{outline:none;border-color:var(--amber)}
+.send{background:var(--amber);color:var(--ink);border:none;padding:0 20px;border-radius:3px;font-weight:700;cursor:pointer;font-family:"Space Mono",monospace;letter-spacing:.08em}
+.send:hover{background:#fff}
+
+/* ---------- final cta ---------- */
+.final{text-align:center}
+.final h2{font-weight:800;font-size:clamp(34px,6vw,62px);color:#fff;text-transform:uppercase}
+.final p{color:var(--smoke);max-width:560px;margin:18px auto 0;font-size:17px}
+.final .hero-cta{justify-content:center}
+.pay{margin-top:44px;display:inline-flex;gap:28px;flex-wrap:wrap;justify-content:center;
+font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.08em;color:var(--smoke)}
+.pay b{color:var(--amber)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:40px 0;background:var(--steel)}
+.foot-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px}
+.foot-links{display:flex;gap:22px;font-family:"Space Mono",monospace;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--smoke)}
+.foot-links a:hover{color:var(--amber)}
+.copy{font-family:"Space Mono",monospace;font-size:12px;color:var(--smoke)}
+
+@media(max-width:640px){
+section{padding:52px 0}
+.hero{padding:56px 0 28px}
+.cluster{margin-top:36px}
+.sec-head{margin-bottom:32px}
+.log{min-height:130px;max-height:300px}
+.term{max-width:100%}
+.msg{max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<header class="bar">
+<div class="wrap bar-in">
+<div class="logo">DIESEL <b>&amp;</b> DISCIPLINE</div>
+<a class="bar-cta" href="https://coachtremayneo7.github.io/dd-program.html" target="_blank" rel="noopener">Start Free →</a>
+</div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+<div class="hero-grid"></div>
+<div class="wrap hero-in">
+<span class="eyebrow">Built by a former CDL driver</span>
+<h1>Diesel <span class="amp">&amp;</span><br>Discipline</h1>
+<p class="sub">Get strong in the cab. Stay disciplined on the road. <b>No gym, no gear, no excuses</b> — just workouts and nutrition built for life behind the wheel.</p>
+<div class="hero-cta">
+<a class="btn btn-solid" href="https://coachtremayneo7.github.io/dd-program.html" target="_blank" rel="noopener">Start the free 4-week program</a>
+<a class="btn btn-ghost" href="https://instagram.com/tremaynepillow" target="_blank" rel="noopener">Prefer to DM? Send me "DRIVER"</a>
+</div>
+<p class="mono" style="margin-top:14px;font-size:12px;letter-spacing:.1em;color:var(--smoke)">↑ NO GYM. NO GEAR. STARTS FREE — RIGHT NOW.</p>
+
+<div class="cluster">
+<div class="gauge"><div class="num" data-count="4">0</div><div class="lbl">Weeks free to start</div></div>
+<div class="gauge"><div class="num" data-count="10">0</div><div class="lbl">Min per truck-stop set</div></div>
+<div class="gauge"><div class="num">$0</div><div class="lbl">Cost to start</div></div>
+<div class="gauge"><div class="num">24/7</div><div class="lbl">AI coach access</div></div>
+</div>
+</div>
+</section>
+
+<!-- OFFERS -->
+<section>
+<div class="wrap">
+<div class="sec-head">
+<span class="eyebrow">What you get</span>
+<h2>Built for the seat, not the gym</h2>
+<p>Every workout fits the space and time a driver actually has — the fuel island, the parking lot, the sleeper.</p>
+</div>
+<div class="offers">
+<div class="offer">
+<span class="tag">01 · TRAINING</span>
+<h3>Truck-stop workouts</h3>
+<p>10-minute circuits you can run at Pilot, Love's, or a rest area with zero equipment. Get in, get strong, get back on the road.</p>
+</div>
+<div class="offer">
+<span class="tag">02 · STRENGTH</span>
+<h3>Cab &amp; catwalk strength</h3>
+<p>Moves built around the space you've got — cab, catwalk, trailer, fuel island. Keep muscle on while the miles pile up.</p>
+</div>
+<div class="offer">
+<span class="tag">03 · NUTRITION</span>
+<h3>Truck-stop nutrition</h3>
+<p>How to eat at the diner, the Flying J, and the drive-thru without wrecking your progress. Real food, real choices, no meal prep.</p>
+</div>
+<div class="offer">
+<span class="tag">04 · HEALTH</span>
+<h3>DOT-physical ready</h3>
+<p>Get your numbers right — weight, blood pressure, energy — so recert isn't a scramble and you keep your CDL clean.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PROGRAM LADDER -->
+<section style="padding-top:0">
+<div class="wrap">
+<div class="sec-head">
+<span class="eyebrow">The route</span>
+<h2>12 weeks. Start free.</h2>
+<p>Four weeks free to build the habit. Eight paid to lock it in. You only keep going if it's working.</p>
+</div>
+<div class="ladder">
+<div class="rung hot">
+<div class="mile">MILE 01 · WEEKS 1–4</div>
+<span class="price free">FREE</span>
+<h3>The Reset</h3>
+<p>Build the habit. Movement that fits your route and your hours. Prove to yourself you can stay consistent on the road.</p>
+</div>
+<div class="rung">
+<div class="mile">MILE 02 · WEEKS 5–8</div>
+<span class="price paid">PAID</span>
+<h3>The Build</h3>
+<p>Add load and structure. We shape the week around your driving hours so training doesn't fight your logbook.</p>
+</div>
+<div class="rung">
+<div class="mile">MILE 03 · WEEKS 9–12</div>
+<span class="price paid">PAID</span>
+<h3>The Discipline</h3>
+<p>Lock it in so it holds when the miles get long and the schedule gets ugly. This is where it becomes who you are.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- COACH TERMINAL -->
+<section class="coach" id="coach">
+<div class="wrap">
+<div class="sec-head" style="margin:0 auto 40px;text-align:center;max-width:560px">
+<span class="eyebrow" style="justify-content:center">AI-powered · Driver-tuned</span>
+<h2>Ask Coach — onboard</h2>
+<p>Instant workouts, truck-stop meal calls, and straight answers — powered by AI, run on Coach TreMayne's playbook.</p>
+</div>
+<div class="term">
+<div class="term-top">
+<span class="dot on"></span><span class="dot"></span><span class="dot"></span>
+<span class="title">DD-COACH // CHANNEL 19</span>
+</div>
+<div class="modes" id="modes">
+<button class="mode active" data-mode="workout">🏋️ Quick workout</button>
+<button class="mode" data-mode="food">🥗 Truck-stop meal</button>
+<button class="mode" data-mode="dot">🩺 DOT physical</button>
+<button class="mode" data-mode="start">⭐ Start free</button>
+</div>
+<div class="log" id="log">
+<div class="msg coach-msg">
+<div class="who">Coach TreMayne</div>
+<div class="bubble">10-4, driver. I'm Coach TreMayne — used to run the same roads you're on. Pick a mode up top or type your question. Tight on space, short on time? That's exactly what this is built for. 💪</div>
+</div>
+</div>
+<div class="row">
+<input id="input" type="text" placeholder="Type it here — e.g. 10-min workout at a rest stop" aria-label="Message Coach">
+<button class="send" id="send">SEND</button>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final" id="start">
+<div class="wrap">
+<span class="eyebrow" style="justify-content:center">No excuses</span>
+<h2>Start the free<br>4-week program</h2>
+<p>You don't need a gym, a coach next to you, or a single day off the road. You need a plan that fits the seat. Let's build it.</p>
+<div class="hero-cta">
+<a class="btn btn-solid" href="https://coachtremayneo7.github.io/dd-program.html" target="_blank" rel="noopener">Start the free 4-week program</a>
+<a class="btn btn-ghost" href="https://instagram.com/tremaynepillow" target="_blank" rel="noopener">Prefer to DM? Send me "DRIVER"</a>
+</div>
+<div class="pay">
+<span>Payments · <b>Cash App</b> $CoachTreMayne</span>
+<span><b>Venmo</b> @CoachTreMayne</span>
+</div>
+</div>
+</section>
+
+<footer>
+<div class="wrap foot-in">
+<div class="logo">DIESEL <b>&amp;</b> DISCIPLINE</div>
+<div class="foot-links">
+<a href="https://instagram.com/tremaynepillow" target="_blank" rel="noopener">DM DRIVER</a>
+<a href="https://linktr.ee/CoachTreMayne" target="_blank" rel="noopener">Linktree</a>
+<a href="#coach">Ask Coach</a>
+</div>
+<div class="copy">© 2026 Coach TreMayne · Diesel &amp; Discipline</div>
+</div>
+</footer>
+
+<script>
+/* ===========================================================
+CONFIG — point this at your live coaching Cloudflare Worker.
+Leave "" to use the built-in offline coach responses below.
+=========================================================== */
+// 👇 PASTE YOUR LIVE COACH WORKER URL BETWEEN THE QUOTES. This is the ONLY thing
+// that makes the coach answer real questions. Blank = canned offline answers.
+const API_ENDPOINT = "https://coach-tremayne-api.quantumflexpt.workers.dev";
+
+// odometer count-up on the gauges
+const io = new IntersectionObserver((entries)=>{
+entries.forEach(e=>{
+if(!e.isIntersecting) return;
+const el = e.target, target = +el.dataset.count;
+let n = 0; const step = Math.max(1, Math.round(target/24));
+const t = setInterval(()=>{ n+=step; if(n>=target){n=target;clearInterval(t);} el.textContent=n; },28);
+io.unobserve(el);
+});
+},{threshold:.6});
+document.querySelectorAll('.gauge .num[data-count]').forEach(el=>io.observe(el));
+
+// offline coach playbook (fires when no API_ENDPOINT set or the call fails)
+const PLAYBOOK = {
+workout:"Here's a 10-minute rest-stop circuit, no gear:\n1) 20 bodyweight squats\n2) 15 incline push-ups (hands on the bumper)\n3) 20 walking lunges around the truck\n4) 30-sec catwalk step-ups each leg\n5) 40-sec plank in the sleeper\nRun it 2x. Done before your fuel finishes pumping.",
+food:"Truck-stop meal call: skip the fried case. Grab a rotisserie or grilled chicken, a bag of pre-cut veggies, and unsalted nuts. Water or black coffee over soda/energy drinks. Hungry late? Beef jerky + string cheese holds you without the crash.",
+dot:"DOT physical coming up? Three levers that move fast: cut the sugary drinks (blood pressure + weight), walk 10 min every fuel stop, and sleep on a real schedule in the sleeper. Do that 3–4 weeks out and your numbers show up better. Want a full pre-DOT plan? Tap Start free.",
+start:"Let's roll. The first 4 weeks are free — built for drivers, no gym, no gear. Easiest way in: DM me the word DRIVER on Instagram (@tremaynepillow) and I'll start you today. 10-4?"
+};
+
+const log = document.getElementById('log');
+const input = document.getElementById('input');
+let mode = 'workout';
+
+function add(text, who){
+const wrap = document.createElement('div');
+wrap.className = 'msg ' + (who==='you'?'you':'coach-msg');
+wrap.innerHTML = '<div class="who">'+(who==='you'?'You':'Coach TreMayne')+'</div><div class="bubble"></div>';
+wrap.querySelector('.bubble').textContent = text;
+log.appendChild(wrap);
+log.scrollTop = log.scrollHeight;
+}
+
+// route a free-typed question to the closest offline blurb (fallback only)
+function routeMode(text){
+const t = text.toLowerCase();
+if(/\b(eat|meal|food|hungry|snack|wendy|mcdonald|burger|breakfast|lunch|dinner|calorie|protein|drink)\b/.test(t)) return 'food';
+if(/\b(dot|physical|blood pressure|\bbp\b|medical card|exam|numbers)\b/.test(t)) return 'dot';
+if(/\b(start|begin|sign ?up|join|free program|enroll)\b/.test(t)) return 'start';
+if(/\b(workout|exercise|train|push|squat|lunge|plank|move|sore|muscle|circuit|stretch)\b/.test(t)) return 'workout';
+return mode; // fall back to last-selected mode
+}
+
+// trucker-voice system prompt sent to the shared coach worker
+const DD_SYSTEM = "You are Coach TreMayne of Diesel & Discipline, a fitness coach for CDL truck drivers who drove the truck yourself. Give practical, motivating advice for life on the road: quick no-gym workouts a driver can do at a truck stop, smart truck-stop and fast-food eating, and DOT physical prep. Talk plain and direct like a driver, not a gym bro. Answer in 2-3 sentences. Never use markdown. When it fits naturally, add a short nudge that the first 4 weeks are free to start (DM DRIVER on Instagram @tremaynepillow) — do not pitch on every reply.";
+
+async function ask(text){
+add(text,'you');
+input.value='';
+const fallback = PLAYBOOK[routeMode(text)];
+if(API_ENDPOINT){
+add('…','coach');
+const pending = log.lastChild.querySelector('.bubble');
+try{
+const r = await fetch(API_ENDPOINT,{
+method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({ system: DD_SYSTEM, messages:[{role:'user',content:text}] })
+});
+const data = await r.json();
+const answer = data && data.content && data.content[0] && data.content[0].text;
+pending.textContent = answer || fallback;
+}catch(err){ pending.textContent = fallback; }
+} else {
+setTimeout(()=>add(fallback,'coach'),350);
+}
+}
+
+document.getElementById('modes').addEventListener('click',(e)=>{
+const b = e.target.closest('.mode'); if(!b) return;
+document.querySelectorAll('.mode').forEach(m=>m.classList.remove('active'));
+b.classList.add('active'); mode = b.dataset.mode;
+ask({workout:'Give me a 10-minute workout I can do right now at a truck stop.',
+food:'What should I eat at a truck stop today?',
+dot:'Help me get ready for my DOT physical.',
+start:"I'm ready to start the free 4 weeks — what's my first step?"}[mode]);
+});
+document.getElementById('send').addEventListener('click',()=>{ if(input.value.trim()) ask(input.value.trim()); });
+input.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&input.value.trim()) ask(input.value.trim()); });
+</script>
+</body>
+</html>
+
