@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="theme-color" content="#0d0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach TreMayne">
+<title>The Reset — Free 4-Week Program · Coach TreMayne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow+Condensed:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+--ink:#0d0f12;--panel:#15181d;--panel-2:#1c2027;--line:#2a2f38;
+--accent:#37c46b;--accent-dim:#2a9955;--accent-glow:rgba(55,196,107,.14);
+--steel:#8a94a3;--steel-dim:#5b636f;--white:#f2f0eb;--gold:#ffab2e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{background:var(--ink);color:var(--white);
+font-family:'Barlow Condensed',system-ui,sans-serif;line-height:1.4;
+padding:0 0 env(safe-area-inset-bottom);
+background-image:
+radial-gradient(120% 55% at 50% -10%, rgba(55,196,107,.08), transparent 60%),
+repeating-linear-gradient(0deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px);
+min-height:100vh}
+.wrap{max-width:540px;margin:0 auto;padding:0 16px}
+
+header{padding:30px 0 6px;text-align:center}
+.stencil{font-family:'Oswald';font-weight:700;letter-spacing:.05em;
+font-size:clamp(30px,9vw,44px);text-transform:uppercase;line-height:.98}
+.stencil .amp{color:var(--accent);font-weight:600}
+.tagline{font-family:'Oswald';font-weight:500;color:var(--accent);
+text-transform:uppercase;letter-spacing:.04em;font-size:clamp(16px,4.5vw,20px);margin-top:10px}
+.sub{color:var(--steel);font-size:15.5px;margin-top:8px;line-height:1.45}
+.rule{height:2px;margin:18px 0 6px;
+background:linear-gradient(90deg,transparent,var(--accent-dim),transparent);opacity:.6}
+
+/* gate */
+.gate{background:var(--panel-2);border:1px solid var(--accent-dim);border-radius:14px;
+padding:20px 18px;margin:20px 0}
+.gate-h{font-family:'Oswald';font-weight:600;text-transform:uppercase;letter-spacing:.03em;
+font-size:20px;text-align:center;margin-bottom:6px}
+.gate-p{color:var(--steel);font-size:14.5px;text-align:center;margin-bottom:16px}
+.gate label{font-family:'Share Tech Mono';font-size:9.5px;letter-spacing:.14em;
+text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.gate input{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;
+color:var(--white);font-family:'Barlow Condensed';font-size:16.5px;padding:12px 13px;margin-bottom:12px}
+.gate input:focus{outline:none;border-color:var(--accent)}
+.gate button{width:100%;background:var(--accent);border:none;border-radius:10px;color:var(--ink);
+font-family:'Oswald';font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+font-size:17px;padding:14px;cursor:pointer;transition:filter .15s}
+.gate button:active{filter:brightness(.9)}
+.gate button:disabled{opacity:.6}
+.gate-fine{font-family:'Share Tech Mono';font-size:10px;color:var(--steel-dim);
+letter-spacing:.05em;text-align:center;margin-top:12px;line-height:1.6}
+.err{color:#ff6b6b;font-size:13.5px;text-align:center;margin-top:8px;display:none}
+
+/* unlocked content */
+#program{display:none}
+#program.open{display:block;animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.welcome{background:var(--accent-glow);border:1px solid var(--accent-dim);border-radius:12px;
+padding:14px 16px;margin:6px 0 18px;text-align:center}
+.welcome b{color:var(--accent)}
+.welcome p{color:var(--white);font-size:15px}
+.welcome span{color:var(--steel);font-size:13.5px;display:block;margin-top:4px}
+
+/* goal toggle */
+.goalpick{margin:6px 0 18px}
+.goalpick-h{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.2em;
+color:var(--steel-dim);text-transform:uppercase;margin:0 4px 10px;text-align:center}
+.goals{display:flex;gap:10px}
+.goal{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+padding:16px 10px;cursor:pointer;text-align:center;transition:.15s;color:inherit;font-family:inherit}
+.goal:active{filter:brightness(1.1)}
+.goal.on{border-color:var(--accent);background:var(--panel-2);box-shadow:0 0 0 1px var(--accent) inset}
+.goal .gi{font-size:24px;line-height:1}
+.goal .gt{font-family:'Oswald';font-weight:600;text-transform:uppercase;letter-spacing:.03em;
+font-size:16px;margin-top:6px}
+.goal .gd{color:var(--steel);font-size:12.5px;margin-top:3px}
+.goal.on .gt{color:var(--accent)}
+
+.track{display:none}
+.track.show{display:block;animation:fade .3s ease}
+
+.save{background:var(--panel);border:1px dashed var(--accent-dim);border-radius:12px;
+padding:14px 16px;margin-bottom:16px}
+.save-h{font-family:'Oswald';text-transform:uppercase;letter-spacing:.03em;font-size:15px;
+color:var(--accent);margin-bottom:7px}
+.save p{color:var(--steel);font-size:14px;line-height:1.5}
+.save p b{color:var(--white)}
+.save .ios{margin-top:4px}
+
+.how{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;margin-bottom:14px}
+.how-h{font-family:'Oswald';text-transform:uppercase;letter-spacing:.04em;font-size:16px;color:var(--accent);margin-bottom:8px}
+.how p{color:var(--steel);font-size:15px}
+.how p+p{margin-top:6px}
+.how b{color:var(--white)}
+
+.daily{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+border-left:4px solid var(--gold);padding:14px 16px;margin-bottom:18px}
+.daily-h{font-family:'Oswald';text-transform:uppercase;letter-spacing:.04em;font-size:15px;color:var(--gold);margin-bottom:8px}
+.daily ul{list-style:none;color:var(--white);font-size:15px}
+.daily li{padding:4px 0;padding-left:18px;position:relative}
+.daily li::before{content:"›";position:absolute;left:2px;color:var(--gold)}
+
+.safety{color:var(--steel-dim);font-size:12.5px;line-height:1.5;
+border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:18px}
+.safety b{color:var(--steel)}
+
+.sec-label{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.2em;
+color:var(--steel-dim);text-transform:uppercase;margin:8px 4px 12px}
+
+/* week accordions */
+.week{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+margin-bottom:12px;overflow:hidden;position:relative}
+.week::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent-dim)}
+.week.peak::before{background:var(--gold)}
+.whead{width:100%;background:none;border:none;color:inherit;text-align:left;cursor:pointer;
+padding:16px 15px 16px 19px;display:flex;align-items:center;gap:12px;font-family:inherit}
+.whead:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.wtag{font-family:'Share Tech Mono';font-size:12px;color:var(--ink);background:var(--accent-dim);
+border-radius:5px;padding:5px 8px;flex-shrink:0}
+.week.peak .wtag{background:var(--gold)}
+.wmain{flex:1;min-width:0}
+.wname{font-family:'Oswald';font-weight:600;text-transform:uppercase;letter-spacing:.03em;font-size:18px;line-height:1.05}
+.wsub{color:var(--steel);font-size:13.5px;margin-top:3px}
+.chev{flex-shrink:0;width:20px;color:var(--accent-dim);transition:transform .28s;text-align:center}
+.week.open .chev{transform:rotate(180deg)}
+.wbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s ease}
+.wbody-in{overflow:hidden}
+.wbody-pad{padding:2px 16px 16px 19px}
+.sess{margin-bottom:14px}
+.sess:last-child{margin-bottom:2px}
+.sess-h{font-family:'Oswald';font-weight:600;text-transform:uppercase;letter-spacing:.03em;
+font-size:14.5px;color:var(--accent);margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+.ex{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:15px}
+.ex .n{color:var(--white)}
+.ex .s{font-family:'Share Tech Mono';color:var(--steel);font-size:13.5px;flex-shrink:0}
+.wnote{color:var(--steel);font-size:13.5px;margin-top:10px;font-style:italic}
+
+/* coach */
+.coachbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:6px 0 18px}
+.coachbox-top{display:flex;align-items:center;gap:8px;padding:13px 15px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.cdot{width:9px;height:9px;border-radius:50%;background:var(--steel-dim)}
+.cdot.on{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.coachbox-title{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-left:5px}
+.cmodes{display:flex;gap:7px;flex-wrap:wrap;padding:13px 14px 3px}
+.cmode{font-family:'Share Tech Mono';font-size:12px;letter-spacing:.03em;border:1px solid var(--line);color:var(--white);background:transparent;padding:8px 11px;border-radius:7px;cursor:pointer;transition:.15s}
+.cmode:hover,.cmode.active{border-color:var(--accent);color:var(--accent)}
+.clog{padding:11px 15px 3px;max-height:340px;overflow-y:auto}
+.cmsg{margin:11px 0;font-size:15px;max-width:90%}
+.cmsg .cwho{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-dim);margin-bottom:4px}
+.cmsg.coach .cwho{color:var(--accent)}
+.cmsg.me{margin-left:auto;text-align:right}
+.cmsg.me .cbub{background:var(--panel-2);display:inline-block;padding:9px 13px;border-radius:9px 9px 2px 9px;text-align:left;color:var(--white)}
+.cmsg.coach .cbub{color:var(--white);white-space:pre-line}
+.crow{display:flex;gap:9px;padding:13px 15px;border-top:1px solid var(--line)}
+.crow input{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:8px;color:var(--white);font-family:'Barlow Condensed';font-size:16px;padding:11px 13px}
+.crow input:focus{outline:none;border-color:var(--accent)}
+.csend{background:var(--accent);color:var(--ink);border:none;padding:0 17px;border-radius:8px;font-family:'Oswald';font-weight:700;letter-spacing:.04em;cursor:pointer;font-size:14px}
+.csend:active{filter:brightness(.9)}
+
+/* upsell */
+.next{background:linear-gradient(160deg,var(--panel-2),var(--panel));
+border:1px solid var(--accent-dim);border-radius:16px;padding:22px 18px;margin:22px 0 10px;text-align:center}
+.next-k{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:8px}
+.next-h{font-family:'Oswald';font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:24px;line-height:1.05;margin-bottom:10px}
+.next-p{color:var(--steel);font-size:15.5px;margin-bottom:18px;line-height:1.45}
+.next-p b{color:var(--white)}
+.cta{display:block;background:var(--accent);color:var(--ink);text-decoration:none;
+font-family:'Oswald';font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+font-size:17px;padding:15px;border-radius:11px;margin-bottom:10px}
+.cta.ghost{background:none;border:1px solid var(--accent-dim);color:var(--accent)}
+
+footer{text-align:center;padding:26px 0 34px}
+footer .fl{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.14em;color:var(--steel-dim);text-transform:uppercase}
+footer a{color:var(--accent-dim);text-decoration:none}
+footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;color:var(--steel-dim);margin-top:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+<div class="stencil">The <span class="amp">Reset</span></div>
+<div class="tagline">Free 4-Week Program</div>
+<div class="sub">Lose fat or build muscle — pick your goal and get a simple, real plan you can run at home or the gym. No fluff, no crash nonsense. Just the work that moves the needle.</div>
+<div class="rule"></div>
+</header>
+
+<!-- EMAIL GATE -->
+<div class="gate" id="gate">
+<div class="gate-h">Unlock the program</div>
+<div class="gate-p">Drop your name + email and the full 4-week plan opens below. I'll send a copy to your inbox too, so it's always with you.</div>
+<label>First name</label>
+<input id="fname" type="text" autocomplete="given-name" placeholder="Your name">
+<label>Email</label>
+<input id="email" type="email" autocomplete="email" inputmode="email" placeholder="you@email.com">
+<button id="unlock">Unlock my program →</button>
+<div class="err" id="err">Enter a valid email to unlock.</div>
+<div class="gate-fine">No spam. Just the program + straight-up training tips. Unsubscribe anytime.</div>
+</div>
+
+<!-- UNLOCKED PROGRAM -->
+<div id="program">
+
+<div class="welcome">
+<p>You're in, <b><span id="whoName">let's work</span></b>. 💪</p>
+<span>Pick your goal below and your 4 weeks open up. Check your email for a copy too.</span>
+</div>
+
+<!-- GOAL PICKER -->
+<div class="goalpick">
+<div class="goalpick-h">Start here — what's the goal?</div>
+<div class="goals" id="goals">
+<button class="goal" data-goal="fatloss"><div class="gi">🔥</div><div class="gt">Lose fat</div><div class="gd">Lean out, keep strength</div></button>
+<button class="goal" data-goal="muscle"><div class="gi">💪</div><div class="gt">Build muscle</div><div class="gd">Add size &amp; strength</div></button>
+</div>
+</div>
+
+<div class="save">
+<div class="save-h">📲 Keep it on your phone</div>
+<p>Save this like an app so it's one tap away:</p>
+<p class="ios"><b>iPhone:</b> tap Share <span style="font-family:monospace">⬆️</span> → <b>Add to Home Screen</b>.</p>
+<p><b>Android:</b> tap the <b>⋮</b> menu → <b>Add to Home screen</b>.</p>
+</div>
+
+<!-- ============ FAT LOSS TRACK ============ -->
+<div class="track" id="track-fatloss">
+
+<div class="how">
+<div class="how-h">How it runs</div>
+<p><b>3 sessions a week</b>, ~30 minutes each — full-body strength plus a short conditioning finisher. The strength work is what keeps your muscle while the fat comes off.</p>
+<p><b>Gear:</b> a pair of dumbbells (or a resistance band) covers it. No dumbbells? Every move has a bodyweight version — just do the reps slow.</p>
+<p><b>Every day:</b> the daily habit below. Fat loss is won outside the workout as much as in it.</p>
+</div>
+
+<div class="daily">
+<div class="daily-h">⚡ Daily — the base</div>
+<ul>
+<li>Get your steps — aim for a daily walk, and a 10-minute one after your biggest meal</li>
+<li>Protein with every meal — it keeps you full and protects muscle</li>
+<li>Fill half your plate with veggies before anything else</li>
+<li>7–8 hours sleep — short sleep sabotages fat loss</li>
+</ul>
+</div>
+
+<div class="safety">
+<b>Before you start:</b> this is general fitness info, not medical or nutrition advice, and it's not a substitute for personalized care. Train within your ability, warm up, and stop if anything hurts — sharp pain is a stop sign. Aim for steady, sustainable change, not extreme restriction. If you have a health condition, an injury, are pregnant, or it's been a while, check with your doctor first.
+</div>
+
+<div class="sec-label">The 4-week build — tap a week</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 1</span>
+<div class="wmain"><div class="wname">Foundation</div><div class="wsub">Learn the moves. Build the habit.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Session A · Full Body</div>
+<div class="ex"><span class="n">Goblet squat (DB or bodyweight)</span><span class="s">3 × 12</span></div>
+<div class="ex"><span class="n">Push-ups (incline if needed)</span><span class="s">3 × 10</span></div>
+<div class="ex"><span class="n">One-arm DB row (or band row)</span><span class="s">3 × 12 / side</span></div>
+<div class="ex"><span class="n">Glute bridge</span><span class="s">3 × 15</span></div>
+<div class="ex"><span class="n">Plank</span><span class="s">3 × 30 sec</span></div>
+</div>
+<div class="sess"><div class="sess-h">Session B · Full Body</div>
+<div class="ex"><span class="n">Reverse lunge</span><span class="s">3 × 10 / leg</span></div>
+<div class="ex"><span class="n">DB shoulder press (or pike push-up)</span><span class="s">3 × 10</span></div>
+<div class="ex"><span class="n">Bent-over row (DB or band)</span><span class="s">3 × 12</span></div>
+<div class="ex"><span class="n">Hip hinge / DB Romanian deadlift</span><span class="s">3 × 12</span></div>
+<div class="ex"><span class="n">Dead bug</span><span class="s">3 × 8 / side</span></div>
+</div>
+<div class="sess"><div class="sess-h">Session C · Strength + Conditioning</div>
+<div class="ex"><span class="n">Circuit ×3 — rest 60 sec between rounds:</span><span class="s"></span></div>
+<div class="ex"><span class="n">Bodyweight squats</span><span class="s">15</span></div>
+<div class="ex"><span class="n">Push-ups</span><span class="s">10</span></div>
+<div class="ex"><span class="n">DB / KB swings (or fast glute bridge)</span><span class="s">15</span></div>
+<div class="ex"><span class="n">Mountain climbers</span><span class="s">20</span></div>
+<div class="ex"><span class="n">March or jog in place</span><span class="s">45 sec</span></div>
+</div>
+<div class="wnote">Rest a day between sessions. Clean reps, not ego reps — this week is about the habit locking in.</div>
+</div></div></div>
+</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 2</span>
+<div class="wmain"><div class="wname">Build</div><div class="wsub">Same moves, more work.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Run the same 3 sessions — with these bumps:</div>
+<div class="ex"><span class="n">Add one set to the first move of each session</span><span class="s">+1 set</span></div>
+<div class="ex"><span class="n">Lower slow — 3 seconds down on every rep</span><span class="s">tempo</span></div>
+<div class="ex"><span class="n">Session C circuit: cut rest to 45 sec</span><span class="s">harder</span></div>
+<div class="ex"><span class="n">Planks: add 10 seconds</span><span class="s">+time</span></div>
+</div>
+<div class="wnote">Same food habits, held steady. This is where the scale and the mirror start to move.</div>
+</div></div></div>
+</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 3</span>
+<div class="wmain"><div class="wname">Intensity</div><div class="wsub">Supersets + a real finisher.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Level up sessions A &amp; B:</div>
+<div class="ex"><span class="n">Pair moves back-to-back (squat → push, row → lunge)</span><span class="s">supersets</span></div>
+<div class="ex"><span class="n">Add a set to the two main lifts</span><span class="s">+1 set</span></div>
+<div class="ex"><span class="n">Harder push-up variation (lower the surface)</span><span class="s">harder</span></div>
+</div>
+<div class="sess"><div class="sess-h">Finisher (end of each session)</div>
+<div class="ex"><span class="n">Walk / run intervals — hard, then easy</span><span class="s">6 × 20s/40s</span></div>
+<div class="ex"><span class="n">— OR — fast DB swings</span><span class="s">3 × 15</span></div>
+</div>
+<div class="wnote">You'll feel fitter than week 1 — that's the fat-burning engine getting bigger.</div>
+</div></div></div>
+</div>
+
+<div class="week peak" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 4</span>
+<div class="wmain"><div class="wname">Peak</div><div class="wsub">Hardest week. Then measure it.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Peak the 3 sessions:</div>
+<div class="ex"><span class="n">Main moves</span><span class="s">4 sets</span></div>
+<div class="ex"><span class="n">Hardest variation you can do clean</span><span class="s">quality</span></div>
+<div class="ex"><span class="n">Finisher every session</span><span class="s">push it</span></div>
+<div class="ex"><span class="n">Circuit rest cut to 30 sec</span><span class="s">density</span></div>
+</div>
+<div class="sess"><div class="sess-h">End of Week 4 — check yourself</div>
+<div class="ex"><span class="n">Time a plank. Count max push-ups.</span><span class="s">retest</span></div>
+<div class="ex"><span class="n">Same photo, same mirror as day 1</span><span class="s">proof</span></div>
+</div>
+<div class="wnote">Four weeks of showing up. That's the base. Now we decide how far you take it.</div>
+</div></div></div>
+</div>
+
+</div><!-- /fatloss -->
+
+<!-- ============ MUSCLE GAIN TRACK ============ -->
+<div class="track" id="track-muscle">
+
+<div class="how">
+<div class="how-h">How it runs</div>
+<p><b>4 sessions a week</b> — Upper, Lower, Upper, Lower. ~40 minutes each. This split hits every muscle twice a week, which is where growth comes from.</p>
+<p><b>Gear:</b> dumbbells and a bench (or gym access) is ideal. Home with just bands? Every move has a swap — the key is pushing close to failure.</p>
+<p><b>Every day:</b> the daily habit below. You don't grow in the gym — you grow eating and sleeping after it.</p>
+</div>
+
+<div class="daily">
+<div class="daily-h">⚡ Daily — the base</div>
+<ul>
+<li>Protein with every meal — it's the raw material for muscle</li>
+<li>Eat enough — building needs fuel, don't train hungry</li>
+<li>7–8 hours sleep — this is when the muscle actually gets built</li>
+<li>Add a little weight or a rep whenever a set feels easy — that's the whole game</li>
+</ul>
+</div>
+
+<div class="safety">
+<b>Before you start:</b> this is general fitness info, not medical or nutrition advice, and it's not a substitute for personalized care. Warm up, keep good form, and stop if anything hurts — sharp pain is a stop sign. If you have a health condition, an injury, or it's been a while, check with your doctor first.
+</div>
+
+<div class="sec-label">The 4-week build — tap a week</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 1</span>
+<div class="wmain"><div class="wname">Foundation</div><div class="wsub">Groove the lifts. Set your weights.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Day 1 · Upper</div>
+<div class="ex"><span class="n">DB bench press (or push-ups)</span><span class="s">4 × 8–10</span></div>
+<div class="ex"><span class="n">One-arm DB row</span><span class="s">4 × 10 / side</span></div>
+<div class="ex"><span class="n">DB shoulder press</span><span class="s">3 × 10</span></div>
+<div class="ex"><span class="n">Band or DB pullover / pulldown</span><span class="s">3 × 12</span></div>
+<div class="ex"><span class="n">DB curl</span><span class="s">3 × 12</span></div>
+<div class="ex"><span class="n">Triceps extension or dips</span><span class="s">3 × 12</span></div>
+</div>
+<div class="sess"><div class="sess-h">Day 2 · Lower</div>
+<div class="ex"><span class="n">Goblet / DB squat</span><span class="s">4 × 10</span></div>
+<div class="ex"><span class="n">DB Romanian deadlift</span><span class="s">4 × 10</span></div>
+<div class="ex"><span class="n">Reverse lunge</span><span class="s">3 × 10 / leg</span></div>
+<div class="ex"><span class="n">Standing calf raise</span><span class="s">3 × 15</span></div>
+<div class="ex"><span class="n">Plank</span><span class="s">3 × 40 sec</span></div>
+</div>
+<div class="sess"><div class="sess-h">Day 3 · Upper (variation)</div>
+<div class="ex"><span class="n">Incline DB press (or decline push-up)</span><span class="s">4 × 10</span></div>
+<div class="ex"><span class="n">Chest-supported / DB row</span><span class="s">4 × 10</span></div>
+<div class="ex"><span class="n">Lateral raise</span><span class="s">3 × 15</span></div>
+<div class="ex"><span class="n">Band pull-apart / face pull</span><span class="s">3 × 15</span></div>
+<div class="ex"><span class="n">Hammer curl</span><span class="s">3 × 12</span></div>
+<div class="ex"><span class="n">Overhead triceps</span><span class="s">3 × 12</span></div>
+</div>
+<div class="sess"><div class="sess-h">Day 4 · Lower (variation)</div>
+<div class="ex"><span class="n">DB deadlift</span><span class="s">4 × 8</span></div>
+<div class="ex"><span class="n">Bulgarian split squat</span><span class="s">3 × 8 / leg</span></div>
+<div class="ex"><span class="n">DB step-ups</span><span class="s">3 × 10 / leg</span></div>
+<div class="ex"><span class="n">Seated / standing calf raise</span><span class="s">3 × 20</span></div>
+<div class="ex"><span class="n">Dead bug</span><span class="s">3 × 10 / side</span></div>
+</div>
+<div class="wnote">Pick weights where the last 2 reps are hard but clean. Write them down — next week you beat them.</div>
+</div></div></div>
+</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 2</span>
+<div class="wmain"><div class="wname">Build</div><div class="wsub">Beat last week.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Same 4 days — progress them:</div>
+<div class="ex"><span class="n">Add a rep or two to every set you can</span><span class="s">+reps</span></div>
+<div class="ex"><span class="n">Hit the top of a rep range? Add weight next set</span><span class="s">+load</span></div>
+<div class="ex"><span class="n">Control the lowering — 2–3 sec down</span><span class="s">tempo</span></div>
+</div>
+<div class="wnote">Progressive overload is the whole point. A little more than last week, every week.</div>
+</div></div></div>
+</div>
+
+<div class="week" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 3</span>
+<div class="wmain"><div class="wname">Intensity</div><div class="wsub">More volume where it counts.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Level up the 4 days:</div>
+<div class="ex"><span class="n">Add one set to your first two lifts each day</span><span class="s">+1 set</span></div>
+<div class="ex"><span class="n">Last set of each lift — push to 1–2 reps from failure</span><span class="s">effort</span></div>
+<div class="ex"><span class="n">Keep beating your logged numbers</span><span class="s">+load</span></div>
+</div>
+<div class="wnote">More total work drives growth — as long as your form holds and you're recovering.</div>
+</div></div></div>
+</div>
+
+<div class="week peak" data-week>
+<button class="whead" aria-expanded="false"><span class="wtag">WK 4</span>
+<div class="wmain"><div class="wname">Peak</div><div class="wsub">Top it out, then measure.</div></div>
+<span class="chev">▾</span></button>
+<div class="wbody"><div class="wbody-in"><div class="wbody-pad">
+<div class="sess"><div class="sess-h">Peak the 4 days:</div>
+<div class="ex"><span class="n">Heaviest weight you can move clean on main lifts</span><span class="s">top set</span></div>
+<div class="ex"><span class="n">Full effort on every working set</span><span class="s">push it</span></div>
+<div class="ex"><span class="n">Then plan an easier week to recover before you repeat</span><span class="s">deload</span></div>
+</div>
+<div class="sess"><div class="sess-h">End of Week 4 — check yourself</div>
+<div class="ex"><span class="n">Compare your logbook to Week 1</span><span class="s">retest</span></div>
+<div class="ex"><span class="n">Same photo, same lighting as day 1</span><span class="s">proof</span></div>
+</div>
+<div class="wnote">Stronger numbers on the page and more you in the mirror. That's four weeks done right.</div>
+</div></div></div>
+</div>
+
+</div><!-- /muscle -->
+
+<!-- COACH (shared) -->
+<div id="coachwrap" style="display:none">
+<div class="sec-label">Your coach — ask anything</div>
+<div class="coachbox">
+<div class="coachbox-top">
+<span class="cdot on"></span><span class="cdot"></span><span class="cdot"></span>
+<span class="coachbox-title">COACH TREMAYNE // ONLINE</span>
+</div>
+<div class="cmodes" id="cmodes">
+<button class="cmode active" data-cmode="workout">🏋️ Quick workout</button>
+<button class="cmode" data-cmode="food">🍽️ Eating for my goal</button>
+<button class="cmode" data-cmode="form">📋 Swap a move</button>
+</div>
+<div class="clog" id="clog">
+<div class="cmsg coach"><div class="cwho">Coach TreMayne</div>
+<div class="cbub">Good to have you. You've got the program — I'm here for everything around it. Need a quick session, a straight answer on eating, or a swap for a move that bugs a joint? Tap a button or just type it. 💪</div></div>
+</div>
+<div class="crow">
+<input id="cinput" type="text" placeholder="Ask it — e.g. no dumbbells today, what do I do?" aria-label="Ask Coach">
+<button class="csend" id="csend">SEND</button>
+</div>
+</div>
+</div>
+
+<!-- UPSELL -->
+<div class="next">
+<div class="next-k">Want it built around you?</div>
+<div class="next-h">This is the starting line.</div>
+<div class="next-p">The free plan gets you moving in the right direction. <b>Coaching</b> is a program built around <b>your</b> body, your goal, your schedule — with me checking your form and keeping you honest so you actually get there. Local? Even better — let's train in person.</div>
+<a class="cta" href="CONSULT_URL_HERE">Book a free consult →</a>
+<a class="cta ghost" href="https://instagram.com/tremaynepillow">Prefer to message? DM me</a>
+</div>
+
+</div><!-- /program -->
+
+<footer>
+<div class="fl">Coach TreMayne · <a href="mailto:coach@coachtremayne.com">coach@coachtremayne.com</a></div>
+<div class="tag">COACH TREMAYNE · STRENGTH · FAT LOSS · REAL COACHING</div>
+</footer>
+</div>
+
+<script>
+// ===== WIRING 1 of 2: email capture =====
+// Point this at the Cloudflare Worker that adds the lead to your GENERAL Brevo list
+// (NOT the DD list — general leads shouldn't get the Diesel nurture).
+// The page posts {email, name, goal, source:"general"} so the worker can route it.
+var CAPTURE_URL = "https://dd-capture.quantumflexpt.workers.dev"; // <-- swap to general worker/list
+// =========================================
+
+var gate=document.getElementById('gate'), program=document.getElementById('program');
+var fname=document.getElementById('fname'), email=document.getElementById('email');
+var btn=document.getElementById('unlock'), err=document.getElementById('err');
+var chosenGoal='';
+
+function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+
+function reveal(name){
+document.getElementById('whoName').textContent = name || "let's work";
+gate.style.display='none';
+program.classList.add('open');
+program.scrollIntoView({behavior:'smooth',block:'start'});
+try{localStorage.setItem('ct_general_unlocked','1');
+if(name) localStorage.setItem('ct_general_name',name);}catch(e){}
+}
+
+function ctGetParam(k){try{return new URLSearchParams(location.search).get(k);}catch(e){return null;}}
+
+// Skip the gate if already unlocked in this browser OR arriving from the email link (?unlocked=1)
+try{
+var ctFromEmail = ctGetParam('unlocked')==='1';
+var ctSaved = localStorage.getItem('ct_general_unlocked')==='1';
+if(ctFromEmail || ctSaved){
+reveal(ctGetParam('n') || localStorage.getItem('ct_general_name') || "let's work");
+var savedGoal = ctGetParam('goal') || localStorage.getItem('ct_general_goal');
+if(savedGoal) selectGoal(savedGoal);
+}
+}catch(e){}
+
+btn.addEventListener('click', function(){
+err.style.display='none';
+var e=email.value.trim(), n=fname.value.trim();
+if(!validEmail(e)){ err.style.display='block'; return; }
+btn.disabled=true; btn.textContent='Unlocking…';
+var send = (CAPTURE_URL.indexOf('YOUR-WORKER')===-1)
+? fetch(CAPTURE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({email:e,name:n,goal:chosenGoal,source:'general'})}).catch(function(){})
+: Promise.resolve();
+send.finally(function(){ reveal(n); });
+});
+email.addEventListener('keydown',function(ev){if(ev.key==='Enter')btn.click();});
+
+// ===== GOAL PICKER =====
+function selectGoal(goal){
+chosenGoal=goal;
+document.querySelectorAll('.goal').forEach(function(g){g.classList.toggle('on',g.dataset.goal===goal);});
+document.getElementById('track-fatloss').classList.toggle('show',goal==='fatloss');
+document.getElementById('track-muscle').classList.toggle('show',goal==='muscle');
+document.getElementById('coachwrap').style.display='block';
+try{localStorage.setItem('ct_general_goal',goal);}catch(e){}
+}
+document.getElementById('goals').addEventListener('click',function(e){
+var b=e.target.closest('.goal'); if(!b)return;
+selectGoal(b.dataset.goal);
+b.scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+// ===== week accordions =====
+document.querySelectorAll('[data-week]').forEach(function(w){
+var h=w.querySelector('.whead');
+h.addEventListener('click',function(){
+var open=w.classList.toggle('open');
+h.setAttribute('aria-expanded',open?'true':'false');
+w.querySelector('.wbody').style.gridTemplateRows=open?'1fr':'0fr';
+});
+});
+
+// ===== AI COACH — reuses your existing worker, general system prompt =====
+var COACH_API = "https://coach-tremayne-api.quantumflexpt.workers.dev";
+var GEN_SYSTEM = "You are Coach TreMayne, a certified personal trainer helping everyday people lose fat or build muscle. Give practical, encouraging, no-nonsense advice: simple workouts they can do at home or the gym, sensible whole-food eating, and how to adjust the program. Talk plain and direct, like a real coach who's in their corner. Keep it sustainable and healthy — never recommend extreme diets, very low calories, crash approaches, or anything disordered; steer people toward steady habits and toward seeing a doctor or registered dietitian for medical or serious nutrition questions. Do not give specific calorie numbers or rigid meal plans. Answer in 2-3 sentences. Never use markdown.";
+var CPLAY = {
+workout:"No gear, 15 minutes:\n1) 20 bodyweight squats\n2) 12 push-ups\n3) 20 walking lunges\n4) 40-sec plank\nRun it 2–3 rounds. Something beats nothing, always.",
+food:"Keep it simple: a protein at every meal, plenty of veggies, and don't drink your calories. You don't need perfect or extreme — you need consistent. If you want real numbers dialed in, that's what a coach or a dietitian is for.",
+form:"If a move bugs a joint, don't push through it — swap it. Squat hurts the knees? Try a box squat or split squat. Push-up bugs the shoulder? Raise your hands to a bench. Tell me the move and what's pinching and I'll give you a clean swap."
+};
+var clog=document.getElementById('clog'), cinput=document.getElementById('cinput');
+function cadd(text,who){
+var d=document.createElement('div');
+d.className='cmsg '+(who==='me'?'me':'coach');
+d.innerHTML='<div class="cwho">'+(who==='me'?'You':'Coach TreMayne')+'</div><div class="cbub"></div>';
+d.querySelector('.cbub').textContent=text;
+clog.appendChild(d); clog.scrollTop=clog.scrollHeight;
+}
+function crouteMode(t){
+t=t.toLowerCase();
+if(/\b(eat|meal|food|hungry|snack|diet|calorie|protein|carb|drink|weight loss)\b/.test(t))return'food';
+if(/\b(swap|hurt|hurts|pain|knee|shoulder|back|no dumbbell|no gym|replace|instead|can'?t do)\b/.test(t))return'form';
+return 'workout';
+}
+function cask(text){
+cadd(text,'me'); cinput.value='';
+var fb=CPLAY[crouteMode(text)];
+cadd('…','coach');
+var pending=clog.lastChild.querySelector('.cbub');
+fetch(COACH_API,{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({system:GEN_SYSTEM,messages:[{role:'user',content:text}]})})
+.then(function(r){return r.json();})
+.then(function(data){
+var ans=data&&data.content&&data.content[0]&&data.content[0].text;
+pending.textContent=ans||fb;
+}).catch(function(){ pending.textContent=fb; });
+}
+document.getElementById('cmodes').addEventListener('click',function(e){
+var b=e.target.closest('.cmode'); if(!b)return;
+document.querySelectorAll('.cmode').forEach(function(m){m.classList.remove('active');});
+b.classList.add('active');
+cask({workout:'Give me a quick workout I can do right now.',
+food:'How should I eat for my goal?',
+form:'I need to swap a move — give me options.'}[b.dataset.cmode]);
+});
+document.getElementById('csend').addEventListener('click',function(){if(cinput.value.trim())cask(cinput.value.trim());});
+cinput.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&cinput.value.trim())cask(cinput.value.trim());});
+</script>
+</body>
+</html>
+
