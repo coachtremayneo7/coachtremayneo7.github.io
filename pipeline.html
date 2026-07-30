@@ -11,6 +11,7 @@
 --amber:#f4a723; --amber-dim:#7a5a15;
 --go:#37b26b; --cold:#d9544d;
 --ah:#4a9be0; /* AfterHours tag */ --dd:#f4a723; /* Diesel tag */
+--gen:#b083f0; /* General tag */
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;background:var(--base);color:var(--text);
@@ -29,12 +30,13 @@ font-weight:700;margin:0;color:var(--text);}
 
 .filter{display:flex;gap:6px;margin-bottom:12px;}
 .filter button{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--muted);
-font-family:inherit;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-padding:9px 0;border-radius:8px;cursor:pointer;}
+font-family:inherit;font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase;
+padding:9px 3px;border-radius:8px;cursor:pointer;}
 .filter button:active{transform:scale(.97);}
 .filter button.on{background:var(--panel2);color:var(--text);border-color:var(--dim);}
 .filter button.on.AH{color:var(--ah);border-color:var(--ah);}
 .filter button.on.DD{color:var(--dd);border-color:var(--dd);}
+.filter button.on.GEN{color:var(--gen);border-color:var(--gen);}
 
 .funnel{display:flex;align-items:stretch;gap:0;}
 .leg{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;
@@ -66,6 +68,7 @@ margin-bottom:8px;overflow:hidden;}
 padding:3px 6px;border-radius:5px;flex:none;}
 .tag.AH{background:rgba(74,155,224,.16);color:var(--ah);}
 .tag.DD{background:rgba(244,167,35,.16);color:var(--dd);}
+.tag.GEN{background:rgba(176,131,240,.16);color:var(--gen);}
 .nm{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .stg{font-size:11px;color:var(--muted);letter-spacing:.04em;flex:none;}
 .stg.won{color:var(--go);} .stg.lost{color:var(--cold);}
@@ -98,9 +101,10 @@ border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-ins
 border-radius:9px;color:var(--text);padding:12px 12px;font-family:inherit;font-size:16px;}
 .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none;}
 .seg button{background:var(--base);color:var(--muted);border:none;font-family:inherit;
-font-weight:700;font-size:12px;padding:0 12px;height:44px;cursor:pointer;letter-spacing:.04em;}
+font-weight:700;font-size:12px;padding:0 10px;height:44px;cursor:pointer;letter-spacing:.04em;}
 .seg button.on.AH{background:var(--ah);color:#0d1620;}
 .seg button.on.DD{background:var(--dd);color:#1a1405;}
+.seg button.on.GEN{background:var(--gen);color:#1a1030;}
 .add{flex:none;width:44px;height:44px;border-radius:9px;border:none;background:var(--amber);
 color:#14161a;font-size:26px;font-weight:700;cursor:pointer;line-height:1;}
 .add:active{transform:scale(.94);}
@@ -117,6 +121,7 @@ color:#14161a;font-size:26px;font-weight:700;cursor:pointer;line-height:1;}
 <button data-f="ALL" onclick="setFilter('ALL')">All</button>
 <button data-f="AH" class="AH" onclick="setFilter('AH')">AfterHours</button>
 <button data-f="DD" class="DD" onclick="setFilter('DD')">Diesel</button>
+<button data-f="GEN" class="GEN" onclick="setFilter('GEN')">General</button>
 </div>
 <div class="funnel" id="funnel"></div>
 </header>
@@ -137,6 +142,7 @@ color:#14161a;font-size:26px;font-weight:700;cursor:pointer;line-height:1;}
 <div class="seg">
 <button id="segAH" class="AH on" onclick="setBrand('AH')">AH</button>
 <button id="segDD" class="DD" onclick="setBrand('DD')">DD</button>
+<button id="segGEN" class="GEN" onclick="setBrand('GEN')">GEN</button>
 </div>
 <input id="nameIn" placeholder="Add lead name…" enterkeyhint="done"
 onkeydown="if(event.key==='Enter')addLead()">
@@ -166,7 +172,8 @@ function daysTo(s){if(!s)return null;const t=today();const d=new Date(s+'T00:00:
 
 function setBrand(b){brand=b;
 document.getElementById('segAH').classList.toggle('on',b==='AH');
-document.getElementById('segDD').classList.toggle('on',b==='DD');}
+document.getElementById('segDD').classList.toggle('on',b==='DD');
+document.getElementById('segGEN').classList.toggle('on',b==='GEN');}
 
 function addLead(){
 const inp=document.getElementById('nameIn');
@@ -235,7 +242,7 @@ else if(dt!==null&&dt===1)duetag='<span class="duetag" style="color:var(--muted)
 const duehit=open&&dt!==null&&dt<=0;
 return `<div class="card ${l._open?'open':''} ${l.status} ${duehit?'duehit':''}">
 <div class="row" onclick="toggle('${l.id}')">
-<span class="tag ${l.brand}">${l.brand==='AH'?'AH':'DD'}</span>
+<span class="tag ${l.brand}">${l.brand}</span>
 <span class="nm">${esc(l.name)}</span>
 ${duetag}
 <span class="stg ${s.c}">${s.t}</span>
