@@ -2,7 +2,7 @@
 "name": "Diesel & Discipline",
 "short_name": "Diesel",
 "description": "Fitness coaching built for drivers — train on the road, keep your card, keep your career.",
-"start_url": "dd-program.html",
+"start_url": "index.html",
 "scope": ".",
 "display": "standalone",
 "orientation": "portrait",
