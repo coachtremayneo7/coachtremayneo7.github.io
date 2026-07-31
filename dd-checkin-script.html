@@ -81,6 +81,16 @@ padding:11px 13px;font-family:'Barlow Condensed';font-size:15.5px;color:var(--wh
 color:var(--amber);font-family:'Share Tech Mono';font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:10px;cursor:pointer;transition:background .15s}
 .copybtn:active{background:rgba(255,171,46,.28)}
 .copybtn.done{color:var(--green);border-color:var(--green)}
+
+/* tap-to-fill picker (session-day recap) */
+.pick{margin-bottom:11px}
+.pick-lbl{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.12em;color:var(--steel);text-transform:uppercase;margin-bottom:7px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--steel);
+font-family:'Barlow Condensed';font-size:14px;padding:7px 12px;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.chip.active{background:var(--amber-glow);border-color:var(--amber-dim);color:var(--amber);font-weight:600}
+.chip:active{transform:scale(.97)}
+
 .foot{text-align:center;color:var(--steel-dim);font-family:'Share Tech Mono';font-size:10px;letter-spacing:.14em;padding:20px 0 30px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -190,7 +200,22 @@ Food: __</div>
 <div class="msgcard" data-card>
 <div class="mc-head"><div class="mc-title">Session-day recap</div><div class="mc-cue">Send the morning of — sets up the 45 min</div></div>
 <div class="mc-body">
-<div class="bubble" data-msg>Session today 💪 Looking at your week — [good streak / back solid / rough patch]. We'll [progress the load / keep it light and clean] off that. Roll in ready. What time works?</div>
+<div class="pick">
+<div class="pick-lbl">This week was…</div>
+<div class="chips" data-pick="week">
+<button class="chip active" data-val="good streak">good streak</button>
+<button class="chip" data-val="back solid">back solid</button>
+<button class="chip" data-val="rough patch">rough patch</button>
+</div>
+</div>
+<div class="pick">
+<div class="pick-lbl">So we'll…</div>
+<div class="chips" data-pick="plan">
+<button class="chip active" data-val="progress the load">progress the load</button>
+<button class="chip" data-val="keep it light and clean">keep it light and clean</button>
+</div>
+</div>
+<div class="bubble" data-msg data-recap>Session today 💪 Looking at your week — {week}. We'll {plan} off that. Roll in ready. What time works?</div>
 <button class="copybtn" data-copy>⧉ Copy message</button>
 </div>
 </div>
@@ -200,15 +225,29 @@ Food: __</div>
 
 <script>
 var cname=document.getElementById('cname'), cwhy=document.getElementById('cwhy');
+var recapWeek='good streak', recapPlan='progress the load';
 function slug(s){return (s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_')||'unnamed';}
+function escapeRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+
 function loadDriver(){
-// load this driver's saved "why" (each driver stored separately)
-try{cwhy.value=localStorage.getItem('ddci_why_'+slug(cname.value))||'';}catch(e){}
+// switch to this driver's saved "why" — but never blank out a why you're mid-typing
+try{
+var key='ddci_why_'+slug(cname.value);
+var saved=localStorage.getItem(key);
+if(saved!==null){ // known driver → load their saved why
+cwhy.value=saved;
+}else if(cwhy.value.trim()){ // renaming mid-entry → keep the why, carry it to the new name
+localStorage.setItem(key,cwhy.value);
+}else{ // brand-new, nothing typed → clear
+cwhy.value='';
+}
+}catch(e){}
 render();
 }
+
 // reopen the last driver you had open
 try{var last=localStorage.getItem('ddci_last'); if(last){cname.value=last;}}catch(e){}
-try{cwhy.value=localStorage.getItem('ddci_why_'+slug(cname.value))||'';}catch(e){}
+try{var s0=localStorage.getItem('ddci_why_'+slug(cname.value)); if(s0!==null){cwhy.value=s0;}}catch(e){}
 
 function render(){
 var n=cname.value.trim(), w=cwhy.value.trim();
@@ -217,13 +256,19 @@ var raw=el.getAttribute('data-raw')||el.textContent;
 el.setAttribute('data-raw',raw);
 var out=raw
 .replace(/\{name\}/g, n ? n : 'there')
-.replace(/\{why\}/g, w ? w : 'what you set out to do');
-// highlight tokens visually only where filled
-el.innerHTML = out
-.replace(new RegExp('('+(n?escapeRe(n):'\\u0000')+')','g'), n?'<span class="tok">$1</span>':'$1');
+.replace(/\{why\}/g, w ? w : 'what you set out to do')
+.replace(/\{week\}/g, recapWeek)
+.replace(/\{plan\}/g, recapPlan);
+if(n){
+// highlight the name — whole words only, never inside another word (Sam ≠ Same)
+try{
+el.innerHTML = out.replace(new RegExp('(^|[^\\w])('+escapeRe(n)+')(?![\\w])','g'),'$1<span class="tok">$2</span>');
+}catch(e){ el.textContent = out; }
+}else{
+el.textContent = out;
+}
 });
 }
-function escapeRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
 cname.addEventListener('input',function(){
 try{localStorage.setItem('ddci_last',cname.value)}catch(e){}
@@ -233,6 +278,21 @@ cwhy.addEventListener('input',function(){
 try{localStorage.setItem('ddci_why_'+slug(cname.value),cwhy.value)}catch(e){}
 render();
 });
+
+// tap-to-fill picker for the session-day recap
+document.querySelectorAll('.chips').forEach(function(group){
+var kind=group.getAttribute('data-pick');
+group.querySelectorAll('.chip').forEach(function(chip){
+chip.addEventListener('click',function(){
+group.querySelectorAll('.chip').forEach(function(c){c.classList.remove('active')});
+chip.classList.add('active');
+if(kind==='week'){recapWeek=chip.getAttribute('data-val');}
+else{recapPlan=chip.getAttribute('data-val');}
+render();
+});
+});
+});
+
 render();
 
 document.querySelectorAll('[data-copy]').forEach(function(btn){
