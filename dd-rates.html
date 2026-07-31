@@ -63,6 +63,24 @@ color:var(--steel-dim);font-size:11px;letter-spacing:.12em;
 text-align:center;text-transform:uppercase;margin-bottom:18px;
 }
 
+/* ---- value block (frames the price before they see it) ---- */
+.value{
+background:linear-gradient(160deg,var(--panel-2),var(--panel));
+border:1px solid var(--line);border-left:3px solid var(--amber);
+border-radius:12px;padding:16px 17px;margin:6px 0 18px;
+}
+.value-h{
+font-family:'Oswald',sans-serif;text-transform:uppercase;
+letter-spacing:.04em;font-size:16px;color:var(--amber);margin-bottom:9px;
+}
+.value p{color:var(--steel);font-size:15px;line-height:1.5}
+.value p + p{margin-top:9px}
+.value p b{color:var(--white);font-weight:600}
+.value .pick{
+color:var(--amber);font-family:'Oswald',sans-serif;font-weight:600;
+text-transform:uppercase;letter-spacing:.03em;font-size:15px;margin-top:11px;
+}
+
 /* ---- tier card ---- */
 .tier{
 background:var(--panel);
@@ -209,6 +227,15 @@ font-size:10px;letter-spacing:.14em;padding:8px 0 30px;
 <div class="kicker">Coach TreMayne · Rate Card</div>
 <div class="rule"></div>
 </header>
+
+<!-- VALUE BLOCK — frames the price before they scroll into it -->
+<div class="value">
+<div class="value-h">This isn't a workout plan — it's a coach</div>
+<p>Not a PDF you'll forget by Friday. A build shaped around <b>your</b> body, your truck, and your schedule — retuned as you go — with me in your DMs every day so you don't quit when the road gets long.</p>
+<p>Here's the math that matters: one failed DOT physical parks your truck. No card, no miles, no paycheck. A month off the road costs more than a year of this. Call it insurance on your career.</p>
+<p><b>I'm your coach the whole haul — I've got your back start to finish, not just Day 1.</b></p>
+<p class="pick">Pick your lane 👇</p>
+</div>
 
 <p class="hint">Tap a tier to see prepay</p>
 
