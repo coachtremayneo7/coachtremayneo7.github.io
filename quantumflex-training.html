@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ══════════════════════════════════════════════════════════════
+👇 NEW CLIENT? FILL THESE 5 THINGS, THEN HIT COMMIT. 👇
+
+[ ] 1. name — the shop's real name
+[ ] 2. emoji — one emoji that fits them
+[ ] 3. greeting — first message (use their name)
+[ ] 4. bookLink — their Calendly / booking URL
+[ ] 5. QUESTIONS — swap in 4 things THEIR customers ask + the answers
+
+Leave a "[BRACKET]" anywhere and the page will show it in red so
+you can't accidentally send a half-filled demo. That's on purpose.
+
+(Optional: line 6, "city" — makes the demo feel local. Safe to leave.)
+══════════════════════════════════════════════════════════════ -->
+<script>
+const BUSINESS = {
+name: "Quantum Flex Training, LLC", // 1. the shop's name
+emoji: "💪", // 2. a fitting emoji
+greeting: "Hey! Thanks for messaging "Quantum Flex Training, LLC. How can I help you today?", // 3.
+bookText: "📅 Book an appointment", // button label (usually leave as-is)
+bookLink: "https://calendly.com/coachtremayne", // 4. their booking URL
+city: "Bowling Green" // 6. (optional) their city — used in proof line
+};
+
+// 5. The questions a real customer would ask — with the answer the AI gives.
+// Keep 3–5. Short, friendly, specific to THIS shop (prices, hours, area).
+const QUESTIONS = [
+{
+q: How much do you charge?",
+a: "Sessions start at $40- want me to send you option?"
+},
+{
+q: "Do you offer group classes and 1 on 1?",
+a: "Yes we offer both."
+},
+{
+q: "What are group session prices?",
+a: "Depends on the program — 4-weeks $275, 6-weeks $375, 12-weeks $475. Which fits your goal?"
+},
+{
+q: "Where are you located?",
+a: "Bowling Green."
+}
+];
+</script>
+<!-- ══════════════════════════════════════════════════════════════
+✋ STOP — DON'T EDIT ANYTHING BELOW THIS LINE
+══════════════════════════════════════════════════════════════ -->
+
+<title>AI Front Desk Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+--ink:#0A0C12; --ink-2:#10141C; --ink-3:#161B25; --line:#232B3A;
+--amber:#FFB020; --cream:#F3EEE4; --muted:#9AA1AE; --slate:#242C3A;
+--display:'Bricolage Grotesque',system-ui,sans-serif;
+--body:'Inter',system-ui,sans-serif; --mono:'Space Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--cream);font-family:var(--body);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 40% at 50% 0,rgba(255,176,32,.10),transparent 60%);pointer-events:none}
+
+.brandbar{font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:14px;display:flex;align-items:center;gap:8px;z-index:1}
+.brandbar .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px 2px rgba(255,176,32,.7);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* NEW: framing line so they instantly know this is THEIR front desk */
+.frame{z-index:1;text-align:center;margin-bottom:16px;max-width:380px}
+.frame h1{font-family:var(--display);font-weight:800;font-size:1.15rem;line-height:1.2;color:var(--cream)}
+.frame h1 .hl{color:var(--amber)}
+.frame p{font-family:var(--body);font-size:.82rem;color:var(--muted);margin-top:6px;line-height:1.4}
+
+.phone{width:380px;max-width:100%;background:var(--ink-2);border:1px solid var(--line);border-radius:30px;padding:14px;box-shadow:0 40px 90px -30px rgba(0,0,0,.85);z-index:1;display:flex;flex-direction:column;height:min(70vh,620px)}
+.p-head{display:flex;align-items:center;gap:11px;padding:6px 6px 14px;border-bottom:1px solid var(--line)}
+.p-ava{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2b3242,#171c26);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.p-name{font-family:var(--display);font-weight:700;font-size:1rem;line-height:1.1}
+.p-status{font-family:var(--mono);font-size:.62rem;color:#7CE0A0;display:flex;align-items:center;gap:5px;margin-top:2px}
+.p-status .d{width:6px;height:6px;border-radius:50%;background:#7CE0A0;box-shadow:0 0 8px #7CE0A0}
+
+.thread{flex:1;overflow-y:auto;padding:16px 4px;display:flex;flex-direction:column;gap:10px}
+.thread::-webkit-scrollbar{width:0}
+.msg{max-width:82%;padding:10px 13px;border-radius:16px;font-size:.9rem;line-height:1.45;animation:pop .3s ease}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.them{align-self:flex-start;background:var(--slate);border-bottom-left-radius:5px}
+.ai{align-self:flex-end;background:linear-gradient(180deg,#FFC24D,var(--amber));color:#150E02;border-bottom-right-radius:5px}
+.typing{align-self:flex-end;background:var(--amber);border-radius:16px;border-bottom-right-radius:5px;padding:13px 15px;display:inline-flex;gap:4px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#150E02;animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+
+.chips{padding:10px 4px 4px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line)}
+.chip{font-family:var(--body);font-size:.8rem;color:var(--cream);background:var(--ink-3);border:1px solid var(--line);padding:9px 13px;border-radius:999px;cursor:pointer;transition:.15s}
+.chip:hover,.chip:active{border-color:var(--amber);color:var(--amber)}
+.chip-hint{font-family:var(--mono);font-size:.6rem;color:var(--muted);width:100%;text-align:center;padding-bottom:4px;letter-spacing:.05em}
+.book{margin-top:10px;text-align:center;font-family:var(--body);font-weight:600;font-size:.95rem;background:linear-gradient(180deg,#FFC24D,var(--amber));color:#0A0C12;text-decoration:none;padding:13px;border-radius:12px;display:block}
+
+/* NEW: closing nudge + dollar-pain + proof */
+.close{z-index:1;text-align:center;margin-top:18px;max-width:380px}
+.pain{font-family:var(--body);font-size:.9rem;color:var(--cream);line-height:1.5}
+.pain b{color:var(--amber)}
+.cta2{display:inline-block;margin-top:12px;font-family:var(--display);font-weight:700;font-size:1rem;color:#0A0C12;background:var(--cream);text-decoration:none;padding:12px 22px;border-radius:12px}
+.proof{font-family:var(--mono);font-size:.64rem;color:var(--muted);margin-top:16px;letter-spacing:.04em}
+.proof b{color:var(--amber)}
+.foot{font-family:var(--mono);font-size:.64rem;color:var(--muted);margin-top:10px;z-index:1;letter-spacing:.04em;text-align:center}
+.foot b{color:var(--amber)}
+
+/* red flag for any [BRACKET] you forgot to fill in */
+.todo{color:#FF5C5C !important;font-weight:700;background:rgba(255,92,92,.12);padding:0 4px;border-radius:4px}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="brandbar"><span class="dot"></span>AI Front Desk · powered by AfterHours</div>
+
+<!-- NEW: framing line — instantly says "this is YOUR front desk" -->
+<div class="frame">
+<h1>Meet <span class="hl" id="frameName">your shop</span>'s AI front desk</h1>
+<p>Tap a message below — see how it answers your customers, day or night.</p>
+</div>
+
+<div class="phone">
+<div class="p-head">
+<div class="p-ava" id="ava">💬</div>
+<div>
+<div class="p-name" id="bizname">Business</div>
+<div class="p-status" id="status"><span class="d"></span> <span id="statustext">Answers day or night</span></div>
+</div>
+</div>
+<div class="thread" id="thread"></div>
+<div class="chips" id="chips"></div>
+<a class="book" id="book" href="#">Book</a>
+</div>
+
+<!-- NEW: dollar-pain + closing CTA + proof -->
+<div class="close">
+<p class="pain">Every DM that goes unanswered is a <b>booking someone else gets.</b> This one never misses — nights, weekends, mid-haircut.</p>
+<a class="cta2" id="cta2" href="#">Want this for <span id="ctaName">your shop</span>?</a>
+<div class="proof" id="proof">Built for local <b id="proofCity">Bowling Green</b> shops.</div>
+</div>
+
+<div class="foot">Answered in seconds — <b>even after you close.</b></div>
+
+<script>
+// --- Wire the editable config into the page ---
+var nameEl = document.getElementById('bizname');
+nameEl.textContent = BUSINESS.name;
+document.getElementById('ava').textContent = BUSINESS.emoji;
+document.title = BUSINESS.name + " — AI Front Desk";
+var book = document.getElementById('book');
+book.textContent = BUSINESS.bookText;
+book.href = BUSINESS.bookLink;
+
+// NEW: framing + closing CTA pull the shop name automatically (no extra fields to fill)
+document.getElementById('frameName').textContent = BUSINESS.name;
+document.getElementById('ctaName').textContent = BUSINESS.name;
+document.getElementById('cta2').href = BUSINESS.bookLink;
+document.getElementById('proofCity').textContent = BUSINESS.city;
+
+var thread = document.getElementById('thread');
+var chips = document.getElementById('chips');
+var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// --- Flag any leftover [BRACKETS] so a half-filled demo can't ship ---
+(function(){
+if(/\[.*?\]/.test(BUSINESS.name)) nameEl.classList.add('todo');
+if(/\[.*?\]/.test(BUSINESS.name)) document.getElementById('frameName').classList.add('todo');
+if(/\[.*?\]/.test(BUSINESS.name)) document.getElementById('ctaName').classList.add('todo');
+})();
+
+function bubble(cls, text){
+var d = document.createElement('div');
+d.className = 'msg ' + cls;
+if(/\[.*?\]/.test(text)){
+d.innerHTML = text.replace(/(\[.*?\])/g,'<span class="todo">$1</span>');
+} else {
+d.textContent = text;
+}
+thread.appendChild(d);
+thread.scrollTop = thread.scrollHeight;
+return d;
+}
+
+function ask(item, chipEl){
+chipEl.style.display = 'none';
+bubble('them', item.q);
+if(reduce){ bubble('ai', item.a); return; }
+var t = document.createElement('div');
+t.className = 'typing';
+t.innerHTML = '<span></span><span></span><span></span>';
+thread.appendChild(t);
+thread.scrollTop = thread.scrollHeight;
+setTimeout(function(){ t.remove(); bubble('ai', item.a); }, 1100);
+}
+
+// Greeting on load
+setTimeout(function(){ bubble('ai', BUSINESS.greeting); }, 300);
+
+// NEW: a tiny hint above the chips so they know to tap (drives the "wow")
+var hint = document.createElement('div');
+hint.className = 'chip-hint';
+hint.textContent = '↓ tap a question like a customer would';
+chips.appendChild(hint);
+
+// Build the tappable question chips
+QUESTIONS.forEach(function(item){
+var c = document.createElement('button');
+c.className = 'chip';
+c.textContent = item.q;
+c.onclick = function(){ ask(item, c); };
+chips.appendChild(c);
+});
+</script>
+</body>
+</html>
+
