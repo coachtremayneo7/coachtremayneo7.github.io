@@ -154,6 +154,17 @@ cursor:pointer;transition:.15s;
 
 .foot{text-align:center;font-size:10.5px;color:#5c626d;letter-spacing:.3px;padding:0 8px}
 .foot b{color:var(--muted);font-weight:600}
+
+.cta-wrap{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.cta{
+display:block;text-align:center;text-decoration:none;
+background:linear-gradient(180deg,var(--gold),#cf9836);
+color:#1a1205;font-family:var(--display);font-weight:700;font-size:16px;
+padding:15px 20px;border-radius:14px;
+box-shadow:0 6px 22px rgba(232,176,75,0.20);transition:.15s;
+}
+.cta:hover,.cta:active{filter:brightness(1.06)}
+.cta-sub{text-align:center;font-size:11.5px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -199,6 +210,11 @@ cursor:pointer;transition:.15s;
 </div>
 
 <div class="foot">Every message answered in seconds — <b>even after you close</b></div>
+
+<div class="cta-wrap">
+<a class="cta" href="https://m.me/tremayne.pillow">Want this for your business? Message me →</a>
+<p class="cta-sub">I'll answer in seconds — kind of the whole point.</p>
+</div>
 </div>
 
 <script>
