@@ -489,7 +489,7 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 <div class="next-h">This is the starting line.</div>
 <div class="next-p">The free plan gets you moving in the right direction. <b>Coaching</b> is a program built around <b>your</b> body, your goal, your schedule — with me checking your form and keeping you honest so you actually get there. Local? Even better — let's train in person.</div>
 <a class="cta" href="https://calendly.com/coachtremayne">Book a free consult →</a>
-<a class="cta ghost" href="https://instagram.com/tremaynepillow">Prefer to message? DM me</a>
+<a class="cta ghost" href="mailto:coach@coachtremayne.com?subject=I%27m%20interested%20in%20coaching">Prefer to message? Email me</a>
 </div>
 
 </div><!-- /program -->
@@ -502,9 +502,10 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 
 <script>
 // ===== WIRING 1 of 2: email capture =====
-// LIVE + CONFIRMED 7/30 — leads land on General Fitness list #15 (fires Brevo Automation #10).
-// Posts {email, name, goal, source:"general"}. Do NOT point this at the DD list.
-var CAPTURE_URL = "https://dd-capture.quantumflexpt.workers.dev";
+// Point this at the Cloudflare Worker that adds the lead to your GENERAL Brevo list
+// (NOT the DD list — general leads shouldn't get the Diesel nurture).
+// The page posts {email, name, goal, source:"general"} so the worker can route it.
+var CAPTURE_URL = "https://dd-capture.quantumflexpt.workers.dev"; // <-- swap to general worker/list
 // =========================================
 
 var gate=document.getElementById('gate'), program=document.getElementById('program');
@@ -598,22 +599,11 @@ return 'workout';
 }
 function cask(text){
 cadd(text,'me'); cinput.value='';
-var mode=crouteMode(text);
-var fb=CPLAY[mode];
-// Pass the picked goal to the coach so fat-loss vs muscle get different answers.
-// The goal rides along only in the message SENT to the AI — the visible bubble stays clean.
-var goalCtx = chosenGoal==='fatloss' ? "My goal is losing fat. "
-: chosenGoal==='muscle' ? "My goal is building muscle. " : "";
-// Offline fallback also follows the goal, so a failed call never shows identical text for both.
-if(mode==='food'){
-fb = chosenGoal==='muscle'
-? "For building muscle: get protein at every meal, eat enough to fuel the work — don't train hungry — and lean on whole foods. Consistency beats perfect. Want it dialed in to real numbers? That's what a coach or a dietitian is for."
-: "For losing fat: protein at every meal to stay full and hold muscle, fill up on veggies, and don't drink your calories. Steady beats extreme. Want it dialed in to real numbers? That's what a coach or a dietitian is for.";
-}
+var fb=CPLAY[crouteMode(text)];
 cadd('…','coach');
 var pending=clog.lastChild.querySelector('.cbub');
 fetch(COACH_API,{method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({system:GEN_SYSTEM,messages:[{role:'user',content:goalCtx+text}]})})
+body:JSON.stringify({system:GEN_SYSTEM,messages:[{role:'user',content:text}]})})
 .then(function(r){return r.json();})
 .then(function(data){
 var ans=data&&data.content&&data.content[0]&&data.content[0].text;
