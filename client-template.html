@@ -61,22 +61,22 @@ a: "[Their city/area — offer to text address + parking.]"
 <style>
 :root{
 --ink:#0A0C12; --ink-2:#10141C; --ink-3:#161B25; --line:#232B3A;
---amber:#FFB020; --cream:#F3EEE4; --muted:#9AA1AE; --slate:#242C3A;
+--teal:#2DD4BF; --teal-dark:#14B8A6; --cream:#EAF1F3; --muted:#9AA1AE; --slate:#242C3A;
 --display:'Bricolage Grotesque',system-ui,sans-serif;
 --body:'Inter',system-ui,sans-serif; --mono:'Space Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--ink);color:var(--cream);font-family:var(--body);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;-webkit-font-smoothing:antialiased}
-body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 40% at 50% 0,rgba(255,176,32,.10),transparent 60%);pointer-events:none}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 40% at 50% 0,rgba(45,212,191,.10),transparent 60%);pointer-events:none}
 
-.brandbar{font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:14px;display:flex;align-items:center;gap:8px;z-index:1}
-.brandbar .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px 2px rgba(255,176,32,.7);animation:pulse 2.4s ease-in-out infinite}
+.brandbar{font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-bottom:14px;display:flex;align-items:center;gap:8px;z-index:1}
+.brandbar .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px 2px rgba(45,212,191,.7);animation:pulse 2.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* NEW: framing line so they instantly know this is THEIR front desk */
+/* framing line so they instantly know this is THEIR front desk */
 .frame{z-index:1;text-align:center;margin-bottom:16px;max-width:380px}
 .frame h1{font-family:var(--display);font-weight:800;font-size:1.15rem;line-height:1.2;color:var(--cream)}
-.frame h1 .hl{color:var(--amber)}
+.frame h1 .hl{color:var(--teal)}
 .frame p{font-family:var(--body);font-size:.82rem;color:var(--muted);margin-top:6px;line-height:1.4}
 
 .phone{width:380px;max-width:100%;background:var(--ink-2);border:1px solid var(--line);border-radius:30px;padding:14px;box-shadow:0 40px 90px -30px rgba(0,0,0,.85);z-index:1;display:flex;flex-direction:column;height:min(70vh,620px)}
@@ -91,27 +91,27 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 40
 .msg{max-width:82%;padding:10px 13px;border-radius:16px;font-size:.9rem;line-height:1.45;animation:pop .3s ease}
 @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .them{align-self:flex-start;background:var(--slate);border-bottom-left-radius:5px}
-.ai{align-self:flex-end;background:linear-gradient(180deg,#FFC24D,var(--amber));color:#150E02;border-bottom-right-radius:5px}
-.typing{align-self:flex-end;background:var(--amber);border-radius:16px;border-bottom-right-radius:5px;padding:13px 15px;display:inline-flex;gap:4px}
-.typing span{width:6px;height:6px;border-radius:50%;background:#150E02;animation:blink 1.2s infinite}
+.ai{align-self:flex-end;background:linear-gradient(180deg,var(--teal),var(--teal-dark));color:#03211E;border-bottom-right-radius:5px}
+.typing{align-self:flex-end;background:var(--teal);border-radius:16px;border-bottom-right-radius:5px;padding:13px 15px;display:inline-flex;gap:4px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#05211D;animation:blink 1.2s infinite}
 .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
 
 .chips{padding:10px 4px 4px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line)}
 .chip{font-family:var(--body);font-size:.8rem;color:var(--cream);background:var(--ink-3);border:1px solid var(--line);padding:9px 13px;border-radius:999px;cursor:pointer;transition:.15s}
-.chip:hover,.chip:active{border-color:var(--amber);color:var(--amber)}
+.chip:hover,.chip:active{border-color:var(--teal);color:var(--teal)}
 .chip-hint{font-family:var(--mono);font-size:.6rem;color:var(--muted);width:100%;text-align:center;padding-bottom:4px;letter-spacing:.05em}
-.book{margin-top:10px;text-align:center;font-family:var(--body);font-weight:600;font-size:.95rem;background:linear-gradient(180deg,#FFC24D,var(--amber));color:#0A0C12;text-decoration:none;padding:13px;border-radius:12px;display:block}
+.book{margin-top:10px;text-align:center;font-family:var(--body);font-weight:600;font-size:.95rem;background:linear-gradient(180deg,var(--teal),var(--teal-dark));color:#03211E;text-decoration:none;padding:13px;border-radius:12px;display:block}
 
-/* NEW: closing nudge + dollar-pain + proof */
+/* closing nudge + dollar-pain + proof */
 .close{z-index:1;text-align:center;margin-top:18px;max-width:380px}
 .pain{font-family:var(--body);font-size:.9rem;color:var(--cream);line-height:1.5}
-.pain b{color:var(--amber)}
+.pain b{color:var(--teal)}
 .cta2{display:inline-block;margin-top:12px;font-family:var(--display);font-weight:700;font-size:1rem;color:#0A0C12;background:var(--cream);text-decoration:none;padding:12px 22px;border-radius:12px}
 .proof{font-family:var(--mono);font-size:.64rem;color:var(--muted);margin-top:16px;letter-spacing:.04em}
-.proof b{color:var(--amber)}
+.proof b{color:var(--teal)}
 .foot{font-family:var(--mono);font-size:.64rem;color:var(--muted);margin-top:10px;z-index:1;letter-spacing:.04em;text-align:center}
-.foot b{color:var(--amber)}
+.foot b{color:var(--teal)}
 
 /* red flag for any [BRACKET] you forgot to fill in */
 .todo{color:#FF5C5C !important;font-weight:700;background:rgba(255,92,92,.12);padding:0 4px;border-radius:4px}
@@ -122,7 +122,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 40
 <body>
 <div class="brandbar"><span class="dot"></span>AI Front Desk · powered by AfterHours</div>
 
-<!-- NEW: framing line — instantly says "this is YOUR front desk" -->
+<!-- framing line — instantly says "this is YOUR front desk" -->
 <div class="frame">
 <h1>Meet <span class="hl" id="frameName">your shop</span>'s AI front desk</h1>
 <p>Tap a message below — see how it answers your customers, day or night.</p>
@@ -141,7 +141,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 40
 <a class="book" id="book" href="#">Book</a>
 </div>
 
-<!-- NEW: dollar-pain + closing CTA + proof -->
+<!-- dollar-pain + closing CTA + proof -->
 <div class="close">
 <p class="pain">Every DM that goes unanswered is a <b>booking someone else gets.</b> This one never misses — nights, weekends, mid-haircut.</p>
 <a class="cta2" id="cta2" href="#">Want this for <span id="ctaName">your shop</span>?</a>
@@ -160,7 +160,7 @@ var book = document.getElementById('book');
 book.textContent = BUSINESS.bookText;
 book.href = BUSINESS.bookLink;
 
-// NEW: framing + closing CTA pull the shop name automatically (no extra fields to fill)
+// framing + closing CTA pull the shop name automatically (no extra fields to fill)
 document.getElementById('frameName').textContent = BUSINESS.name;
 document.getElementById('ctaName').textContent = BUSINESS.name;
 document.getElementById('cta2').href = BUSINESS.bookLink;
@@ -205,7 +205,7 @@ setTimeout(function(){ t.remove(); bubble('ai', item.a); }, 1100);
 // Greeting on load
 setTimeout(function(){ bubble('ai', BUSINESS.greeting); }, 300);
 
-// NEW: a tiny hint above the chips so they know to tap (drives the "wow")
+// a tiny hint above the chips so they know to tap (drives the "wow")
 var hint = document.createElement('div');
 hint.className = 'chip-hint';
 hint.textContent = '↓ tap a question like a customer would';
