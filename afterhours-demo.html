@@ -1,191 +1,479 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AfterHours — Your Front Desk Doesn't Clock Out</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AfterHours AI Front Desk — Live Demo</title>
+<link rel="apple-touch-icon" href="afterhours-icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="afterhours-icon-512.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="afterhours-icon-192.png" />
+<meta name="apple-mobile-web-app-title" content="AfterHours" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 <style>
 :root{
+--ink:#0F1115;
+--panel:#171A21;
+--panel-2:#1E222B;
+--line:#2A2F3A;
 --teal:#2DD4BF;
---teal-deep:#14B8A6;
---green:#37C46B;
---bg:#0a0f1a;
---card:#0e1524;
---panel:#131c2e;
---panel-alt:#0f1626;
---line:#1e2a40;
---ink:#f4f7fb;
---muted:#8a97ab;
---muted-dim:#5f6c80;
+--teal-lite:#5EEAD4;
+--live:#4ADE80;
+--text:#E8EEF2;
+--muted:#8A8F98;
+--user:#2A2F3A;
+--bot:#20252F;
+--display:'Space Grotesk',system-ui,sans-serif;
+--body:'Inter',system-ui,sans-serif;
+--mono:'Space Mono','SFMono-Regular',monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:#05080f;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
 body{
-font-family:'Inter',system-ui,sans-serif;
+font-family:var(--body);
+background:
+radial-gradient(120% 80% at 50% -10%, rgba(45,212,191,0.10), transparent 60%),
+var(--ink);
+color:var(--text);
 display:flex;justify-content:center;
-padding:24px 16px;color:var(--ink);
+padding:20px 14px 40px;
 -webkit-font-smoothing:antialiased;
 }
-.card{
-width:100%;max-width:560px;
-background:
-radial-gradient(120% 60% at 50% 0%, rgba(45,212,191,.10) 0%, rgba(45,212,191,0) 55%),
-linear-gradient(180deg,#0d1524 0%, #090e1a 100%);
-border:1px solid #16203400;
-border-radius:22px;
-padding:40px 30px 34px;
-box-shadow:0 30px 80px rgba(0,0,0,.5);
-}
+.app{width:100%;max-width:460px;display:flex;flex-direction:column;gap:14px}
 
-.eyebrow{
-font-family:'Space Mono',monospace;
-text-align:center;color:var(--teal);
-font-size:13px;letter-spacing:.32em;
-text-transform:uppercase;font-weight:700;
-margin-bottom:12px;
-}
-h1{
-font-family:'Bricolage Grotesque','Inter',sans-serif;
-text-align:center;font-weight:800;
-font-size:40px;line-height:1.02;
-letter-spacing:-.01em;text-transform:uppercase;
-}
-h1 .hl{color:var(--teal);}
-.subhead{
-text-align:center;color:var(--muted);
-font-size:15px;margin-top:12px;font-weight:500;
-}
-
-.table{
-margin-top:26px;border-radius:16px;overflow:hidden;
+.bar{
+position:relative;
+background:var(--panel);
 border:1px solid var(--line);
-background:var(--card);
+border-radius:16px;
+padding:16px 18px;
+overflow:hidden;
 }
-.thead{display:grid;grid-template-columns:1fr 1fr;}
-.thead .col{
-padding:14px 18px;font-weight:800;font-size:15px;
-letter-spacing:.02em;
+.bar::before{
+content:"";position:absolute;top:-40px;right:-30px;width:160px;height:160px;
+background:radial-gradient(circle, rgba(45,212,191,0.28), transparent 70%);
+filter:blur(6px);pointer-events:none;
 }
-.thead .ah{
-background:linear-gradient(180deg,var(--teal) 0%, var(--teal-deep) 100%);
-color:#062622;
+.brand{display:flex;align-items:center;gap:9px;position:relative}
+.brand .dot{
+width:9px;height:9px;border-radius:50%;background:var(--live);
+box-shadow:0 0 0 0 rgba(74,222,128,0.6);animation:pulse 2s infinite;
 }
-.thead .own{
-background:#1a2437;color:#cdd6e4;
+@keyframes pulse{
+0%{box-shadow:0 0 0 0 rgba(74,222,128,0.55)}
+70%{box-shadow:0 0 0 8px rgba(74,222,128,0)}
+100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}
+}
+.brand h1{
+font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.2px;
+}
+.brand h1 span{color:var(--teal)}
+.status-row{
+display:flex;align-items:flex-end;justify-content:space-between;
+margin-top:14px;position:relative;
+}
+.clock{font-family:var(--mono);font-size:26px;font-weight:700;line-height:1;color:var(--teal-lite)}
+.clock small{display:block;font-family:var(--body);font-size:10px;letter-spacing:1.5px;
+color:var(--muted);font-weight:500;margin-top:6px;text-transform:uppercase}
+.status-pill{
+text-align:right;font-size:11px;line-height:1.5;
+}
+.status-pill .closed{color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.status-pill .answering{color:var(--live);font-weight:600}
+.status-pill .saved{color:var(--teal-lite);font-weight:600;margin-top:2px;font-size:10.5px}
+
+.switch-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
+font-weight:600;margin:2px 2px -4px}
+.niches{display:flex;gap:8px;overflow-x:auto;padding:6px 2px 4px;scrollbar-width:none}
+.niches::-webkit-scrollbar{display:none}
+.niche{
+flex:0 0 auto;background:var(--panel-2);border:1px solid var(--line);
+color:var(--muted);font-family:var(--body);font-size:12.5px;font-weight:500;
+padding:8px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;
+transition:.18s;
+}
+.niche:hover{color:var(--text);border-color:#3a4150}
+.niche.active{
+background:linear-gradient(180deg,var(--teal),#14B8A6);
+color:#03211E;border-color:transparent;font-weight:600;
 }
 
-.row{display:grid;grid-template-columns:1fr 1fr;}
-.row:nth-child(odd) .cell{background:var(--panel-alt);}
-.row:nth-child(even) .cell{background:var(--panel);}
-.cell{
+.chat-card{
+background:var(--panel);border:1px solid var(--line);border-radius:16px;
+display:flex;flex-direction:column;overflow:hidden;
+}
+.biz-head{
+padding:13px 16px;border-bottom:1px solid var(--line);
 display:flex;align-items:center;gap:11px;
-padding:15px 18px;font-size:15px;font-weight:600;
-border-top:1px solid var(--line);
 }
-.cell.left{color:#eaf0f7;}
-.cell.right{color:#7c8798;font-weight:500;}
-.row:first-of-type .cell{border-top:none;}
-
-.mark{
-flex:0 0 auto;width:22px;height:22px;border-radius:50%;
+.biz-avatar{
+width:34px;height:34px;border-radius:10px;flex:0 0 auto;
+background:linear-gradient(145deg,var(--teal),#0F9488);
 display:flex;align-items:center;justify-content:center;
-font-size:13px;font-weight:800;
+font-family:var(--display);font-weight:700;color:#03211E;font-size:15px;
 }
-.mark.yes{background:rgba(55,196,107,.16);color:var(--green);}
-.mark.no{background:rgba(120,135,152,.14);color:#6a7686;}
+.biz-head .name{font-family:var(--display);font-weight:600;font-size:14.5px}
+.biz-head .type{font-size:11px;color:var(--muted);margin-top:1px}
 
-.kicker{
-text-align:center;margin-top:26px;
-font-family:'Bricolage Grotesque','Inter',sans-serif;
-font-weight:800;font-size:27px;letter-spacing:-.01em;
+.transcript{
+padding:16px;display:flex;flex-direction:column;gap:11px;
+height:340px;overflow-y:auto;scroll-behavior:smooth;
 }
-.kicker .hl{color:var(--teal);}
-.terms{
-text-align:center;color:var(--teal);
-font-size:13.5px;margin-top:9px;font-weight:600;
-letter-spacing:.01em;
-}
-.kicker-sub{
-text-align:center;color:var(--muted);
-font-size:14px;margin-top:8px;font-weight:500;
-}
+.msg{max-width:82%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;
+animation:rise .25s ease}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg.bot{background:var(--bot);border:1px solid var(--line);border-bottom-left-radius:5px;align-self:flex-start}
+.msg.user{background:var(--user);border-bottom-right-radius:5px;align-self:flex-end}
+.msg.bot .who{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);
+font-weight:600;margin-bottom:4px;display:block}
+.typing{align-self:flex-start;display:flex;gap:4px;padding:12px 14px;background:var(--bot);
+border:1px solid var(--line);border-radius:14px;border-bottom-left-radius:5px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1.3s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
 
+.chips{display:flex;gap:7px;overflow-x:auto;padding:10px 14px 4px;scrollbar-width:none;border-top:1px solid var(--line)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;background:transparent;border:1px solid var(--line);color:var(--muted);
+font-family:var(--body);font-size:12px;padding:6px 11px;border-radius:999px;cursor:pointer;
+white-space:nowrap;transition:.15s}
+.chip:hover{color:var(--text);border-color:var(--teal);}
+
+.composer{display:flex;gap:8px;padding:12px 14px 14px}
+.composer input{
+flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+color:var(--text);font-family:var(--body);font-size:16px;padding:12px 14px;outline:none;
+}
+.composer input:focus{border-color:var(--teal)}
+.composer input::placeholder{color:#5c626d}
+.send{
+background:linear-gradient(180deg,var(--teal),#14B8A6);color:#03211E;border:none;
+border-radius:12px;padding:0 16px;font-family:var(--display);font-weight:700;font-size:14px;
+cursor:pointer;transition:.15s;
+}
+.send:hover{filter:brightness(1.06)}
+.send:disabled{opacity:.5;cursor:not-allowed}
+
+.foot{text-align:center;font-size:10.5px;color:#5c626d;letter-spacing:.3px;padding:0 8px}
+.foot b{color:var(--muted);font-weight:600}
+
+.cta-wrap{display:flex;flex-direction:column;gap:8px;margin-top:4px}
 .cta{
-display:block;width:100%;margin-top:22px;
-background:linear-gradient(180deg,var(--teal) 0%, var(--teal-deep) 100%);
-color:#062622;border:none;border-radius:13px;
-padding:18px;font-size:16.5px;font-weight:800;
-letter-spacing:.02em;cursor:pointer;text-align:center;
-text-decoration:none;
-box-shadow:0 10px 26px rgba(20,184,166,.28);
-transition:transform .12s ease, box-shadow .12s ease;
+display:block;text-align:center;text-decoration:none;
+background:linear-gradient(180deg,var(--teal),#14B8A6);
+color:#03211E;font-family:var(--display);font-weight:700;font-size:16px;
+padding:15px 20px;border-radius:14px;
+box-shadow:0 6px 22px rgba(45,212,191,0.20);transition:.15s;
 }
-.cta:hover{transform:translateY(-1px);box-shadow:0 14px 32px rgba(20,184,166,.38);}
-.cta:focus-visible{outline:3px solid #7fead9;outline-offset:3px;}
-
-.footer{
-text-align:center;margin-top:16px;
-font-family:'Space Mono',monospace;
-color:var(--muted-dim);font-size:11.5px;
-letter-spacing:.28em;text-transform:uppercase;
-}
-
-@media (max-width:420px){
-h1{font-size:33px;}
-.cell{font-size:13.5px;padding:13px 13px;}
-.thead .col{font-size:13px;padding:13px 13px;}
-.card{padding:32px 20px 28px;}
-}
+.cta:hover,.cta:active{filter:brightness(1.06)}
+.cta-sub{text-align:center;font-size:11.5px;color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="card">
-<p class="eyebrow">The lights stay on</p>
-<h1>Your front desk<br>doesn't <span class="hl">clock out</span></h1>
-<p class="subhead">AfterHours&nbsp; vs.&nbsp; answering DMs yourself</p>
+<div class="app">
 
-<div class="table">
-<div class="thead">
-<div class="col ah">AFTERHOURS</div>
-<div class="col own">ON YOUR OWN</div>
+<div class="bar">
+<div class="brand">
+<span class="dot"></span>
+<h1>After<span>Hours</span> · AI Front Desk</h1>
 </div>
-
-<div class="row">
-<div class="cell left"><span class="mark yes">✓</span>Replies in seconds, 24/7</div>
-<div class="cell right"><span class="mark no">✕</span>Whenever you check the phone</div>
+<div class="status-row">
+<div class="clock">
+<span id="clock">--:--</span>
+<small>Local time</small>
 </div>
-<div class="row">
-<div class="cell left"><span class="mark yes">✓</span>Answers price &amp; hours instantly</div>
-<div class="cell right"><span class="mark no">✕</span>"Let me get back to you"</div>
+<div class="status-pill">
+<div class="closed" id="bizStatus">BUSINESS CLOSED</div>
+<div class="answering">● Booking customers anyway</div>
+<div class="saved" id="savedLine">1 booking caught tonight</div>
 </div>
-<div class="row">
-<div class="cell left"><span class="mark yes">✓</span>Books it right in the DM</div>
-<div class="cell right"><span class="mark no">✕</span>Back-and-forth, then ghosted</div>
-</div>
-<div class="row">
-<div class="cell left"><span class="mark yes">✓</span>Catches the 9pm message</div>
-<div class="cell right"><span class="mark no">✕</span>Sees it at 7am, too late</div>
-</div>
-<div class="row">
-<div class="cell left"><span class="mark yes">✓</span>Follows up on its own</div>
-<div class="cell right"><span class="mark no">✕</span>Forgets to follow up</div>
-</div>
-<div class="row">
-<div class="cell left"><span class="mark yes">✓</span>Every lead captured</div>
-<div class="cell right"><span class="mark no">✕</span>Lost to a faster shop</div>
 </div>
 </div>
 
-<p class="kicker">No booking, <span class="hl">no bill.</span></p>
-<p class="terms">If it doesn't book in 14 days, you don't pay &mdash; cancel anytime.</p>
-<p class="kicker-sub">We build it, wire it to your DMs, and run it for you.</p>
-
-<a class="cta" href="#">TAP THE LINK TO SEE IT LIVE 👇</a>
-<p class="footer">AfterHours AI Front Desk</p>
+<div>
+<div class="switch-label">Show it as a…</div>
+<div class="niches" id="niches"></div>
 </div>
+
+<div class="chat-card">
+<div class="biz-head">
+<div class="biz-avatar" id="avatar">L</div>
+<div>
+<div class="name" id="bizName">—</div>
+<div class="type" id="bizType">—</div>
+</div>
+</div>
+<div class="transcript" id="transcript"></div>
+<div class="chips" id="chips"></div>
+<div class="composer">
+<input id="input" type="text" placeholder="Ask like a customer would…" autocomplete="off" />
+<button class="send" id="send">Send</button>
+</div>
+</div>
+
+<div class="foot">Every message answered in seconds — <b>even after you close</b></div>
+
+<div class="cta-wrap">
+<a class="cta" href="https://calendly.com/d/ds73-235-v7b">Book your AfterHours setup call →</a>
+<p class="cta-sub">Free 15-min call. See if it fits your shop — no pressure.</p>
+</div>
+</div>
+
+<script>
+/* =========================================================================
+YOUR WORKER — the demo sends every message here.
+This is your live frontdesk-api Worker, running on YOUR Anthropic key.
+If replies come back blank, check two things:
+1) The URL below is exactly what Cloudflare shows for the Worker + "/frontdesk"
+2) If you set FRONTDESK_SECRET in the Worker, paste the same value in API_SECRET
+========================================================================= */
+const WORKER_URL = "https://frontdesk-api.quantumflexpt.workers.dev/frontdesk";
+const API_SECRET = ""; // leave "" unless you set FRONTDESK_SECRET in the Worker
+
+/* =========================================================================
+YOUR NICHES — each block is one business. These fields map 1:1 to what
+your Worker expects (biz_name, services, hours, persona, booking_link).
+To onboard a real client: copy a block, swap in their real details. Done.
+========================================================================= */
+const NICHES = [
+{
+key:"medspa", label:"Med Spa", avatar:"L",
+name:"Lumière Med Spa", type:"Aesthetics & skin care",
+services:"Botox ($12/unit), dermal fillers, HydraFacials (from $175), laser hair removal, chemical peels, microneedling. Consultations are complimentary.",
+hours:"Tue–Sat 9am–6pm; closed Sun & Mon",
+persona:"warm, polished, and reassuring",
+booking_link:"lumiere-medspa.com/book",
+questions:["Do you do lip filler?","How much is a HydraFacial?","Are you open Sunday?","Do I need a consult first?"]
+},
+{
+key:"salon", label:"Hair Salon", avatar:"G",
+name:"The Gilded Chair", type:"Hair salon & color",
+services:"Women's cuts (from $55), balayage (from $180), full color, highlights, blowouts ($45), keratin treatments, extensions.",
+hours:"Wed–Sun 10am–7pm",
+persona:"friendly, stylish, and upbeat",
+booking_link:"gildedchair.com/book",
+questions:["How much for balayage?","Can I get in this weekend?","Do you do extensions?","Who's good with curly hair?"]
+},
+{
+key:"barber", label:"Barber", avatar:"F",
+name:"Fadeline Barbershop", type:"Barbershop",
+services:"Fades, tapers, beard trims, hot-towel shaves, line-ups, kids' cuts. Cut $30, cut + beard $45, kids $20. Walk-ins welcome.",
+hours:"Mon–Sat 9am–7pm",
+persona:"chill, confident, and no-fluff",
+booking_link:"fadeline.com/book",
+questions:["You take walk-ins?","How much for a cut and beard?","Open on Saturday?","Do you cut kids' hair?"]
+},
+{
+key:"massage", label:"Massage", avatar:"S",
+name:"Stillwater Massage", type:"Massage therapy",
+services:"Deep tissue, Swedish, prenatal, sports recovery, and hot stone. 60-min $95, 90-min $135. By appointment.",
+hours:"Mon–Sat 9am–8pm",
+persona:"calm, caring, and unhurried",
+booking_link:"stillwatermassage.com/book",
+questions:["Do you do prenatal massage?","How much for 90 minutes?","Any openings tonight?","Is deep tissue good for back pain?"]
+},
+{
+key:"nails", label:"Nails", avatar:"P",
+name:"Polished Nail Studio", type:"Nail salon",
+services:"Gel manicures ($45), dip powder, acrylic full sets ($60), pedicures ($50), nail art, and fills.",
+hours:"Tue–Sun 10am–7pm",
+persona:"friendly, fun, and welcoming",
+booking_link:"polishedstudio.com/book",
+questions:["How much for a full set?","Do you do nail art?","Can I come in today?","Do you take walk-ins?"]
+},
+{
+key:"grooming", label:"Dog Grooming", avatar:"W",
+name:"Waggs & Whiskers", type:"Pet grooming",
+services:"Full grooms (from $65, varies by size and coat), bath & brush, nail trims ($15), de-shedding, breed cuts. Dogs and cats. By appointment.",
+hours:"Tue–Sat 8am–5pm",
+persona:"warm, animal-loving, and easygoing — ask breed or size when it affects the answer",
+booking_link:"waggsandwhiskers.com/book",
+questions:["How much to groom a golden retriever?","Do you do nail trims only?","Any openings this week?","Do you groom cats?"]
+},
+{
+key:"realtor", label:"Realtor", avatar:"C",
+name:"Casey Monroe Realty", type:"Real estate",
+services:"Buying, selling, free home valuations, showings, and first-time-buyer help. Showings by appointment, available 7 days.",
+hours:"",
+persona:"professional and trustworthy — quick to offer taking the caller's name and number so Casey can follow up fast",
+booking_link:"caseymonroe.com",
+questions:["What's my home worth?","I'm a first-time buyer, where do I start?","Can we see a house this weekend?","Do you cover this area?"]
+},
+{
+key:"breeder", label:"Dog Breeder", avatar:"K",
+name:"Cedar Ridge Kennels", type:"Dog breeder",
+services:"Golden Retrievers and Bernese Mountain Dogs. Health-tested parents, vet checks, first shots. Goldens from $2,000; a $500 deposit reserves a waitlist spot.",
+hours:"",
+persona:"caring, honest, and family-oriented — offer to take their name and number for the waitlist, and never promise litter timing",
+booking_link:"cedarridgekennels.com",
+questions:["Any puppies available now?","How much is a golden?","How does the waitlist work?","Are the parents health tested?"]
+},
+{
+key:"cars", label:"Car Sales", avatar:"R",
+name:"Rivertown Auto Sales", type:"Used car dealership",
+services:"Used cars and trucks, financing (all credit considered), trade-in appraisals, and test drives.",
+hours:"Mon–Sat 9am–8pm",
+persona:"friendly, straight-talking, and no-pressure — offer to grab their name and number so a salesperson can follow up",
+booking_link:"rivertownautos.com",
+questions:["Do you have any trucks under $20k?","Can I get financing with bad credit?","What's my trade worth?","Can I test drive tonight?"]
+},
+{
+key:"trainer", label:"Personal Trainer", avatar:"Q",
+name:"Quantum Flex Training", type:"Fitness coaching",
+services:"In-person training, online coaching for traveling professionals 40+, and truck-driver fitness (Diesel & Discipline). Free 20-minute intro call.",
+hours:"",
+persona:"motivating, direct, and no-fluff — like Coach TreMayne himself; push the free intro call and offer to take their name and number",
+booking_link:"calendly.com/coachtremayne",
+questions:["Do you train people over 40?","I'm a truck driver, can you help?","How much is coaching?","Can I book a free call?"]
+},
+{
+key:"accountant", label:"Accountant", avatar:"B",
+name:"Bishop & Clark Tax", type:"Accounting & tax",
+services:"Individual and small-business tax prep (individuals from $250, business from $600), bookkeeping, LLC setup, and quarterly filings.",
+hours:"Mon–Fri 9am–5pm (extended during tax season)",
+persona:"professional, clear, and reassuring — offer to take their name and number for a CPA to follow up, and never give specific tax or legal advice",
+booking_link:"bishopclark.com/book",
+questions:["How much to file my taxes?","Can you do my LLC's books?","Do you handle 1099 stuff?","When can I come in?"]
+}
+];
+
+/* ========================= app logic ========================= */
+const el = id => document.getElementById(id);
+let current = NICHES[0];
+let busy = false;
+let caught = 1; // bookings caught after hours — ticks up as they play
+
+function bumpCaught(){
+caught++;
+const line = el("savedLine");
+if(line) line.textContent = caught + " booking" + (caught === 1 ? "" : "s") + " caught tonight";
+}
+
+// live clock — proves the desk is awake right now
+function tick(){
+const now = new Date();
+let h = now.getHours(), m = now.getMinutes();
+const ampm = h >= 12 ? "PM" : "AM";
+const h12 = ((h + 11) % 12) + 1;
+el("clock").textContent = `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+const closed = (h < 9 || h >= 18);
+el("bizStatus").textContent = closed ? "BUSINESS CLOSED" : "OPEN — & COVERED";
+}
+setInterval(tick, 1000); tick();
+
+function buildNiches(){
+const wrap = el("niches"); wrap.innerHTML = "";
+NICHES.forEach(n => {
+const b = document.createElement("button");
+b.className = "niche" + (n.key === current.key ? " active" : "");
+b.textContent = n.label;
+b.onclick = () => selectNiche(n);
+wrap.appendChild(b);
+});
+}
+
+function selectNiche(n){
+current = n;
+caught = 1;
+const line = el("savedLine");
+if(line) line.textContent = "1 booking caught tonight";
+buildNiches();
+el("avatar").textContent = n.avatar;
+el("bizName").textContent = n.name;
+el("bizType").textContent = n.type;
+el("transcript").innerHTML = "";
+addMsg("bot", `Thanks for reaching out to ${n.name}! We're closed right now, but I can still help. What can I do for you?`);
+buildChips();
+el("input").focus();
+}
+
+function buildChips(){
+const wrap = el("chips"); wrap.innerHTML = "";
+current.questions.forEach(q => {
+const c = document.createElement("button");
+c.className = "chip"; c.textContent = q;
+c.onclick = () => { if(!busy){ el("input").value = q; sendMessage(); } };
+wrap.appendChild(c);
+});
+}
+
+function addMsg(role, text){
+const d = document.createElement("div");
+d.className = "msg " + (role === "user" ? "user" : "bot");
+if(role === "bot"){
+const who = document.createElement("span");
+who.className = "who"; who.textContent = current.name;
+d.appendChild(who);
+d.appendChild(document.createTextNode(text));
+} else {
+d.textContent = text;
+}
+const t = el("transcript"); t.appendChild(d); t.scrollTop = t.scrollHeight;
+}
+
+function showTyping(){
+const d = document.createElement("div");
+d.className = "typing"; d.id = "typing";
+d.innerHTML = "<span></span><span></span><span></span>";
+const t = el("transcript"); t.appendChild(d); t.scrollTop = t.scrollHeight;
+}
+function hideTyping(){ const t = el("typing"); if(t) t.remove(); }
+
+function sendMessage(){
+const input = el("input");
+const text = input.value.trim();
+if(!text || busy) return;
+input.value = "";
+addMsg("user", text);
+busy = true; el("send").disabled = true;
+showTyping();
+
+askFrontDesk(text)
+.then(reply => { hideTyping(); addMsg("bot", reply); bumpCaught(); })
+.catch(err => {
+hideTyping();
+addMsg("bot", "Give me one sec and try that again.");
+console.error("AfterHours demo error:", err);
+})
+.finally(() => { busy = false; el("send").disabled = false; input.focus(); });
+}
+
+/* Sends ONE customer message + this business's details to YOUR Worker.
+The Worker adds your Anthropic key and returns { reply }. Single message
+in, single reply out — same as a real ManyChat DM. */
+async function askFrontDesk(message){
+const headers = { "Content-Type":"application/json" };
+if(API_SECRET) headers["X-Api-Secret"] = API_SECRET;
+
+const res = await fetch(WORKER_URL, {
+method:"POST",
+headers,
+body: JSON.stringify({
+message,
+biz_name: current.name,
+services: current.services,
+hours: current.hours,
+persona: current.persona,
+booking_link: current.booking_link
+})
+});
+
+if(!res.ok) throw new Error("Worker HTTP " + res.status);
+const data = await res.json();
+const reply = (data.reply || "").trim();
+if(!reply) throw new Error("Empty reply — check the URL or FRONTDESK_SECRET");
+return reply;
+}
+
+el("send").onclick = sendMessage;
+el("input").addEventListener("keydown", e => { if(e.key === "Enter") sendMessage(); });
+
+buildNiches();
+selectNiche(current);
+</script>
 </body>
 </html>
-
