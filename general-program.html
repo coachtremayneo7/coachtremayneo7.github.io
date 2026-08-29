@@ -116,6 +116,24 @@ border-left:4px solid var(--gold);padding:14px 16px;margin-bottom:18px}
 border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:18px}
 .safety b{color:var(--steel)}
 
+/* ---- Step 1 · Baseline (drop-in) ---- */
+.baseline{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+border-left:4px solid var(--accent);padding:14px 16px;margin-bottom:16px}
+.baseline-h{font-family:'Oswald';text-transform:uppercase;letter-spacing:.04em;
+font-size:15px;color:var(--accent);margin-bottom:10px}
+.bcheck{list-style:none}
+.bcheck li{position:relative;padding:6px 0 6px 28px;color:var(--white);font-size:15px;line-height:1.45}
+.bcheck li::before{content:"";position:absolute;left:0;top:8px;width:15px;height:15px;
+border:1.5px solid var(--accent);border-radius:4px}
+.bcheck li span{display:block;color:var(--steel);font-size:13px;margin-top:2px}
+.intake{list-style:none;counter-reset:q}
+.intake li{position:relative;padding:11px 14px 11px 42px;margin-bottom:9px;
+background:var(--ink);border:1px solid var(--line);border-radius:9px;color:var(--white);font-size:15px;line-height:1.4}
+.intake li:last-child{margin-bottom:0}
+.intake li::before{counter-increment:q;content:counter(q);position:absolute;left:14px;top:10px;
+font-family:'Oswald';font-weight:700;color:var(--accent);font-size:16px}
+.intake li span{display:block;color:var(--steel);font-size:13px;margin-top:3px}
+
 .sec-label{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.2em;
 color:var(--steel-dim);text-transform:uppercase;margin:8px 4px 12px}
 
@@ -233,6 +251,37 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 <p>Save this like an app so it's one tap away:</p>
 <p class="ios"><b>iPhone:</b> tap Share <span style="font-family:monospace">⬆️</span> → <b>Add to Home Screen</b>.</p>
 <p><b>Android:</b> tap the <b>⋮</b> menu → <b>Add to Home screen</b>.</p>
+</div>
+
+<!-- ===== STEP 1 · BASELINE (drop-in) ===== -->
+<div class="sec-label">Step 1 · Your starting line</div>
+
+<div class="how">
+<div class="how-h">📍 Take your baseline first</div>
+<p>Before you train, capture where you are <b>today</b>. Fifteen minutes, and it's the reason Week 4 means something — that's when you retake these exact numbers and see what moved.</p>
+<p>Be honest, not impressive. Nobody sees this but you — the messier your real starting point, the more obvious your progress.</p>
+</div>
+
+<div class="baseline">
+<div class="baseline-h">📸 Your day-1 snapshot</div>
+<ul class="bcheck">
+<li>Bodyweight, first thing in the morning<span>Optional — skip it if the number stresses you out</span></li>
+<li>Waist at the belly button + one measurement you care about<span>Arm, hip, or thigh — same spot every time</span></li>
+<li>Front and side photo, same light, same mirror<span>Private. This is the one that never lies</span></li>
+<li>Days you moved on purpose last week<span>Your honest normal, not your best week</span></li>
+<li>Sleep and energy, 1–10<span>What a normal day feels like before we change anything</span></li>
+</ul>
+</div>
+
+<div class="baseline">
+<div class="baseline-h">📋 5 questions — so the plan fits your life</div>
+<ul class="intake">
+<li>How many days can you realistically train?<span>Your normal week, not your best one</span></li>
+<li>Where are you training?<span>Full gym, home with a few things, or bodyweight only</span></li>
+<li>Any injuries or moves to avoid?<span>Anything a knee, back, or shoulder says no to</span></li>
+<li>What time of day will you actually do it?<span>Build the habit around your real schedule</span></li>
+<li>What made past attempts fall apart?<span>Name it now so Week 3 doesn't ambush you</span></li>
+</ul>
 </div>
 
 <!-- ============ FAT LOSS TRACK ============ -->
