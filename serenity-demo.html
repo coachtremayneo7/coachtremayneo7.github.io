@@ -14,8 +14,12 @@
 <!-- RETELL VOICE WIDGET — the call happens right on this page. -->
 <!-- Voice agent: agent_4b59900425d87445089231d9ed -->
 <!-- Public key: public_key_f780754fa1ff0314fe219 -->
-<!-- Note: this key is locked to coachtremayne.com, so the widget only -->
-<!-- works on the live page there — not when opening the file locally. -->
+<!-- The widget's own floating "Speak with the front desk" button -->
+<!-- (bottom-right) is the call-to-action. One tap starts the call. -->
+<!-- Key is locked to coachtremayne.com, so it only works on the live -->
+<!-- page there — not when opening the file locally. -->
+<!-- To hide "Powered by Retell", add data-white-label="YOUR_TOKEN" -->
+<!-- once Retell gives you a white-label token. -->
 <!-- =================================================================== -->
 <script
 id="retell-widget"
@@ -137,37 +141,16 @@ color:var(--honey-soft);
 font-size:clamp(1.05rem,2.6vw,1.25rem);
 color:rgba(243,238,230,0.82);
 max-width:40ch;
-margin-bottom:2.2rem;
+margin-bottom:1.6rem;
 }
-
-.cta{
+.cue{
 display:inline-flex;
 align-items:center;
-gap:0.85rem;
-background:var(--honey);
-color:var(--pine-deep);
-border:none;
-font-family:"Instrument Sans",sans-serif;
-font-size:1.05rem;
-font-weight:600;
-padding:1rem 1.6rem;
-border-radius:100px;
-cursor:pointer;
-text-decoration:none;
-align-self:flex-start;
-transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
-box-shadow:0 10px 40px -12px rgba(201,154,91,0.7);
+gap:0.6rem;
+font-size:0.9rem;
+color:var(--honey-soft);
 }
-.cta:hover{transform:translateY(-2px);background:var(--honey-soft);}
-.cta:focus-visible{outline:3px solid var(--honey-soft);outline-offset:3px;}
-.cta .mic{
-width:22px;height:22px;flex:none;
-}
-.cta-note{
-margin-top:1.1rem;
-font-size:0.85rem;
-color:var(--sage);
-}
+.cue svg{width:18px;height:18px;flex:none;}
 
 /* ---------- SESSIONS ---------- */
 .sessions{
@@ -187,10 +170,7 @@ color:var(--ink-soft);
 max-width:52ch;
 margin-bottom:clamp(2.4rem,5vw,3.4rem);
 }
-.session-list{
-display:grid;
-gap:0;
-}
+.session-list{display:grid;gap:0;}
 .session{
 display:grid;
 grid-template-columns:1fr;
@@ -199,17 +179,10 @@ padding:1.7rem 0;
 border-top:1px solid rgba(58,54,47,0.16);
 }
 .session:last-child{border-bottom:1px solid rgba(58,54,47,0.16);}
-.session h3{
-font-size:1.5rem;
-color:var(--ink);
-}
+.session h3{font-size:1.5rem;color:var(--ink);}
 .session p{color:var(--ink-soft);max-width:56ch;}
 @media(min-width:620px){
-.session{
-grid-template-columns:12rem 1fr;
-gap:1.5rem;
-align-items:baseline;
-}
+.session{grid-template-columns:12rem 1fr;gap:1.5rem;align-items:baseline;}
 }
 
 .lengths{
@@ -221,11 +194,7 @@ gap:0.9rem 1.4rem;
 color:var(--ink-soft);
 font-size:0.98rem;
 }
-.len-tag{
-font-family:"Fraunces",serif;
-font-size:1.25rem;
-color:var(--pine);
-}
+.len-tag{font-family:"Fraunces",serif;font-size:1.25rem;color:var(--pine);}
 
 /* ---------- CLOSING STRIP ---------- */
 .closing{
@@ -240,8 +209,7 @@ max-width:20ch;
 margin:0 auto 1.3rem;
 }
 .closing h2 em{font-style:italic;color:var(--honey-soft);}
-.closing p{color:var(--sage);max-width:44ch;margin:0 auto 2rem;}
-.cta.on-pine{box-shadow:0 10px 40px -12px rgba(0,0,0,0.5);align-self:center;}
+.closing p{color:var(--sage);max-width:44ch;margin:0 auto 0;}
 
 /* ---------- FOOTER ---------- */
 footer{
@@ -256,25 +224,6 @@ align-items:center;
 justify-content:space-between;
 }
 footer .fw{font-family:"Fraunces",serif;color:var(--linen);font-size:1rem;}
-
-/* ---------- HINT TOAST (fallback if the hero button can't reach the widget) ---------- */
-.hint{
-position:fixed;
-left:50%;
-bottom:5.5rem;
-transform:translateX(-50%) translateY(160%);
-background:var(--ink);
-color:var(--linen);
-padding:0.85rem 1.2rem;
-border-radius:100px;
-font-size:0.92rem;
-box-shadow:0 14px 40px -12px rgba(0,0,0,0.6);
-transition:transform .4s cubic-bezier(.2,.9,.3,1);
-z-index:9998;
-max-width:calc(100vw - 2rem);
-text-align:center;
-}
-.hint.show{transform:translateX(-50%) translateY(0);}
 
 @keyframes pulse{
 0%,100%{box-shadow:0 0 0 0 rgba(228,199,154,0.5);}
@@ -291,8 +240,6 @@ text-align:center;
 @media(prefers-reduced-motion:reduce){
 .reveal{animation:none;opacity:1;transform:none;}
 .dot{animation:none;}
-.cta{transition:none;}
-.hint{transition:opacity .2s;}
 }
 </style>
 </head>
@@ -309,14 +256,13 @@ text-align:center;
 <p class="eyebrow reveal d1">Massage &amp; bodywork</p>
 <h1 class="reveal d2">Come back<br>to <em>yourself.</em></h1>
 <p class="lede reveal d3">Booking takes a minute. Tell our front desk what's going on and it'll find you a time that fits &mdash; Swedish, deep tissue, or prenatal.</p>
-<button class="cta reveal d4" data-talk aria-label="Speak with the front desk">
-<svg class="mic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+<span class="cue reveal d4">
+<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" fill="currentColor"/>
 <path d="M18 11a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.917V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.083A6 6 0 0 0 18 11Z" fill="currentColor"/>
 </svg>
-Speak with the front desk
-</button>
-<p class="cta-note reveal d4">Live voice &middot; book, reschedule, or ask a question any time.</p>
+Tap &ldquo;Speak with the front desk&rdquo; to start a live call.
+</span>
 </div>
 </header>
 
@@ -354,59 +300,12 @@ Speak with the front desk
 <section class="closing">
 <h2>The table's <em>waiting.</em></h2>
 <p>No hold music, no callback. Our front desk answers right away and books you in.</p>
-<button class="cta on-pine" data-talk aria-label="Speak with the front desk">
-<svg class="mic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-<path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" fill="currentColor"/>
-<path d="M18 11a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.917V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.083A6 6 0 0 0 18 11Z" fill="currentColor"/>
-</svg>
-Speak with the front desk
-</button>
 </section>
 
 <footer>
 <span class="fw">Serenity Massage Therapy</span>
 <span>Mon&ndash;Sat &middot; by appointment &middot; this page is a live AI demo</span>
 </footer>
-
-<div class="hint" id="hint" role="status" aria-live="polite">Tap the front-desk button in the bottom-right corner to start.</div>
-
-<script>
-// The Retell widget adds its own floating "Speak with the front desk" button
-// (bottom-right). These in-page buttons try to open that widget directly;
-// if the widget guards its internals, we nudge the user to the corner button.
-(function () {
-var hint = document.getElementById('hint');
-var hintTimer;
-
-function showHint() {
-hint.classList.add('show');
-clearTimeout(hintTimer);
-hintTimer = setTimeout(function () { hint.classList.remove('show'); }, 5000);
-}
-
-function openWidget() {
-var selectors = [
-'#retell-widget-fab',
-'[class*="retell"] button',
-'[id*="retell"] button',
-'[class*="fab"]',
-'button[aria-label*="support" i]',
-'button[aria-label*="front desk" i]'
-];
-for (var i = 0; i < selectors.length; i++) {
-var el = document.querySelector(selectors[i]);
-if (el && !el.hasAttribute('data-talk')) { el.click(); return true; }
-}
-return false;
-}
-
-document.querySelectorAll('[data-talk]').forEach(function (btn) {
-btn.addEventListener('click', function () {
-if (!openWidget()) showHint();
-});
-});
-})();
-</script>
 
 </body>
 </html>
