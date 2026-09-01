@@ -182,10 +182,14 @@ font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.06em;text-alig
 font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.14em;
 text-transform:uppercase;color:var(--smoke);margin:0;
 }
-.real-problem .video-slot{
-display:flex;align-items:center;justify-content:center;height:170px;margin-top:16px;
-border:1px dashed var(--line);border-radius:4px;color:var(--smoke);
-font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.06em;
+.real-problem .testimonial{margin-top:18px}
+.real-problem .testimonial video{
+display:block;width:100%;max-width:300px;border-radius:6px;
+border:1px solid var(--line);background:#000;
+}
+.real-problem .testimonial .cap{
+font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;
+text-transform:uppercase;color:var(--smoke);margin-top:10px;
 }
 
 /* offerings */
@@ -208,6 +212,25 @@ font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.06em;
 .rung p{color:var(--smoke);font-size:15px}
 .rung.hot{border-color:rgba(255,176,32,.45)}
 @media(max-width:820px){.ladder{grid-template-columns:1fr}}
+
+/* ---------- 1-on-1 coaching ---------- */
+.coaching{border-top:1px solid var(--line)}
+.coaching .panel{
+background:
+radial-gradient(circle at 88% 0%,rgba(255,176,32,.10),transparent 55%),
+linear-gradient(150deg,var(--panel),var(--steel));
+border:1px solid rgba(255,176,32,.4);border-radius:8px;padding:44px 40px;
+}
+.coaching h2{font-weight:800;font-size:clamp(30px,5vw,50px);color:#fff;margin:14px 0 16px;text-transform:uppercase;line-height:1.02}
+.coaching .pitch{color:var(--chrome);font-size:17px;max-width:60ch;margin-bottom:24px}
+.coaching .pitch b{color:#fff;font-weight:600}
+.coaching ul{list-style:none;margin:0 0 30px;display:grid;gap:12px;max-width:560px}
+.coaching li{position:relative;padding-left:26px;color:var(--chrome);font-size:16px}
+.coaching li::before{content:"›";position:absolute;left:6px;color:var(--amber);font-weight:700}
+.coaching .acts{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.coaching .tel{font-family:"Space Mono",monospace;font-size:14px;letter-spacing:.04em;color:var(--amber);display:inline-flex;align-items:center;gap:8px}
+.coaching .tel:hover{color:#fff}
+@media(max-width:640px){.coaching .panel{padding:30px 22px}}
 
 /* ---------- coach terminal ---------- */
 .coach{background:var(--ink);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -354,7 +377,13 @@ onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
 <div class="img-fallback">Upload the before/after to the repo as&nbsp;<b style="color:var(--amber)">nigel-before-after.jpg</b></div>
 <p>Nigel's a full-time driver. Five weeks — no gym, worked around the road.</p>
 <p class="who">Nigel &middot; full-time driver &middot; 5 weeks &middot; Jul 17 – Aug 22, 2026</p>
-<div class="video-slot">▶ Drop Nigel's 47-sec testimonial here</div>
+<div class="testimonial">
+<video controls playsinline preload="metadata" poster="nigel-testimonial-poster.jpg">
+<source src="nigel-testimonial.mp4" type="video/mp4">
+Your browser can't play this video.
+</video>
+<div class="cap">▶ Nigel + Coach TreMayne — 5 weeks in</div>
+</div>
 </div>
 
 <div class="hero-cta">
@@ -422,6 +451,26 @@ onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
 <span class="price paid">PAID</span>
 <h3>The Discipline</h3>
 <p>Lock it in so it holds when the miles get long and the schedule gets ugly. This is where it becomes who you are.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 1-ON-1 COACHING -->
+<section class="coaching">
+<div class="wrap">
+<div class="panel">
+<span class="eyebrow">Want me in your corner?</span>
+<h2>Work with me 1-on-1.</h2>
+<p class="pitch">The program gets you moving on your own. This is different: I build the plan around <b>your body, your truck, and your hours</b> — then I stay on you every week so you don't quit when the road gets long.</p>
+<ul>
+<li>A plan built around your route, your DOT timeline, and your body</li>
+<li>Weekly check-ins — I adjust as your miles and schedule change</li>
+<li>Me in your corner by text, so you stay accountable from the road</li>
+</ul>
+<div class="acts">
+<a class="btn btn-solid" href="https://coachtremayne.com/dd-rates.html" target="_blank" rel="noopener">See 1-on-1 coaching →</a>
+<a class="tel" href="tel:+12709433164">📞 Or call me — (270) 943-3164</a>
 </div>
 </div>
 </div>
