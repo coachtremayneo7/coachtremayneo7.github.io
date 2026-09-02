@@ -432,7 +432,8 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 <div class="next-k">Your invitation to go further</div>
 <div class="next-h">A PDF can't coach you.</div>
 <div class="next-p">This plan gives you the exercises. What it can't give you is <b>accountability, real-time form checks, and a coach who adjusts the plan when travel blows it up.</b> That's what coaching with me is built to do.</div>
-<a class="cta" href="https://calendly.com/coachtremayne">Book a free consult →</a>
+<a class="cta" href="tel:+12709433164">📞 Call to book a free consult — (270) 943-3164</a>
+<a class="cta ghost" href="https://calendly.com/coachtremayne">Rather pick a time online? Book here →</a>
 <a class="cta ghost" href="mailto:coach@coachtremayne.com?subject=I%27m%20interested%20in%20travel%20coaching">Prefer to message? Email me</a>
 </div>
 
@@ -446,10 +447,6 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 
 <script>
 // ===== WIRING 1 of 2: email capture =====
-// Same capture worker as your general page — tagged source:"travel" so the
-// worker routes these leads to your TRAVEL Brevo list (the one that emails
-// the No Gym No Problem PDF). If your worker doesn't handle "travel" yet,
-// add a travel branch to it with your travel Brevo list ID.
 var CAPTURE_URL = "https://dd-capture.quantumflexpt.workers.dev";
 // =========================================
 
@@ -459,23 +456,21 @@ var btn=document.getElementById('unlock'), err=document.getElementById('err');
 
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 
+// Ask-every-time: reveal the plan but do NOT save any "unlocked" flag,
+// so every fresh visit shows the gate and collects name + email.
 function reveal(name){
 document.getElementById('whoName').textContent = name || "let's work";
 gate.style.display='none';
 program.classList.add('open');
 program.scrollIntoView({behavior:'smooth',block:'start'});
-try{localStorage.setItem('ct_travel_unlocked','1');
-if(name) localStorage.setItem('ct_travel_name',name);}catch(e){}
 }
 
 function ctGetParam(k){try{return new URLSearchParams(location.search).get(k);}catch(e){return null;}}
 
-// Skip the gate if already unlocked in this browser OR arriving from the email link (?unlocked=1)
+// Only the email link (?unlocked=1) bypasses the gate — everyone else always sees it.
 try{
-var ctFromEmail = ctGetParam('unlocked')==='1';
-var ctSaved = localStorage.getItem('ct_travel_unlocked')==='1';
-if(ctFromEmail || ctSaved){
-reveal(ctGetParam('n') || localStorage.getItem('ct_travel_name') || "let's work");
+if(ctGetParam('unlocked')==='1'){
+reveal(ctGetParam('n') || "let's work");
 }
 }catch(e){}
 
@@ -506,8 +501,8 @@ w.querySelector('.wbody').style.gridTemplateRows=open?'1fr':'0fr';
 var COACH_API = "https://coach-tremayne-api.quantumflexpt.workers.dev";
 var TRAVEL_SYSTEM = "You are Coach TreMayne, a certified personal trainer helping busy professionals 40+ stay in shape while they travel. Focus on bodyweight training that needs zero equipment — hotel rooms, truck cabs, small spaces — plus how to eat sensibly on the road and how to stay consistent when the schedule won't hold still. Talk plain and direct, like a real coach who's in their corner. Keep it sustainable and healthy — never recommend extreme diets, very low calories, crash approaches, or anything disordered; steer people toward steady habits and toward seeing a doctor or registered dietitian for medical or serious nutrition questions. Do not give specific calorie numbers or rigid meal plans. Answer in 2-3 sentences. Never use markdown.";
 var CPLAY = {
-workout:"Hotel room, 15 minutes, zero gear:\n1) 20 bodyweight squats\n2) 12 push-ups (hands on the bed if needed)\n3) 20 walking lunges\n4) 40-sec plank\nRun it 2\u20133 rounds. On the road, something always beats nothing.",
-food:"Traveling makes it easy to overeat and hard to hit protein \u2014 so anchor every meal on a protein, add veggies where you can, and drink water before you decide you're hungry. You don't need perfect on the road, you need consistent. Serious nutrition questions? That's a dietitian.",
+workout:"Hotel room, 15 minutes, zero gear:\n1) 20 bodyweight squats\n2) 12 push-ups (hands on the bed if needed)\n3) 20 walking lunges\n4) 40-sec plank\nRun it 2–3 rounds. On the road, something always beats nothing.",
+food:"Traveling makes it easy to overeat and hard to hit protein — so anchor every meal on a protein, add veggies where you can, and drink water before you decide you're hungry. You don't need perfect on the road, you need consistent. Serious nutrition questions? That's a dietitian.",
 form:"No equipment? Every move has a bodyweight swap. No door frame for rows? Do a table row or a backpack row. Weighted squat? Slow-tempo bodyweight or a single-leg version. Tell me the move and your space and I'll give you a clean swap."
 };
 var clog=document.getElementById('clog'), cinput=document.getElementById('cinput');
@@ -527,7 +522,7 @@ clog.appendChild(d); clog.scrollTop=clog.scrollHeight;
 function cask(text){
 cadd(text,'me'); cinput.value='';
 var fb=CPLAY[crouteMode(text)];
-cadd('\u2026','coach');
+cadd('…','coach');
 var pending=clog.lastChild.querySelector('.cbub');
 fetch(COACH_API,{method:'POST',headers:{'Content-Type':'application/json'},
 body:JSON.stringify({system:TRAVEL_SYSTEM,messages:[{role:'user',content:text}]})})
@@ -543,7 +538,7 @@ document.querySelectorAll('.cmode').forEach(function(m){m.classList.remove('acti
 b.classList.add('active');
 cask({workout:'Give me a quick hotel-room workout I can do right now.',
 food:'How should I eat while I\u2019m traveling?',
-form:'I have no equipment \u2014 give me bodyweight swaps.'}[b.dataset.cmode]);
+form:'I have no equipment — give me bodyweight swaps.'}[b.dataset.cmode]);
 });
 document.getElementById('csend').addEventListener('click',function(){if(cinput.value.trim())cask(cinput.value.trim());});
 cinput.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&cinput.value.trim())cask(cinput.value.trim());});
