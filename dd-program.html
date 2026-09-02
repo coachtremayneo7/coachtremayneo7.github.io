@@ -369,29 +369,24 @@ var btn=document.getElementById('unlock'), err=document.getElementById('err');
 
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 
+// Reveal the program. Ask-every-time: we do NOT save any "already unlocked"
+// flag, so every fresh visit shows the gate and collects name + email.
 function reveal(name){
 document.getElementById('whoName').textContent = name || 'driver';
 gate.style.display='none';
 program.classList.add('open');
 program.scrollIntoView({behavior:'smooth',block:'start'});
-try{localStorage.setItem('dd_roadbuild_unlocked','1');
-if(name) localStorage.setItem('dd_roadbuild_name',name);}catch(e){}
 }
 
-// read a URL query param safely (lets the email link skip the gate)
+// read a URL query param safely (lets the email "here's your program" link skip the gate)
 function ddGetParam(k){try{return new URLSearchParams(location.search).get(k);}catch(e){return null;}}
 
-// Skip the gate if EITHER:
-// - this browser already unlocked before (localStorage), OR
-// - they arrived from the email link, which carries ?unlocked=1
-// The email-link case is the fix for "tapped the email and saw the form again" —
-// the email opens in a fresh browser with no saved memory, so the URL flag is
-// what tells the page they've already signed up.
+// Only the email link (?unlocked=1) bypasses the gate — so a driver clicking
+// the copy you emailed them doesn't have to re-enter. Everyone else always
+// sees the form. (Remove this block too if you want the email link gated as well.)
 try{
-var ddFromEmail = ddGetParam('unlocked')==='1';
-var ddSaved = localStorage.getItem('dd_roadbuild_unlocked')==='1';
-if(ddFromEmail || ddSaved){
-reveal(ddGetParam('n') || localStorage.getItem('dd_roadbuild_name') || 'driver');
+if(ddGetParam('unlocked')==='1'){
+reveal(ddGetParam('n') || 'driver');
 }
 }catch(e){}
 
