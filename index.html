@@ -192,6 +192,19 @@ font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;
 text-transform:uppercase;color:var(--smoke);margin-top:10px;
 }
 
+/* ---------- calorie calculator (free tool) ---------- */
+.calc-card{
+background:
+radial-gradient(circle at 12% 0%,rgba(255,176,32,.10),transparent 55%),
+linear-gradient(150deg,var(--panel),var(--steel));
+border:1px solid rgba(255,176,32,.4);border-radius:8px;padding:44px 40px;text-align:center;
+}
+.calc-card .eyebrow{justify-content:center}
+.calc-card h2{font-weight:800;font-size:clamp(28px,5vw,46px);color:#fff;margin:14px 0 14px;text-transform:uppercase;line-height:1.03}
+.calc-card p{color:var(--chrome);font-size:17px;max-width:52ch;margin:0 auto 26px}
+.calc-card .hero-cta{justify-content:center}
+@media(max-width:640px){.calc-card{padding:30px 22px}}
+
 /* offerings */
 .offers{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
 .offer{background:var(--steel);padding:34px 30px;transition:.18s}
@@ -388,6 +401,20 @@ Your browser can't play this video.
 
 <div class="hero-cta">
 <a class="btn btn-solid" href="https://coachtremayne.com/dd-program.html" target="_blank" rel="noopener">Get cleared — start free →</a>
+</div>
+</div>
+</section>
+
+<!-- CALORIE CALCULATOR (free tool) -->
+<section style="padding-top:0">
+<div class="wrap">
+<div class="calc-card">
+<span class="eyebrow">Free tool · 60 seconds</span>
+<h2>Know your number.</h2>
+<p>Before you fix the number on the scale, find out what it needs to be. Get the daily calories to drop the weight and keep your card — dialed to your body, your hours, and your goal.</p>
+<div class="hero-cta">
+<a class="btn btn-solid" href="calculator-dd.html" target="_blank" rel="noopener">Get my calorie target →</a>
+</div>
 </div>
 </div>
 </section>
