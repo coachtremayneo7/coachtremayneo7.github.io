@@ -539,7 +539,8 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 <div class="next-k">Want it built around you?</div>
 <div class="next-h">This is the starting line.</div>
 <div class="next-p">The free plan gets you moving in the right direction. <b>Coaching</b> is a program built around <b>your</b> body, your goal, your schedule — with me checking your form and keeping you honest so you actually get there. Local? Even better — let's train in person.</div>
-<a class="cta" href="https://calendly.com/coachtremayne">Book a free consult →</a>
+<a class="cta" href="tel:+12709433164">📞 Call to book a free consult — (270) 943-3164</a>
+<a class="cta ghost" href="https://calendly.com/coachtremayne">Rather pick a time online? Book here →</a>
 <a class="cta ghost" href="mailto:coach@coachtremayne.com?subject=I%27m%20interested%20in%20coaching">Prefer to message? Email me</a>
 </div>
 
@@ -553,9 +554,6 @@ footer .tag{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.16em;co
 
 <script>
 // ===== WIRING 1 of 2: email capture =====
-// Point this at the Cloudflare Worker that adds the lead to your GENERAL Brevo list
-// (NOT the DD list — general leads shouldn't get the Diesel nurture).
-// The page posts {email, name, goal, source:"general"} so the worker can route it.
 var CAPTURE_URL = "https://dd-capture.quantumflexpt.workers.dev"; // <-- swap to general worker/list
 // =========================================
 
@@ -566,24 +564,22 @@ var chosenGoal='';
 
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 
+// Ask-every-time: reveal the program but do NOT save any "unlocked" flag,
+// so every fresh visit shows the gate and collects name + email.
 function reveal(name){
 document.getElementById('whoName').textContent = name || "let's work";
 gate.style.display='none';
 program.classList.add('open');
 program.scrollIntoView({behavior:'smooth',block:'start'});
-try{localStorage.setItem('ct_general_unlocked','1');
-if(name) localStorage.setItem('ct_general_name',name);}catch(e){}
 }
 
 function ctGetParam(k){try{return new URLSearchParams(location.search).get(k);}catch(e){return null;}}
 
-// Skip the gate if already unlocked in this browser OR arriving from the email link (?unlocked=1)
+// Only the email link (?unlocked=1) bypasses the gate — everyone else always sees it.
 try{
-var ctFromEmail = ctGetParam('unlocked')==='1';
-var ctSaved = localStorage.getItem('ct_general_unlocked')==='1';
-if(ctFromEmail || ctSaved){
-reveal(ctGetParam('n') || localStorage.getItem('ct_general_name') || "let's work");
-var savedGoal = ctGetParam('goal') || localStorage.getItem('ct_general_goal');
+if(ctGetParam('unlocked')==='1'){
+reveal(ctGetParam('n') || "let's work");
+var savedGoal = ctGetParam('goal');
 if(savedGoal) selectGoal(savedGoal);
 }
 }catch(e){}
@@ -608,7 +604,6 @@ document.querySelectorAll('.goal').forEach(function(g){g.classList.toggle('on',g
 document.getElementById('track-fatloss').classList.toggle('show',goal==='fatloss');
 document.getElementById('track-muscle').classList.toggle('show',goal==='muscle');
 document.getElementById('coachwrap').style.display='block';
-try{localStorage.setItem('ct_general_goal',goal);}catch(e){}
 }
 document.getElementById('goals').addEventListener('click',function(e){
 var b=e.target.closest('.goal'); if(!b)return;
