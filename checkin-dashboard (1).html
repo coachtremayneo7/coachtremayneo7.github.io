@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Check-in Dashboard</title>
+<style>
+  :root {
+    --ink:#14181f; --muted:#667085; --line:#e6e8ec; --bg:#f4f6f8; --panel:#fff;
+    --accent:#1f6feb; --ok:#37c46b; --warn:#f0a020; --risk:#e5484d;
+    --dd:#f0a020; --reset:#37c46b; --travel:#ff7a2d;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); margin:0; }
+  header { background:var(--ink); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0; font-weight:700; }
+  header .cfg { display:flex; gap:8px; align-items:center; margin-left:auto; flex-wrap:wrap; }
+  header input { padding:6px 10px; border-radius:7px; border:1px solid #333a44; background:#1f2530; color:#fff; font-size:12px; width:320px; }
+  header input.sm { width:150px; }
+  header label { font-size:11px; color:#9aa4b2; }
+
+  .layout { display:flex; gap:16px; padding:16px; align-items:flex-start; }
+  .roster { width:280px; flex-shrink:0; }
+  .main { flex:1; min-width:0; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .panel h2 { font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:0 0 12px; }
+
+  .rosterhead { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .rosterhead h2 { margin:0; flex:1; }
+  .btn { border:0; border-radius:9px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+  .btn.dark { background:var(--ink); color:#fff; }
+  .btn.light { background:#eef1f5; color:var(--ink); }
+  .btn.accent { background:var(--accent); color:#fff; }
+  .btn.wide { width:100%; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .btn.tiny { padding:5px 10px; font-size:12px; }
+
+  .clientrow { display:flex; align-items:center; gap:10px; padding:10px; border-radius:9px; cursor:pointer; border:1px solid transparent; }
+  .clientrow:hover { background:#f0f3f7; }
+  .clientrow.active { background:#eaf1ff; border-color:#cfe0ff; }
+  .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .dot.on_track{background:var(--ok);} .dot.needs_attention{background:var(--warn);} .dot.at_risk{background:var(--risk);} .dot.none{background:#cfd4da;}
+  .clientrow .nm { font-weight:600; font-size:14px; }
+  .clientrow .meta { font-size:11px; color:var(--muted); }
+  .empty { color:var(--muted); font-size:13px; padding:8px 4px; }
+
+  label.f { display:block; font-size:11px; font-weight:600; color:var(--muted); margin:12px 0 4px; text-transform:uppercase; letter-spacing:.03em; }
+  label.f:first-child { margin-top:0; }
+  input.f, textarea.f, select.f { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; color:var(--ink); }
+  textarea.f { resize:vertical; min-height:70px; }
+  .grid2 { display:flex; gap:12px; } .grid2>div{flex:1;}
+  .presets { display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
+  .preset { border:1px solid var(--line); background:#fff; border-radius:999px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; }
+  .preset.dd{border-color:var(--dd);color:#7a5200;} .preset.reset{border-color:var(--reset);color:#1a6e3a;} .preset.travel{border-color:var(--travel);color:#a34400;}
+
+  .status-pill { display:inline-block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:4px 10px; border-radius:999px; color:#fff; }
+  .status-pill.on_track{background:var(--ok);} .status-pill.needs_attention{background:var(--warn);color:#3a2a00;} .status-pill.at_risk{background:var(--risk);}
+  .block { margin-top:14px; } .block h3 { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:0 0 6px; }
+  .draftbox { width:100%; min-height:150px; padding:12px; border:1px solid #cdefd9; border-radius:8px; background:#f0fbf4; font-size:14px; font-family:inherit; resize:vertical; }
+  .tweak { background:#fff8ec; border:1px solid #ffe6b8; border-radius:8px; padding:12px; font-size:14px; }
+  .arc { background:#eef4ff; border:1px solid #cfe0ff; border-radius:8px; padding:12px; font-size:14px; font-style:italic; color:#234; }
+  ul.flags { margin:0; padding-left:18px; } ul.flags li{margin:2px 0;}
+  .metaline { font-size:12px; color:var(--muted); margin-top:10px; }
+  .err { background:#fdecec; border:1px solid #f5c2c2; color:#a12; border-radius:8px; padding:12px; font-size:14px; }
+  .row-actions { display:flex; gap:8px; margin-top:8px; align-items:center; }
+  .copied { font-size:12px; color:var(--ok); font-weight:600; }
+  .hist-item { border-left:3px solid var(--line); padding:6px 0 6px 12px; margin:8px 0; font-size:13px; }
+  .hist-item .when { font-size:11px; color:var(--muted); }
+  details summary { cursor:pointer; font-size:12px; color:var(--muted); margin-top:10px; }
+  pre { background:#0f1420; color:#cdd6e4; padding:12px; border-radius:8px; overflow:auto; font-size:12px; }
+  .hide { display:none; }
+  .pending-panel { border:1px solid #ffd8a8; background:#fffaf2; }
+  .pending-panel h2 { color:#a35b00; }
+  .pend-badge { display:inline-block; min-width:20px; text-align:center; background:#e5484d; color:#fff; border-radius:999px; font-size:12px; font-weight:700; padding:1px 7px; margin-left:6px; }
+  .pendrow { display:flex; align-items:center; gap:10px; padding:9px; border-radius:9px; cursor:pointer; }
+  .pendrow:hover { background:#fff2e0; }
+  .pendrow .nm { font-weight:600; font-size:14px; }
+  .pendrow .meta { font-size:11px; color:var(--muted); }
+  .reviewing { background:#fffaf2; border:1px solid #ffd8a8; border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:12px; }
+  .reviewing b { color:#a35b00; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Coach Check-in Dashboard</h1>
+  <div class="cfg">
+    <label>Worker</label>
+    <input id="baseUrl" value="https://checkin-api.quantumflexpt.workers.dev">
+    <label>Secret</label>
+    <input id="secret" class="sm" placeholder="(blank)">
+  </div>
+</header>
+
+<div class="layout">
+  <!-- ROSTER -->
+  <div class="roster">
+    <div class="panel pending-panel" id="pendingPanel">
+      <h2>Pending check-ins<span class="pend-badge hide" id="pendBadge">0</span></h2>
+      <div id="pendingList"><div class="empty">None waiting.</div></div>
+    </div>
+    <div class="panel">
+      <div class="rosterhead">
+        <h2>Clients</h2>
+        <button class="btn light tiny" id="refresh">Refresh</button>
+      </div>
+      <button class="btn accent wide" id="newBtn" style="margin-bottom:10px;">+ New check-in</button>
+      <div id="clientList"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="panel">
+      <h2 id="formTitle">New check-in</h2>
+
+      <div class="grid2">
+        <div>
+          <label class="f">Client ID (used as the key)</label>
+          <input class="f" id="cid" placeholder="e.g. reset_sarah">
+        </div>
+        <div>
+          <label class="f">Name</label>
+          <input class="f" id="name" placeholder="e.g. Sarah">
+        </div>
+      </div>
+
+      <label class="f">Goal</label>
+      <input class="f" id="goal" placeholder="What they're working toward">
+
+      <label class="f">Current program</label>
+      <input class="f" id="program" placeholder="e.g. 3 full-body workouts/week + 8k steps/day">
+
+      <label class="f">Coach notes (optional)</label>
+      <input class="f" id="notes" placeholder="context — job, schedule, constraints">
+
+      <label class="f">Coaching voice (brand tone)</label>
+      <input class="f" id="voice" placeholder="how the reply should sound">
+      <div class="presets">
+        <button class="preset reset" data-b="reset">The Reset</button>
+        <button class="preset dd" data-b="dd">Diesel &amp; Discipline</button>
+        <button class="preset travel" data-b="travel">Travel</button>
+      </div>
+
+      <label class="f">This week's check-in message</label>
+      <textarea class="f" id="msg" placeholder="paste what the client sent you"></textarea>
+
+      <div class="grid2">
+        <div><label class="f">Weight (lb, optional)</label><input class="f" id="weight"></div>
+        <div><label class="f">Workouts done (optional)</label><input class="f" id="workouts"></div>
+      </div>
+
+      <button class="btn dark wide" id="run" style="margin-top:16px;">Run check-in</button>
+    </div>
+
+    <div class="panel hide" id="resultPanel"></div>
+
+    <div class="panel hide" id="historyPanel">
+      <h2>History &amp; arc</h2>
+      <div id="historyBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const base = () => $("baseUrl").value.trim().replace(/\/+$/,"");
+  const authHeaders = () => {
+    const h = { "Content-Type":"application/json" };
+    const s = $("secret").value.trim();
+    if (s) h["Authorization"] = "Bearer " + s;
+    return h;
+  };
+  const esc = (s) => String(s==null?"":s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]));
+  const fmtDate = (iso) => { try { return new Date(iso).toLocaleDateString(undefined,{month:"short",day:"numeric"}); } catch { return ""; } };
+
+  const PRESETS = {
+    reset:  "Warm and encouraging; celebrate small wins; focus on sustainable habits, not perfection",
+    dd:     "Direct, no-nonsense, deadline-aware; talk like a coach who drove trucks and gets the road life",
+    travel: "Flexible and practical; no guilt about missed days; make it work with whatever's available on the road"
+  };
+  document.querySelectorAll(".preset").forEach(b => b.addEventListener("click", () => { $("voice").value = PRESETS[b.dataset.b]; }));
+
+  // ---- roster ----
+  async function loadClients() {
+    const list = $("clientList");
+    list.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      const res = await fetch(base() + "/clients", { headers: authHeaders() });
+      const data = await res.json();
+      const clients = (data.clients || []);
+      if (!clients.length) { list.innerHTML = '<div class="empty">No clients yet. Run a check-in to add one.</div>'; return; }
+      list.innerHTML = "";
+      clients.forEach(c => {
+        const row = document.createElement("div");
+        row.className = "clientrow";
+        row.dataset.id = c.id;
+        row.innerHTML =
+          '<span class="dot ' + (c.status || "none") + '"></span>' +
+          '<div><div class="nm">' + esc(c.name || c.id) + '</div>' +
+          '<div class="meta">' + (c.count||0) + ' check-ins · ' + (c.lastAt?fmtDate(c.lastAt):'—') + '</div></div>';
+        row.addEventListener("click", () => selectClient(c.id, row));
+        list.appendChild(row);
+      });
+    } catch (e) {
+      list.innerHTML = '<div class="err">Couldn\'t load clients. Check the Worker URL.</div>';
+    }
+  }
+
+  function markActive(row) {
+    document.querySelectorAll(".clientrow").forEach(r => r.classList.remove("active"));
+    if (row) row.classList.add("active");
+  }
+
+  async function selectClient(id, row) {
+    markActive(row);
+    try {
+      const res = await fetch(base() + "/history?client_id=" + encodeURIComponent(id), { headers: authHeaders() });
+      const data = await res.json();
+      const p = data.profile || {};
+      $("formTitle").textContent = "Check-in — " + (p.name || id);
+      $("cid").value = id;
+      $("name").value = p.name || "";
+      $("goal").value = p.goal || "";
+      $("program").value = p.program || "";
+      $("notes").value = p.notes || "";
+      $("voice").value = p.voice || "";
+      $("msg").value = ""; $("weight").value = ""; $("workouts").value = "";
+      renderHistory(data);
+      $("resultPanel").classList.add("hide");
+      window.scrollTo({top:0,behavior:"smooth"});
+    } catch (e) {
+      alert("Couldn't load that client.");
+    }
+  }
+
+  function renderHistory(data) {
+    const panel = $("historyPanel"), body = $("historyBody");
+    const arc = data.arc_summary || "";
+    const hist = (data.history || []).slice().reverse();
+    let html = "";
+    if (arc) html += '<div class="block"><h3>Arc so far (long-term memory)</h3><div class="arc">' + esc(arc) + '</div></div>';
+    if (hist.length) {
+      html += '<div class="block"><h3>Past check-ins ('+hist.length+')</h3>';
+      hist.forEach(h => {
+        const a = h.analysis || {};
+        html += '<div class="hist-item"><div class="when">' + fmtDate(h.at) + ' · ' + esc((a.status||"").replace(/_/g," ")) + '</div>' + esc(a.summary || (h.checkin&&h.checkin.message) || "") + '</div>';
+      });
+      html += '</div>';
+    }
+    if (!html) html = '<div class="empty">No history yet.</div>';
+    body.innerHTML = html;
+    panel.classList.remove("hide");
+  }
+
+  // ---- new / reset form ----
+  $("newBtn").addEventListener("click", () => {
+    markActive(null);
+    $("formTitle").textContent = "New check-in";
+    ["cid","name","goal","program","notes","voice","msg","weight","workouts"].forEach(id => $(id).value = "");
+    $("resultPanel").classList.add("hide");
+    $("historyPanel").classList.add("hide");
+  });
+
+  // auto-suggest an id from the name for new clients
+  $("name").addEventListener("blur", () => {
+    if (!$("cid").value.trim() && $("name").value.trim()) {
+      $("cid").value = $("name").value.trim().toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"");
+    }
+  });
+
+  // ---- run ----
+  $("run").addEventListener("click", async () => {
+    const id = $("cid").value.trim();
+    if (!id) { alert("Give the client an ID (or type a name and click away to auto-fill it)."); return; }
+    if (!$("msg").value.trim()) { alert("Paste this week's check-in message."); return; }
+
+    const btn = $("run"); btn.disabled = true; btn.textContent = "Running…";
+    const panel = $("resultPanel"); panel.classList.remove("hide"); panel.innerHTML = '<div class="empty">Contacting Worker…</div>';
+
+    const body = {
+      client: {
+        id, name:$("name").value.trim(), goal:$("goal").value.trim(),
+        program:$("program").value.trim(), notes:$("notes").value.trim(), voice:$("voice").value.trim()
+      },
+      checkin: {
+        message:$("msg").value.trim(),
+        metrics: { weight_lb:$("weight").value?Number($("weight").value):null, workouts_done:$("workouts").value?Number($("workouts").value):null }
+      }
+    };
+
+    try {
+      const res = await fetch(base() + "/checkin", { method:"POST", headers:authHeaders(), body:JSON.stringify(body) });
+      const data = await res.json();
+      if (!data.ok) {
+        panel.innerHTML = '<div class="err"><strong>Error:</strong> ' + esc(data.error||"Unknown") + (data.detail?'<br><small>'+esc(data.detail)+'</small>':'') + '</div>';
+      } else {
+        renderAnalysis(panel, data.analysis || {}, { model: data.model, stored: data.stored });
+        loadClients();
+      }
+    } catch (e) {
+      panel.innerHTML = '<div class="err"><strong>Request failed:</strong> ' + esc(String(e)) + '</div>';
+    } finally {
+      btn.disabled = false; btn.textContent = "Run check-in";
+    }
+  });
+
+
+  // ---- shared result renderer ----
+  function renderAnalysis(panel, a, opts) {
+    opts = opts || {};
+    const flags = (a.flags||[]).map(f => '<li>'+esc(f)+'</li>').join('') || '<li>None</li>';
+    panel.classList.remove("hide");
+    panel.innerHTML =
+      (opts.reviewHeader || '<h2>Result</h2>') +
+      '<span class="status-pill ' + (a.status||"") + '">' + esc((a.status||"?").replace(/_/g," ")) + '</span>' +
+      '<div class="block"><h3>Summary</h3><div>' + esc(a.summary||"") + '</div></div>' +
+      '<div class="block"><h3>Flags for you</h3><ul class="flags">' + flags + '</ul></div>' +
+      '<div class="block"><h3>Draft reply (edit if needed, then approve)</h3>' +
+        '<textarea class="draftbox" id="draftbox">' + esc(a.suggested_reply||"") + '</textarea>' +
+        '<div class="row-actions"><button class="btn accent tiny" id="copyBtn">' + (opts.pendingKey ? 'Approve, copy &amp; clear' : 'Approve &amp; copy') + '</button><span class="copied hide" id="copied">Copied — paste it to your client</span></div>' +
+      '</div>' +
+      '<div class="block"><h3>Suggested tweak</h3><div class="tweak">' + esc(a.suggested_tweak||"") + '</div></div>' +
+      (a.updated_summary ? '<div class="block"><h3>Arc so far (long-term memory)</h3><div class="arc">' + esc(a.updated_summary) + '</div></div>' : '') +
+      (opts.model ? '<div class="metaline">Model: ' + esc(opts.model) + ' · Stored: ' + (opts.stored?"yes":"no") + '</div>' : '');
+
+    $("copyBtn").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText($("draftbox").value); } catch { $("draftbox").select(); document.execCommand("copy"); }
+      $("copied").classList.remove("hide");
+      if (opts.pendingKey) {
+        try { await fetch(base()+"/approve", { method:"POST", headers:authHeaders(), body:JSON.stringify({key:opts.pendingKey}) }); } catch(_){}
+        loadPending();
+      }
+    });
+  }
+
+  // ---- pending queue ----
+  async function loadPending() {
+    const list = $("pendingList"), badge = $("pendBadge");
+    try {
+      const res = await fetch(base()+"/pending", { headers: authHeaders() });
+      const data = await res.json();
+      const items = data.pending || [];
+      if (!items.length) { list.innerHTML = '<div class="empty">None waiting.</div>'; badge.classList.add("hide"); return; }
+      badge.textContent = items.length; badge.classList.remove("hide");
+      list.innerHTML = "";
+      items.forEach(it => {
+        const a = it.analysis || {};
+        const row = document.createElement("div");
+        row.className = "pendrow";
+        row.innerHTML =
+          '<span class="dot ' + (a.status||"none") + '"></span>' +
+          '<div><div class="nm">' + esc(it.name || it.clientId) + '</div>' +
+          '<div class="meta">' + fmtDate(it.at) + ' · tap to review</div></div>';
+        row.addEventListener("click", () => reviewPending(it));
+        list.appendChild(row);
+      });
+    } catch (e) {
+      list.innerHTML = '<div class="err">Couldn\'t load the queue.</div>';
+    }
+  }
+
+  function reviewPending(it) {
+    const panel = $("resultPanel");
+    const msg = (it.checkin && it.checkin.message) || "";
+    const header = '<h2>Review — ' + esc(it.name || it.clientId) + '</h2>' +
+      '<div class="reviewing"><b>Client wrote:</b> ' + esc(msg) + '</div>';
+    renderAnalysis(panel, it.analysis || {}, { reviewHeader: header, pendingKey: it.key });
+    $("historyPanel").classList.add("hide");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  $("refresh").addEventListener("click", () => { loadClients(); loadPending(); });
+  loadClients();
+  loadPending();
+  setInterval(loadPending, 30000); // auto-check the queue every 30s
+</script>
+</body>
+</html>
