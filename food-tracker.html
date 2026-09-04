@@ -13,16 +13,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   /* ===================================================================
-     REBRAND (optional): change --accent to match a brand.
-        Coach neutral (default): #E0894E   |  DD amber: #FFB020
-        Reset green: #37C46B               |  Travel orange: #FF7A2D
+     REBRAND (optional): change --accent.
+        Coach neutral (default): #E0894E | DD amber: #FFB020
+        Reset green: #37C46B            | Travel orange: #FF7A2D
   =================================================================== */
   :root{
     --accent:#E0894E;
     --bg:#0E0E10; --panel:#17171B; --panel-2:#1E1E24;
     --line:rgba(255,255,255,.09); --line-strong:rgba(255,255,255,.16);
-    --ink:#EDE8E0; --muted:#8C877F; --radius:15px;
-    --protein:#63B3F0;
+    --ink:#EDE8E0; --muted:#8C877F; --radius:15px; --protein:#63B3F0;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
@@ -36,19 +35,18 @@
   h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(2rem,8vw,2.6rem);line-height:1;letter-spacing:-.01em}
   .lede{color:var(--muted);margin-top:10px;font-size:.95rem}
 
-  /* running totals */
   .totals{position:sticky;top:8px;z-index:5;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 8px}
   .tcard{background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius);padding:16px 18px;text-align:center}
   .tcard .k{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .tcard .v{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2rem;line-height:1;margin-top:5px}
   .tcard.cal .v{color:var(--accent)}
   .tcard.pro .v{color:var(--protein)}
-  .newday{width:100%;margin:2px 0 20px;background:transparent;border:1px solid var(--line);color:var(--muted);
-    font:inherit;font-size:.85rem;padding:10px;border-radius:10px;cursor:pointer}
+  .newday{width:100%;margin:2px 0 20px;background:transparent;border:1px solid var(--line);color:var(--muted);font:inherit;font-size:.85rem;padding:10px;border-radius:10px;cursor:pointer}
   .newday:hover{border-color:var(--line-strong);color:var(--ink)}
 
-  /* today's log */
-  .section-label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:22px 4px 10px}
+  .section-label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:22px 4px 10px;display:flex;justify-content:space-between;align-items:center}
+  .section-label .hint{text-transform:none;letter-spacing:0;font-size:.72rem}
+
   .log{display:flex;flex-direction:column;gap:8px;min-height:8px}
   .log-empty{color:var(--muted);font-size:.9rem;text-align:center;padding:18px;border:1px dashed var(--line);border-radius:12px}
   .item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
@@ -56,35 +54,73 @@
   .item .nm{font-weight:600;font-size:.98rem}
   .item .mac{font-size:.8rem;color:var(--muted);margin-top:2px}
   .item .mac b{color:var(--protein);font-weight:600}
-  .item .rm{flex:0 0 auto;background:transparent;border:1px solid var(--line);color:var(--muted);
-    width:30px;height:30px;border-radius:8px;font-size:1.1rem;line-height:1;cursor:pointer}
+  .item .rm{flex:0 0 auto;background:transparent;border:1px solid var(--line);color:var(--muted);width:30px;height:30px;border-radius:8px;font-size:1.1rem;line-height:1;cursor:pointer}
   .item .rm:hover{border-color:var(--accent);color:var(--accent)}
 
-  /* add custom */
+  /* saved meals — each is a card that lists its ingredients */
+  .meals{display:flex;flex-direction:column;gap:10px}
+  .meal{background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
+  .meal-top{display:flex;align-items:center;gap:12px;padding:13px 14px}
+  .meal-top .mtxt{flex:1;min-width:0}
+  .meal-top .mn{font-weight:600;font-size:1rem}
+  .meal-top .mm{font-size:.8rem;color:var(--muted);margin-top:2px}
+  .meal-top .mm b{color:var(--protein);font-weight:600}
+  .meal-add{flex:0 0 auto;background:var(--accent);color:#160d07;border:0;font:inherit;font-weight:700;font-size:.85rem;padding:9px 13px;border-radius:9px;cursor:pointer}
+  .meal-add:active{transform:translateY(1px)}
+  .meal-toggle{flex:0 0 auto;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;width:30px;height:30px;font-size:.85rem;cursor:pointer}
+  .meal-toggle:hover{border-color:var(--line-strong);color:var(--ink)}
+  .meal-ings{display:none;border-top:1px solid var(--line);padding:10px 14px;background:var(--panel-2)}
+  .meal.open .meal-ings{display:block}
+  .meal-ings .ing{display:flex;justify-content:space-between;font-size:.85rem;padding:3px 0;color:var(--ink)}
+  .meal-ings .ing span{color:var(--muted)}
+  .meal-ings .mdel{margin-top:8px;background:transparent;border:1px solid var(--line);color:var(--muted);font:inherit;font-size:.8rem;padding:7px 10px;border-radius:8px;cursor:pointer}
+  .meal-ings .mdel:hover{border-color:var(--accent);color:var(--accent)}
+  .meals-empty{color:var(--muted);font-size:.88rem;padding:4px 2px}
+
+  /* meal builder */
+  .builder{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-top:10px;overflow:hidden}
+  .builder-head{width:100%;background:transparent;border:0;color:var(--ink);font:inherit;font-weight:600;font-size:.95rem;padding:15px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+  .builder-head .chev{color:var(--accent);transition:transform .2s}
+  .builder.open .builder-head .chev{transform:rotate(180deg)}
+  .builder-body{display:none;padding:0 16px 16px}
+  .builder.open .builder-body{display:block}
+  .b-hint{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+  .b-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+  .b-empty{color:var(--muted);font-size:.85rem;padding:8px 0}
+  .b-item{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:.9rem}
+  .b-item .bn{flex:1;min-width:0}
+  .b-item .bm{color:var(--muted);font-size:.78rem}
+  .b-item .brm{background:transparent;border:0;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 4px}
+  .b-total{font-size:.85rem;color:var(--muted);margin-bottom:10px}
+  .b-total b{color:var(--ink)}
+  .b-name{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:1rem;padding:12px 13px;border-radius:10px;margin-bottom:8px}
+  .b-name:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .b-save{width:100%;background:var(--accent);color:#160d07;border:0;font:inherit;font-weight:600;font-size:1rem;padding:12px;border-radius:10px;cursor:pointer}
+  .b-save:disabled{opacity:.5}
+
   .custom{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:10px}
   .custom-h{font-weight:600;font-size:.92rem;margin-bottom:12px}
   .crow{display:grid;grid-template-columns:1fr;gap:8px}
-  .crow input{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
-    font:inherit;font-size:1rem;padding:12px 13px;border-radius:10px}
+  .crow input{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:1rem;padding:12px 13px;border-radius:10px}
   .crow input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
   .crow .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .add-custom{width:100%;margin-top:10px;background:var(--accent);color:#160d07;border:0;font:inherit;font-weight:600;
-    font-size:1rem;padding:13px;border-radius:11px;cursor:pointer}
-  .add-custom:active{transform:translateY(1px)}
+  .add-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .add-today{background:var(--accent);color:#160d07;border:0;font:inherit;font-weight:600;font-size:.95rem;padding:12px;border-radius:10px;cursor:pointer}
+  .add-toBuild{background:transparent;color:var(--ink);border:1px solid var(--line-strong);font:inherit;font-weight:600;font-size:.95rem;padding:12px;border-radius:10px;cursor:pointer}
+  .add-today:active,.add-toBuild:active{transform:translateY(1px)}
 
-  /* food picker */
-  .search{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
-    font:inherit;font-size:1rem;padding:13px 14px;border-radius:11px;margin-bottom:12px}
+  .search{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:1rem;padding:13px 14px;border-radius:11px;margin-bottom:12px}
   .search:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
   .foods{display:flex;flex-direction:column;gap:7px}
-  .food{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
-    border-radius:11px;padding:11px 14px;cursor:pointer;transition:border-color .12s,background .12s;text-align:left;width:100%;font:inherit;color:var(--ink)}
-  .food:hover{border-color:var(--accent);background:var(--panel-2)}
+  .food{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 14px;text-align:left;width:100%;font:inherit;color:var(--ink)}
   .food .in{flex:1;min-width:0}
   .food .nm{font-weight:600;font-size:.96rem}
   .food .mac{font-size:.8rem;color:var(--muted);margin-top:2px}
   .food .mac b{color:var(--protein);font-weight:600}
-  .food .plus{flex:0 0 auto;color:var(--accent);font-size:1.4rem;line-height:1;font-weight:600}
+  .food .acts{flex:0 0 auto;display:flex;gap:6px}
+  .food .fbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:1.05rem;line-height:1;cursor:pointer}
+  .food .fbtn.add{border-color:transparent;background:var(--accent);color:#160d07;font-weight:700}
+  .food .fbtn:hover{border-color:var(--accent)}
 
   .disclaimer{color:var(--muted);font-size:.76rem;margin-top:24px;text-align:center;line-height:1.5}
   footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:14px}
@@ -95,7 +131,7 @@
   <div class="wrap">
     <p class="eyebrow">Coaching tool</p>
     <h1>Food Tracker</h1>
-    <p class="lede">Tap what you eat — it adds up your calories and protein for the day. Saves on this phone; tap "New day" each morning to reset.</p>
+    <p class="lede">Tap what you eat — it adds up your calories and protein for the day. Build meals from their ingredients, save them, and re-add the whole thing with one tap. Saves on this phone.</p>
 
     <div class="totals">
       <div class="tcard cal"><div class="k">Calories today</div><div class="v" id="tCal">0</div></div>
@@ -106,6 +142,26 @@
     <div class="section-label">Today's log</div>
     <div class="log" id="log"></div>
 
+    <!-- SAVED MEALS -->
+    <div class="section-label">My meals <span class="hint">tap ✓ to add · tap ▾ to see ingredients</span></div>
+    <div class="meals" id="meals"></div>
+
+    <!-- MEAL BUILDER -->
+    <div class="builder" id="builder">
+      <button class="builder-head" id="builderHead">
+        <span>+ Build a meal to save (e.g. "Taco bowl")</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="builder-body">
+        <p class="b-hint">Add each ingredient with the ＋ button (on foods below, or "＋ Add to meal" for your own). Name the meal and save. It keeps every ingredient inside.</p>
+        <div class="b-list" id="bList"></div>
+        <div class="b-total" id="bTotal">Total: <b>0 cal · 0g protein</b></div>
+        <input class="b-name" id="bName" type="text" placeholder="Name this meal (e.g. Taco bowl)" />
+        <button class="b-save" id="bSave" disabled>Save meal</button>
+      </div>
+    </div>
+
+    <!-- ADD CUSTOM -->
     <div class="section-label">Add your own</div>
     <div class="custom">
       <div class="custom-h">Not on the list? Punch it in:</div>
@@ -116,9 +172,13 @@
           <input id="cPro" type="number" inputmode="numeric" placeholder="Protein (g)" />
         </div>
       </div>
-      <button class="add-custom" id="addCustom">Add to today →</button>
+      <div class="add-btns">
+        <button class="add-today" id="addCustom">Add to today</button>
+        <button class="add-toBuild" id="addCustomBuild">＋ Add to meal</button>
+      </div>
     </div>
 
+    <!-- FOOD PICKER -->
     <div class="section-label">Tap to add</div>
     <input class="search" id="search" type="text" placeholder="Search foods…" />
     <div class="foods" id="foods"></div>
@@ -130,10 +190,8 @@
 <script>
 /* ===================================================================
    FOOD LIST — add / edit anytime. Format: [ "Name (portion)", calories, protein_g ]
-   Just add a line, keep the commas, re-upload. That's it.
 =================================================================== */
 var FOODS = [
-  // ---- Eggs / breakfast ----
   ["Egg, large (1)", 72, 6],
   ["Eggs, scrambled (2)", 180, 12],
   ["Oatmeal, plain (1 cup cooked)", 150, 5],
@@ -145,7 +203,6 @@ var FOODS = [
   ["Banana (1 medium)", 105, 1],
   ["Apple (1 medium)", 95, 0],
   ["Orange (1 medium)", 62, 1],
-  // ---- Proteins / mains ----
   ["Chicken breast, grilled (6 oz)", 280, 52],
   ["Rotisserie chicken (1 cup)", 230, 38],
   ["Ground beef, 85% (4 oz)", 240, 21],
@@ -154,7 +211,6 @@ var FOODS = [
   ["Turkey deli slices (3 oz)", 90, 16],
   ["Pork chop (6 oz)", 310, 46],
   ["Steak, sirloin (6 oz)", 340, 50],
-  // ---- Truck-stop / on-the-road ----
   ["Beef jerky (1 oz)", 80, 9],
   ["String cheese (1)", 80, 7],
   ["Hard-boiled egg (from cooler)", 72, 6],
@@ -166,7 +222,6 @@ var FOODS = [
   ["Cheeseburger, fast food", 300, 15],
   ["Grilled chicken sandwich", 380, 37],
   ["Side salad w/ grilled chicken", 320, 35],
-  // ---- Sides / carbs ----
   ["White rice (1 cup cooked)", 205, 4],
   ["Brown rice (1 cup cooked)", 215, 5],
   ["Baked potato (medium)", 160, 4],
@@ -174,7 +229,6 @@ var FOODS = [
   ["Whole-wheat pasta (1 cup)", 180, 8],
   ["Black beans (1/2 cup)", 110, 7],
   ["Bread roll (1)", 120, 4],
-  // ---- Veg / extras ----
   ["Broccoli, steamed (1 cup)", 55, 4],
   ["Mixed veggies (1 cup)", 60, 3],
   ["Avocado (1/2)", 120, 1],
@@ -182,88 +236,156 @@ var FOODS = [
   ["Olive oil (1 tbsp)", 120, 0]
 ];
 
-var KEY = "ctmayne_food_log_v1";
+var LOG_KEY = "ctmayne_food_log_v1";
+var MEAL_KEY = "ctmayne_meals_v2"; // v2: meals store their ingredients
 
-var logEl = document.getElementById("log");
-var foodsEl = document.getElementById("foods");
-var tCal = document.getElementById("tCal");
-var tPro = document.getElementById("tPro");
+var logEl=document.getElementById("log"), foodsEl=document.getElementById("foods"),
+    mealsEl=document.getElementById("meals"), bListEl=document.getElementById("bList"),
+    tCal=document.getElementById("tCal"), tPro=document.getElementById("tPro");
 
-function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } }
-function save(list){ try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){} }
+var building = []; // {n,c,p} items currently in the builder
 
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)) || []; }catch(e){ return []; } }
+function store(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+/* ---------- today's log ---------- */
 function render(){
-  var list = load();
-  // totals
-  var c=0,p=0;
-  list.forEach(function(it){ c+=it.c; p+=it.p; });
-  tCal.textContent = c.toLocaleString();
-  tPro.textContent = Math.round(p) + "g";
-  // log
-  logEl.innerHTML = "";
-  if(list.length === 0){
-    var e = document.createElement("div");
-    e.className = "log-empty";
-    e.textContent = "Nothing logged yet — tap a food below to start your day.";
-    logEl.appendChild(e);
-    return;
+  var list = load(LOG_KEY);
+  var c=0,p=0; list.forEach(function(it){ c+=it.c; p+=it.p; });
+  tCal.textContent=c.toLocaleString(); tPro.textContent=Math.round(p)+"g";
+  logEl.innerHTML="";
+  if(list.length===0){
+    var e=document.createElement("div"); e.className="log-empty";
+    e.textContent="Nothing logged yet — tap a food or a saved meal to start.";
+    logEl.appendChild(e); return;
   }
-  list.forEach(function(it, i){
-    var row = document.createElement("div");
-    row.className = "item";
-    row.innerHTML = '<div class="in"><div class="nm"></div><div class="mac"></div></div>'
-      + '<button class="rm" aria-label="Remove">×</button>';
-    row.querySelector(".nm").textContent = it.n;
-    var mac = row.querySelector(".mac");
-    mac.innerHTML = it.c.toLocaleString() + " cal · <b>" + Math.round(it.p) + "g protein</b>";
-    row.querySelector(".rm").addEventListener("click", function(){
-      var l = load(); l.splice(i,1); save(l); render();
-    });
+  list.forEach(function(it,i){
+    var row=document.createElement("div"); row.className="item";
+    row.innerHTML='<div class="in"><div class="nm"></div><div class="mac"></div></div><button class="rm" aria-label="Remove">×</button>';
+    row.querySelector(".nm").textContent=it.n;
+    row.querySelector(".mac").innerHTML=it.c.toLocaleString()+" cal · <b>"+Math.round(it.p)+"g protein</b>";
+    row.querySelector(".rm").addEventListener("click",function(){ var l=load(LOG_KEY); l.splice(i,1); store(LOG_KEY,l); render(); });
     logEl.appendChild(row);
   });
 }
-
-function addFood(name, cal, pro){
-  var list = load();
+function addToLog(name,cal,pro){
+  var list=load(LOG_KEY);
   list.push({ n:name, c:Math.round(cal), p:Math.round(pro) });
-  save(list); render();
+  store(LOG_KEY,list); render();
 }
 
-// build the tap-to-add list
-function renderFoods(filter){
-  foodsEl.innerHTML = "";
-  var f = (filter||"").toLowerCase();
-  FOODS.filter(function(x){ return x[0].toLowerCase().indexOf(f) !== -1; })
-    .forEach(function(x){
-      var b = document.createElement("button");
-      b.className = "food";
-      b.innerHTML = '<div class="in"><div class="nm"></div><div class="mac"></div></div><div class="plus">+</div>';
-      b.querySelector(".nm").textContent = x[0];
-      b.querySelector(".mac").innerHTML = x[1].toLocaleString() + " cal · <b>" + x[2] + "g protein</b>";
-      b.addEventListener("click", function(){ addFood(x[0], x[1], x[2]); });
-      foodsEl.appendChild(b);
+/* ---------- saved meals (store ingredients) ---------- */
+function mealTotals(m){ var c=0,p=0; m.items.forEach(function(f){ c+=f.c; p+=f.p; }); return {c:c,p:p}; }
+
+function renderMeals(){
+  var meals=load(MEAL_KEY);
+  mealsEl.innerHTML="";
+  if(meals.length===0){
+    var e=document.createElement("div"); e.className="meals-empty";
+    e.textContent="No saved meals yet — build one below and it'll show here.";
+    mealsEl.appendChild(e); return;
+  }
+  meals.forEach(function(m,i){
+    var t=mealTotals(m);
+    var card=document.createElement("div"); card.className="meal";
+    var ings = m.items.map(function(f){
+      return '<div class="ing">'+escapeHtml(f.n)+' <span>'+f.c+' cal · '+f.p+'g</span></div>';
+    }).join("");
+    card.innerHTML =
+      '<div class="meal-top">'
+      +  '<div class="mtxt"><div class="mn"></div><div class="mm">'+t.c.toLocaleString()+' cal · <b>'+Math.round(t.p)+'g</b> · '+m.items.length+' items</div></div>'
+      +  '<button class="meal-toggle" title="See ingredients">▾</button>'
+      +  '<button class="meal-add">✓ Add</button>'
+      +'</div>'
+      +'<div class="meal-ings">'+ings+'<div><button class="mdel">Delete this meal</button></div></div>';
+    card.querySelector(".mn").textContent=m.n;
+    card.querySelector(".meal-add").addEventListener("click",function(){
+      // log every ingredient so the day shows the full breakdown
+      m.items.forEach(function(f){ addToLog(f.n, f.c, f.p); });
     });
+    card.querySelector(".meal-toggle").addEventListener("click",function(){ card.classList.toggle("open"); });
+    card.querySelector(".mdel").addEventListener("click",function(){
+      if(confirm('Delete saved meal "'+m.n+'"?')){ var l=load(MEAL_KEY); l.splice(i,1); store(MEAL_KEY,l); renderMeals(); }
+    });
+    mealsEl.appendChild(card);
+  });
 }
+function escapeHtml(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 
-document.getElementById("search").addEventListener("input", function(e){ renderFoods(e.target.value); });
-
-document.getElementById("addCustom").addEventListener("click", function(){
-  var n = document.getElementById("cName").value.trim();
-  var c = parseFloat(document.getElementById("cCal").value);
-  var p = parseFloat(document.getElementById("cPro").value);
-  if(!n || isNaN(c)) return;
-  addFood(n, c, isNaN(p)?0:p);
-  document.getElementById("cName").value = "";
-  document.getElementById("cCal").value = "";
-  document.getElementById("cPro").value = "";
+/* ---------- meal builder ---------- */
+function renderBuilder(){
+  bListEl.innerHTML="";
+  if(building.length===0){
+    var e=document.createElement("div"); e.className="b-empty";
+    e.textContent="No ingredients yet. Use ＋ on a food below, or ＋ Add to meal for your own.";
+    bListEl.appendChild(e);
+  } else {
+    building.forEach(function(f,i){
+      var row=document.createElement("div"); row.className="b-item";
+      row.innerHTML='<div class="bn"></div><div class="bm"></div><button class="brm">×</button>';
+      row.querySelector(".bn").textContent=f.n;
+      row.querySelector(".bm").textContent=f.c+" cal · "+f.p+"g";
+      row.querySelector(".brm").addEventListener("click",function(){ building.splice(i,1); renderBuilder(); });
+      bListEl.appendChild(row);
+    });
+  }
+  var c=0,p=0; building.forEach(function(f){ c+=f.c; p+=f.p; });
+  document.getElementById("bTotal").innerHTML="Total: <b>"+c.toLocaleString()+" cal · "+Math.round(p)+"g protein</b>";
+  var name=document.getElementById("bName").value.trim();
+  document.getElementById("bSave").disabled=(building.length===0 || !name);
+}
+function addToBuild(name,cal,pro){
+  building.push({ n:name, c:Math.round(cal), p:Math.round(pro) });
+  document.getElementById("builder").classList.add("open");
+  renderBuilder();
+}
+document.getElementById("builderHead").addEventListener("click",function(){ document.getElementById("builder").classList.toggle("open"); });
+document.getElementById("bName").addEventListener("input",renderBuilder);
+document.getElementById("bSave").addEventListener("click",function(){
+  var name=document.getElementById("bName").value.trim();
+  if(building.length===0 || !name) return;
+  var meals=load(MEAL_KEY);
+  meals.push({ n:name, items: building.slice() }); // store the ingredient list
+  store(MEAL_KEY,meals);
+  building=[]; document.getElementById("bName").value="";
+  renderBuilder(); renderMeals();
 });
 
-document.getElementById("newday").addEventListener("click", function(){
-  if(confirm("Clear today's log and start fresh?")){ save([]); render(); }
+/* ---------- food picker ---------- */
+function renderFoods(filter){
+  foodsEl.innerHTML="";
+  var f=(filter||"").toLowerCase();
+  FOODS.filter(function(x){ return x[0].toLowerCase().indexOf(f)!==-1; }).forEach(function(x){
+    var b=document.createElement("div"); b.className="food";
+    b.innerHTML='<div class="in"><div class="nm"></div><div class="mac"></div></div>'
+      +'<div class="acts"><button class="fbtn build" title="Add to meal">＋</button><button class="fbtn add" title="Add to today">✓</button></div>';
+    b.querySelector(".nm").textContent=x[0];
+    b.querySelector(".mac").innerHTML=x[1].toLocaleString()+" cal · <b>"+x[2]+"g protein</b>";
+    b.querySelector(".add").addEventListener("click",function(){ addToLog(x[0],x[1],x[2]); });
+    b.querySelector(".build").addEventListener("click",function(){ addToBuild(x[0],x[1],x[2]); });
+    foodsEl.appendChild(b);
+  });
+}
+document.getElementById("search").addEventListener("input",function(e){ renderFoods(e.target.value); });
+
+/* ---------- custom ---------- */
+function readCustom(){
+  var n=document.getElementById("cName").value.trim();
+  var c=parseFloat(document.getElementById("cCal").value);
+  var p=parseFloat(document.getElementById("cPro").value);
+  if(!n || isNaN(c)) return null;
+  return { n:n, c:Math.round(c), p:isNaN(p)?0:Math.round(p) };
+}
+function clearCustom(){ document.getElementById("cName").value=""; document.getElementById("cCal").value=""; document.getElementById("cPro").value=""; }
+document.getElementById("addCustom").addEventListener("click",function(){ var f=readCustom(); if(!f) return; addToLog(f.n,f.c,f.p); clearCustom(); });
+document.getElementById("addCustomBuild").addEventListener("click",function(){ var f=readCustom(); if(!f) return; addToBuild(f.n,f.c,f.p); clearCustom(); });
+
+/* ---------- new day ---------- */
+document.getElementById("newday").addEventListener("click",function(){
+  if(confirm("Clear today's log and start fresh?")){ store(LOG_KEY,[]); render(); }
 });
 
-renderFoods("");
-render();
+renderFoods(""); render(); renderMeals(); renderBuilder();
 </script>
 </body>
 </html>
