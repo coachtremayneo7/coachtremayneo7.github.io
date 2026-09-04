@@ -78,6 +78,24 @@
   .pendrow .meta { font-size:11px; color:var(--muted); }
   .reviewing { background:#fffaf2; border:1px solid #ffd8a8; border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:12px; }
   .reviewing b { color:#a35b00; }
+
+  /* --- mobile: stack into one clean column --- */
+  @media (max-width: 760px) {
+    header { flex-direction:column; align-items:flex-start; gap:8px; padding:12px 16px; }
+    header h1 { font-size:16px; }
+    header .cfg { margin-left:0; width:100%; flex-direction:column; align-items:stretch; gap:6px; }
+    header input, header input.sm { width:100%; }
+    .layout { flex-direction:column; padding:12px; gap:12px; }
+    .roster { width:100%; }
+    .main { width:100%; min-width:0; }
+    .grid2 { flex-direction:column; gap:0; }
+    input.f, textarea.f, select.f { font-size:16px; }  /* stops iOS zoom-on-tap */
+    .draftbox { min-height:200px; font-size:16px; }
+    .panel { padding:14px; }
+    .presets { gap:8px; }
+    .preset { padding:8px 14px; }
+    button.run { padding:15px; font-size:16px; }
+  }
 </style>
 </head>
 <body>
