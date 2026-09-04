@@ -233,7 +233,31 @@ var FOODS = [
   ["Mixed veggies (1 cup)", 60, 3],
   ["Avocado (1/2)", 120, 1],
   ["Cheese, cheddar (1 oz)", 110, 7],
-  ["Olive oil (1 tbsp)", 120, 0]
+  ["Olive oil (1 tbsp)", 120, 0],
+
+  ["Hamburger patty (1, ~4 oz)", 240, 21],
+  ["Cheese slice, American (1)", 60, 3],
+  ["Lettuce, shredded (1 cup)", 5, 0],
+  ["Tomato, sliced (1 medium)", 22, 1],
+  ["Salsa (2 tbsp)", 10, 0],
+
+  ["Coke (12 oz can)", 140, 0],
+  ["Sprite (12 oz can)", 140, 0],
+  ["Dr Pepper (12 oz can)", 150, 0],
+  ["Root beer (12 oz can)", 170, 0],
+  ["Lemonade (12 oz)", 150, 0],
+  ["Sweet tea (16 oz)", 160, 0],
+  ["Unsweet tea (16 oz)", 5, 0],
+  ["Gatorade (20 oz bottle)", 140, 0],
+  ["Powerade (20 oz bottle)", 130, 0],
+
+  ["Coke Zero (12 oz)", 0, 0],
+  ["Diet Coke (12 oz)", 0, 0],
+  ["Sprite Zero (12 oz)", 0, 0],
+  ["Dr Pepper Zero (12 oz)", 0, 0],
+  ["Diet Dr Pepper (12 oz)", 0, 0],
+  ["Diet root beer (12 oz)", 0, 0],
+  ["Zero-sugar soda, any (12 oz)", 0, 0]
 ];
 
 var LOG_KEY = "ctmayne_food_log_v1";
@@ -384,6 +408,23 @@ document.getElementById("addCustomBuild").addEventListener("click",function(){ v
 document.getElementById("newday").addEventListener("click",function(){
   if(confirm("Clear today's log and start fresh?")){ store(LOG_KEY,[]); render(); }
 });
+
+/* ---------- one-time example meal (new phones only) ---------- */
+function seedExample(){
+  var SEED_FLAG="ctmayne_seeded_v1";
+  if(localStorage.getItem(SEED_FLAG)) return;      // already seeded once — never again
+  try{ localStorage.setItem(SEED_FLAG,"1"); }catch(e){}
+  var meals=load(MEAL_KEY);
+  if(meals.length>0) return;                        // client already has meals — don't touch
+  meals.push({ n:"Loaded Burger (example)", items:[
+    {n:"Hamburger patty (1, ~4 oz)", c:240, p:21},
+    {n:"Cheese slice, American (1)", c:60, p:3},
+    {n:"Lettuce, shredded (1 cup)", c:5, p:0},
+    {n:"Tomato, sliced (1 medium)", c:22, p:1}
+  ]});
+  store(MEAL_KEY,meals);
+}
+seedExample();
 
 renderFoods(""); render(); renderMeals(); renderBuilder();
 </script>
