@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Coach TreMayne — Hub</title>
+
+<!-- home-screen app behavior -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach Hub">
+<meta name="theme-color" content="#14181f">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314181f'/%3E%3Ctext x='32' y='44' font-size='34' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
+
+<style>
+  :root { --ink:#14181f; --muted:#8a93a2; --bg:#0f1319; --card:#1a1f27; --line:#2a303a;
+          --dd:#f0a020; --reset:#2fb26a; --travel:#ff7a2d; --blue:#3b82f6; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:#fff; margin:0;
+         padding:34px 20px calc(34px + env(safe-area-inset-bottom)); min-height:100vh; }
+  .wrap { max-width:520px; margin:0 auto; }
+  .head { text-align:center; margin-bottom:28px; }
+  .logo { width:62px; height:62px; border-radius:16px; background:var(--ink); border:1px solid var(--line);
+          display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:800; margin:0 auto 12px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:14px; margin:0; }
+
+  .tile { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
+          border-radius:16px; padding:18px 18px; margin-bottom:14px; text-decoration:none; color:#fff; }
+  .tile:active { transform:translateY(1px); }
+  .ic { width:46px; height:46px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .ic.checkins { background:rgba(59,130,246,.16); }
+  .ic.tracker  { background:rgba(47,178,106,.16); }
+  .tile .t { font-size:17px; font-weight:700; }
+  .tile .d { font-size:13px; color:var(--muted); margin-top:2px; }
+  .arrow { margin-left:auto; color:var(--muted); font-size:20px; }
+
+  .section-label { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:24px 4px 10px; }
+  .calc-row { display:flex; gap:10px; }
+  .calc { flex:1; text-decoration:none; text-align:center; border-radius:14px; padding:16px 8px; font-weight:700; font-size:14px; color:#fff; border:1px solid; }
+  .calc.dd     { background:rgba(240,160,32,.14);  border-color:var(--dd);     color:#f7c266; }
+  .calc.reset  { background:rgba(47,178,106,.14);  border-color:var(--reset);  color:#5fd394; }
+  .calc.travel { background:rgba(255,122,45,.14);  border-color:var(--travel); color:#ff9a5e; }
+  .calc small { display:block; font-weight:500; font-size:11px; color:var(--muted); margin-top:3px; }
+
+  .foot { text-align:center; color:var(--muted); font-size:12px; margin-top:28px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="logo">T</div>
+    <h1>Coach TreMayne</h1>
+    <p class="sub">Your coaching command center</p>
+  </div>
+
+  <a class="tile" href="checkin-dashboard.html">
+    <div class="ic checkins">&#128203;</div>
+    <div><div class="t">Check-ins</div><div class="d">Review &amp; approve client check-ins</div></div>
+    <div class="arrow">&#8250;</div>
+  </a>
+
+  <a class="tile" href="food-tracker.html">
+    <div class="ic tracker">&#127869;</div>
+    <div><div class="t">Food Tracker</div><div class="d">Log &amp; review nutrition</div></div>
+    <div class="arrow">&#8250;</div>
+  </a>
+
+  <div class="section-label">Calculators</div>
+  <div class="calc-row">
+    <a class="calc dd"     href="calculator-dd.html">DD<small>Diesel &amp; Discipline</small></a>
+    <a class="calc reset"  href="calculator-the-reset.html">Reset<small>The Reset</small></a>
+    <a class="calc travel" href="calculator-travel.html">Travel<small>On the road</small></a>
+  </div>
+
+  <div class="foot">Add to Home Screen to use like an app</div>
+</div>
+</body>
+</html>

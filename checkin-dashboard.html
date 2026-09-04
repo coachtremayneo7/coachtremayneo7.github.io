@@ -69,6 +69,10 @@
   details summary { cursor:pointer; font-size:12px; color:var(--muted); margin-top:10px; }
   pre { background:#0f1420; color:#cdd6e4; padding:12px; border-radius:8px; overflow:auto; font-size:12px; }
   .hide { display:none; }
+  .cfg-toggle { margin-left:auto; background:#1f2530; color:#cfd6e0; border:1px solid #333a44; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; }
+  #cfgWrap { display:none; width:100%; margin-top:6px; }
+  #cfgWrap.open { display:block; }
+  @media (max-width:760px){ .cfg-toggle { margin-left:0; } }
   .pending-panel { border:1px solid #ffd8a8; background:#fffaf2; }
   .pending-panel h2 { color:#a35b00; }
   .pend-badge { display:inline-block; min-width:20px; text-align:center; background:#e5484d; color:#fff; border-radius:999px; font-size:12px; font-weight:700; padding:1px 7px; margin-left:6px; }
@@ -101,7 +105,8 @@
 <body>
 <header>
   <h1>Coach Check-in Dashboard</h1>
-  <div class="cfg">
+  <button class="cfg-toggle" id="cfgToggle" type="button">⚙ Settings</button>
+  <div class="cfg" id="cfgWrap">
     <label>Worker</label>
     <input id="baseUrl" value="https://checkin-api.quantumflexpt.workers.dev">
     <label>Secret</label>
@@ -387,6 +392,7 @@
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
+  $("cfgToggle").addEventListener("click", () => $("cfgWrap").classList.toggle("open"));
   $("refresh").addEventListener("click", () => { loadClients(); loadPending(); });
   loadClients();
   loadPending();
