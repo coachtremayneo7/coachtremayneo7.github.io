@@ -2,65 +2,112 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Weekly Check-in</title>
+
+<!-- Home-screen / app behavior -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Check-in">
+<meta name="theme-color" id="themeColor" content="#1f6feb">
+<link rel="icon" id="favicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f6feb'/%3E%3Cpath d='M20 33l8 8 16-18' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
 <style>
   :root { --ink:#14181f; --muted:#667085; --line:#e2e6ea; --bg:#f4f6f8; --accent:#1f6feb; --ok:#37c46b; }
   * { box-sizing:border-box; }
-  body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:24px; }
-  .card { max-width:520px; margin:24px auto; background:#fff; border:1px solid var(--line); border-radius:16px; padding:26px; }
+  body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
+  .card { max-width:520px; margin:22px auto; background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 4px 20px rgba(20,24,31,.06); }
+  .brandbar { display:none; padding:14px 22px; color:#fff; background:var(--accent); font-weight:800; font-size:15px; letter-spacing:.02em; }
+  body.branded .brandbar { display:block; }
+  .body { padding:24px 22px 26px; }
   h1 { font-size:22px; margin:0 0 4px; }
   .sub { color:var(--muted); font-size:14px; margin:0 0 20px; }
   label { display:block; font-size:13px; font-weight:600; margin:16px 0 6px; }
   label:first-of-type { margin-top:0; }
   .req { color:var(--muted); font-weight:400; }
-  input, textarea { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px; font-size:15px; font-family:inherit; }
+  input, textarea { width:100%; padding:13px 14px; border:1px solid var(--line); border-radius:12px; font-size:16px; font-family:inherit; -webkit-appearance:none; }
+  input:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
   textarea { resize:vertical; min-height:120px; }
   .row { display:flex; gap:12px; } .row>div{flex:1;}
-  button { width:100%; margin-top:22px; background:var(--ink); color:#fff; border:0; border-radius:12px; padding:15px; font-size:16px; font-weight:600; cursor:pointer; }
+  button { width:100%; margin-top:22px; background:var(--accent); color:#fff; border:0; border-radius:14px; padding:16px; font-size:16px; font-weight:700; cursor:pointer; }
+  button:active { transform:translateY(1px); }
   button:disabled { opacity:.5; }
-  .ok { text-align:center; padding:20px 0; }
-  .ok .check { width:56px; height:56px; border-radius:50%; background:var(--ok); color:#fff; font-size:30px; line-height:56px; margin:0 auto 14px; }
-  .ok h2 { margin:0 0 6px; font-size:20px; }
+  .ok { text-align:center; padding:26px 0 8px; }
+  .ok .check { width:60px; height:60px; border-radius:50%; background:var(--ok); color:#fff; font-size:32px; line-height:60px; margin:0 auto 14px; }
+  .ok h2 { margin:0 0 6px; font-size:21px; }
   .ok p { color:var(--muted); margin:0; }
-  .err { background:#fdecec; border:1px solid #f5c2c2; color:#a12; border-radius:10px; padding:12px; font-size:14px; margin-top:14px; }
-  .note { background:#fff8ec; border:1px solid #ffe6b8; border-radius:10px; padding:12px; font-size:14px; color:#7a5a10; }
+  .err { background:#fdecec; border:1px solid #f5c2c2; color:#a12; border-radius:12px; padding:12px; font-size:14px; margin-top:14px; }
+  .note { background:#fff8ec; border:1px solid #ffe6b8; border-radius:12px; padding:12px; font-size:14px; color:#7a5a10; }
 </style>
 </head>
 <body>
-<div class="card" id="card">
-  <h1>Weekly Check-in</h1>
-  <p class="sub">Tell your coach how the week went. A couple of sentences is plenty.</p>
+<div class="card">
+  <div class="brandbar" id="brandbar"></div>
+  <div class="body">
+    <h1>Weekly Check-in</h1>
+    <p class="sub">Tell your coach how the week went. A couple of sentences is plenty.</p>
 
-  <div id="form">
-    <label>How did this week go? <span class="req">(required)</span></label>
-    <textarea id="msg" placeholder="Workouts, energy, food, sleep, wins, struggles — whatever stood out."></textarea>
+    <div id="form">
+      <label>How did this week go? <span class="req">(required)</span></label>
+      <textarea id="msg" placeholder="Workouts, energy, food, sleep, wins, struggles — whatever stood out."></textarea>
 
-    <div class="row">
-      <div>
-        <label>Weight <span class="req">(optional)</span></label>
-        <input id="weight" inputmode="decimal" placeholder="lb">
+      <div class="row">
+        <div>
+          <label>Weight <span class="req">(optional)</span></label>
+          <input id="weight" inputmode="decimal" placeholder="lb">
+        </div>
+        <div>
+          <label>Workouts done <span class="req">(optional)</span></label>
+          <input id="workouts" inputmode="numeric" placeholder="#">
+        </div>
       </div>
-      <div>
-        <label>Workouts done <span class="req">(optional)</span></label>
-        <input id="workouts" inputmode="numeric" placeholder="#">
-      </div>
+
+      <button id="send">Send my check-in</button>
+      <div id="err"></div>
     </div>
-
-    <button id="send">Send my check-in</button>
-    <div id="err"></div>
   </div>
 </div>
 
 <script>
   // === CONFIG ===
-  // Point this at your Worker. Each client gets a personal link with ?c=THEIR_ID
-  //   e.g.  https://yoursite/client-checkin.html?c=reset_sarah
   const WORKER_URL = "https://checkin-api.quantumflexpt.workers.dev";
+
+  // Personal link format:  ?c=CLIENTID&b=BRAND
+  //   b = dd | reset | travel   (leave off for a clean neutral look)
+  const BRANDS = {
+    dd:     { accent:"#f0a020", name:"Diesel & Discipline" },
+    reset:  { accent:"#2fb26a", name:"The Reset" },
+    travel: { accent:"#ff7a2d", name:"Travel" },
+  };
 
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const clientId = (params.get("c") || params.get("client") || "").trim();
+  const brandKey = (params.get("b") || params.get("brand") || "").trim().toLowerCase();
+  const brand = BRANDS[brandKey];
+
+  // apply brand color + name + app theming
+  if (brand) {
+    document.documentElement.style.setProperty("--accent", brand.accent);
+    document.body.classList.add("branded");
+    $("brandbar").textContent = brand.name;
+    document.title = brand.name + " — Check-in";
+    $("themeColor").setAttribute("content", brand.accent);
+    $("favicon").setAttribute("href",
+      "data:image/svg+xml," + encodeURIComponent(
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='"+brand.accent+"'/><path d='M20 33l8 8 16-18' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>"));
+  }
+
+  // generate a home-screen manifest at runtime (name + color match the brand)
+  try {
+    const accent = brand ? brand.accent : "#1f6feb";
+    const appName = brand ? (brand.name + " Check-in") : "Weekly Check-in";
+    const manifest = { name: appName, short_name: "Check-in", start_url: location.href, display: "standalone", background_color: "#f4f6f8", theme_color: accent };
+    const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+    const l = document.createElement("link"); l.rel = "manifest"; l.href = URL.createObjectURL(blob);
+    document.head.appendChild(l);
+  } catch (_) {}
 
   if (!clientId) {
     $("form").innerHTML = '<div class="note">This check-in link is missing your personal ID. Please use the exact link your coach sent you (it ends with <b>?c=your-id</b>).</div>';
@@ -85,7 +132,8 @@
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Something went wrong.");
-      $("card").innerHTML = '<div class="ok"><div class="check">&#10003;</div><h2>Check-in sent!</h2><p>' + (data.message || "Your coach will follow up soon.") + '</p></div>';
+      document.querySelector(".body").innerHTML =
+        '<div class="ok"><div class="check">&#10003;</div><h2>Check-in sent!</h2><p>' + (data.message || "Your coach will follow up soon.") + '</p></div>';
     } catch (e) {
       btn.disabled = false; btn.textContent = "Send my check-in";
       $("err").innerHTML = '<div class="err">Couldn\'t send: ' + String(e.message || e) + '. Please try again.</div>';
