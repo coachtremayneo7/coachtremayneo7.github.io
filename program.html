@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your program — The Reset</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e1613; --surface:#16211d; --surface2:#1d2a25; --line:#2a3b34;
+    --ink:#e9f0ec; --muted:#8fa89d; --green:#37c46b; --green-deep:#2aa259; --ring:#5fe08f;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 10px 30px -18px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;line-height:1.55;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:640px;margin:0 auto;padding:22px 18px 120px;}
+  a{color:inherit;}
+
+  /* header / wordmark */
+  .brand{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(55,196,107,.15);}
+  .brand b{color:var(--ink);font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.01em;}
+
+  /* hero: the track + the week, the most characteristic thing */
+  h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.02em;
+    font-size:2.1rem;line-height:1.05;margin:20px 0 6px;}
+  .lede{color:var(--muted);margin:0 0 22px;max-width:60ch;}
+
+  /* week switcher — weeks are a real sequence, so they're numbered */
+  .weeks{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;-webkit-overflow-scrolling:touch;}
+  .weeks button{flex:0 0 auto;padding:9px 15px;border-radius:11px;border:1px solid var(--line);
+    background:var(--surface);color:var(--muted);font:600 .92rem Inter,sans-serif;cursor:pointer;}
+  .weeks button[aria-selected="true"]{background:var(--green);border-color:var(--green);color:#04140a;}
+  .weeks button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}
+
+  .day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 16px 6px;
+    margin:0 0 14px;box-shadow:var(--shadow);}
+  .day-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px;}
+  .day-head h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.15rem;margin:0;}
+  .day-head .focus{color:var(--green);font-weight:600;font-size:.9rem;}
+  .ex{display:flex;align-items:baseline;gap:10px;padding:11px 0;border-top:1px solid var(--line);}
+  .ex:first-of-type{border-top:0;}
+  .ex .name{flex:1;font-weight:500;}
+  .ex .note{display:block;color:var(--muted);font-size:.86rem;font-weight:400;margin-top:2px;}
+  .ex .pres{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .ex .watch{color:var(--green);font-size:.85rem;font-weight:600;text-decoration:none;white-space:nowrap;}
+  .ex .watch:hover{text-decoration:underline;}
+  .rest{color:var(--muted);padding:11px 0;border-top:1px solid var(--line);font-style:italic;}
+
+  /* persistent check-in action — the reason they're paying */
+  .cta{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,transparent,var(--bg) 34%);
+    padding:26px 18px 20px;}
+  .cta .inner{max-width:640px;margin:0 auto;}
+  .cta a{display:block;text-align:center;background:var(--green);color:#04140a;font-weight:700;
+    padding:15px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px -10px rgba(55,196,107,.6);}
+  .cta a:focus-visible{outline:2px solid var(--ring);outline-offset:3px;}
+  .cta p{max-width:640px;margin:0 auto 9px;color:var(--muted);font-size:.85rem;text-align:center;}
+
+  .missing{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--muted);}
+  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="dot"></span><b>The Reset</b><span id="track-label"></span></div>
+  <h1 id="title">Your program</h1>
+  <p class="lede" id="lede">Follow the week below. Check in every week — that's how we catch what's working and fix what isn't before it costs you a month.</p>
+
+  <div class="weeks" id="weeks" role="tablist" aria-label="Program weeks"></div>
+  <div id="days"></div>
+</div>
+
+<div class="cta">
+  <div class="inner">
+    <p>Done for the week?</p>
+    <a id="checkin-link" href="#">Submit this week's check-in</a>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   EDIT HERE — your two tracks. Add weeks/days/exercises freely.
+   exercise fields: name (required), pres (sets×reps), note (optional),
+   video (optional unlisted YouTube URL). Use { rest:"..." } for a rest day.
+   ========================================================================= */
+const PROGRAMS = {
+  fatloss: {
+    label: "Lose fat",
+    lede: "Four days on, built to keep muscle while the weight comes off. Log every session honestly in your weekly check-in.",
+    weeks: [
+      { // Week 1
+        days: [
+          { title:"Day 1", focus:"Full body", exercises:[
+            { name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
+            { name:"Dumbbell bench press", pres:"3 × 10" },
+            { name:"1-arm row", pres:"3 × 10 each" },
+            { name:"Plank", pres:"3 × 30s" },
+          ]},
+          { rest:"Rest or a 20–30 min walk." },
+          { title:"Day 2", focus:"Lower + core", exercises:[
+            { name:"Romanian deadlift", pres:"3 × 10", video:"https://youtu.be/REPLACE" },
+            { name:"Walking lunge", pres:"3 × 12 each" },
+            { name:"Hanging or lying leg raise", pres:"3 × 12" },
+          ]},
+          { title:"Day 3", focus:"Upper", exercises:[
+            { name:"Incline press", pres:"3 × 10" },
+            { name:"Lat pulldown", pres:"3 × 12" },
+            { name:"Shoulder press", pres:"3 × 10" },
+            { name:"Face pull", pres:"3 × 15" },
+          ]},
+          { title:"Day 4", focus:"Conditioning", exercises:[
+            { name:"Intervals", pres:"20 min", note:"30s hard / 90s easy, any machine." },
+          ]},
+        ]
+      },
+      // Week 2 … copy the block above and adjust. Add as many weeks as the program runs.
+    ]
+  },
+
+  muscle: {
+    label: "Build muscle",
+    lede: "An upper/lower split to add size. Push the weight up week over week — your check-in is where we track that it's actually moving.",
+    weeks: [
+      { // Week 1
+        days: [
+          { title:"Day 1", focus:"Upper", exercises:[
+            { name:"Barbell bench press", pres:"4 × 6–8" },
+            { name:"Bent-over row", pres:"4 × 8" },
+            { name:"Overhead press", pres:"3 × 8" },
+            { name:"Chin-up", pres:"3 × max" },
+          ]},
+          { title:"Day 2", focus:"Lower", exercises:[
+            { name:"Back squat", pres:"4 × 6–8" },
+            { name:"Romanian deadlift", pres:"3 × 8" },
+            { name:"Leg press", pres:"3 × 12" },
+            { name:"Calf raise", pres:"4 × 15" },
+          ]},
+          { rest:"Rest." },
+          { title:"Day 3", focus:"Upper", exercises:[
+            { name:"Incline dumbbell press", pres:"4 × 8–10" },
+            { name:"Pull-up or pulldown", pres:"4 × 8–10" },
+            { name:"Lateral raise", pres:"3 × 15" },
+            { name:"Curl + triceps superset", pres:"3 × 12" },
+          ]},
+          { title:"Day 4", focus:"Lower", exercises:[
+            { name:"Front squat", pres:"4 × 8" },
+            { name:"Hip thrust", pres:"3 × 10" },
+            { name:"Hamstring curl", pres:"3 × 12" },
+          ]},
+        ]
+      },
+      // Week 2 …
+    ]
+  }
+};
+/* ===================== stop editing ===================== */
+
+const params = new URLSearchParams(location.search);
+const cid = params.get("c");
+const trackKey = (params.get("track") || "fatloss").toLowerCase();
+const prog = PROGRAMS[trackKey];
+
+// check-in button carries the client id straight through
+document.getElementById("checkin-link").href = "checkin.html" + (cid ? "?c=" + encodeURIComponent(cid) : "");
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+if (!prog) {
+  document.getElementById("days").innerHTML =
+    `<div class="missing">This program link looks off. Use the link Coach TreMayne sent you, or reach out and he'll resend it.</div>`;
+  document.querySelector(".cta").style.display = "none";
+} else {
+  document.getElementById("track-label").textContent = "· " + prog.label;
+  document.getElementById("title").textContent = prog.label;
+  if (prog.lede) document.getElementById("lede").textContent = prog.lede;
+  buildWeeks(prog.weeks);
+}
+
+function buildWeeks(weeks) {
+  const tabs = document.getElementById("weeks");
+  weeks.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.role = "tab"; b.textContent = "Week " + (i + 1);
+    b.setAttribute("aria-selected", i === 0);
+    b.addEventListener("click", () => { showWeek(i); [...tabs.children].forEach((x, j) => x.setAttribute("aria-selected", j === i)); });
+    tabs.appendChild(b);
+  });
+  showWeek(0);
+}
+
+function showWeek(i) {
+  const wrap = document.getElementById("days");
+  wrap.innerHTML = "";
+  for (const day of prog.weeks[i].days) {
+    const el = document.createElement("div");
+    if (day.rest) { el.className = "day"; el.innerHTML = `<div class="rest">${esc(day.rest)}</div>`; wrap.appendChild(el); continue; }
+    el.className = "day";
+    let rows = "";
+    for (const ex of day.exercises) {
+      const watch = ex.video ? `<a class="watch" href="${esc(ex.video)}" target="_blank" rel="noopener">Watch</a>` : "";
+      const note = ex.note ? `<span class="note">${esc(ex.note)}</span>` : "";
+      rows += `<div class="ex"><span class="name">${esc(ex.name)}${note}</span>${ex.pres ? `<span class="pres">${esc(ex.pres)}</span>` : ""}${watch}</div>`;
+    }
+    el.innerHTML = `<div class="day-head"><h2>${esc(day.title)}</h2>${day.focus ? `<span class="focus">${esc(day.focus)}</span>` : ""}</div>${rows}`;
+    wrap.appendChild(el);
+  }
+}
+</script>
+</body>
+</html>

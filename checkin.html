@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Check-in — Coach TreMayne</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --brand2:#2DD4BF; --bg:#f8fafc; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:var(--bg); color:var(--ink); line-height:1.5; }
+  .wrap { max-width:520px; margin:0 auto; padding:24px 18px 64px; }
+  h1 { font-size:1.5rem; margin:.2em 0 .1em; }
+  .sub { color:var(--muted); margin:0 0 20px; }
+  label { display:block; font-weight:600; margin:18px 0 6px; }
+  .hint { font-weight:400; color:var(--muted); font-size:.85rem; }
+  input, textarea, select { width:100%; padding:13px 14px; font-size:1rem; border:1px solid var(--line);
+         border-radius:12px; background:#fff; color:var(--ink); -webkit-appearance:none; }
+  input:focus, textarea:focus, select:focus { outline:2px solid var(--brand2); border-color:var(--brand); }
+  textarea { min-height:90px; resize:vertical; }
+  .energy { display:flex; gap:8px; }
+  .energy button { flex:1; padding:13px 0; font-size:1rem; border:1px solid var(--line); border-radius:12px;
+         background:#fff; cursor:pointer; }
+  .energy button[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:700; }
+  .submit { margin-top:26px; width:100%; padding:15px; font-size:1.05rem; font-weight:700; color:#fff;
+         background:var(--brand); border:0; border-radius:14px; cursor:pointer; }
+  .submit:disabled { opacity:.55; cursor:default; }
+  .msg { margin-top:18px; padding:14px 16px; border-radius:12px; font-weight:600; display:none; }
+  .msg.ok  { display:block; background:#ecfdf5; color:#065f46; }
+  .msg.err { display:block; background:#fef2f2; color:#991b1b; }
+  .done { text-align:center; padding:40px 0; }
+  .done h2 { font-size:1.6rem; margin:.2em 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="form-view">
+    <h1>Weekly check-in</h1>
+    <p class="sub">Takes about 30 seconds. Be honest — that's the whole point.</p>
+
+    <label for="client_id">Your check-in ID <span class="hint">(from your link — leave as-is)</span></label>
+    <input id="client_id" autocomplete="off" placeholder="e.g. nigel">
+
+    <label for="workouts">Workouts completed this week</label>
+    <input id="workouts" type="number" inputmode="numeric" min="0" max="14" step="1" placeholder="0">
+
+    <label for="weight">Body weight <span class="hint">(optional — lb)</span></label>
+    <input id="weight" type="number" inputmode="decimal" min="0" step="0.1" placeholder="Leave blank if you didn't weigh in">
+
+    <label>Energy this week</label>
+    <div class="energy" id="energy" role="group" aria-label="Energy 1 to 5">
+      <button type="button" data-v="1">1</button>
+      <button type="button" data-v="2">2</button>
+      <button type="button" data-v="3">3</button>
+      <button type="button" data-v="4">4</button>
+      <button type="button" data-v="5">5</button>
+    </div>
+
+    <label for="notes">Anything I should know? <span class="hint">(optional)</span></label>
+    <textarea id="notes" placeholder="Travel, soreness, wins, struggles…"></textarea>
+
+    <button class="submit" id="submit">Submit check-in</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div id="done-view" class="done" style="display:none">
+    <h2>Got it 💪</h2>
+    <p class="sub">Your check-in is in. I'll be in touch if anything needs adjusting.</p>
+  </div>
+</div>
+
+<script>
+  // checkin-api base. Same-origin by default (planned coachtremayne.com/api route).
+  // For standalone testing, set to your Worker URL, e.g. "https://checkin-api.<sub>.workers.dev".
+  const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+
+  // Client identity = the temporary dogfood mechanism: a ?c=<id> in the personal link.
+  const params = new URLSearchParams(location.search);
+  const cid = params.get("c");
+  const clientInput = document.getElementById("client_id");
+  if (cid) clientInput.value = cid;
+
+  let energy = null;
+  const energyWrap = document.getElementById("energy");
+  energyWrap.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    energy = Number(b.dataset.v);
+    [...energyWrap.children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  });
+
+  const msg = document.getElementById("msg");
+  const btn = document.getElementById("submit");
+  const show = (t, cls) => { msg.textContent = t; msg.className = "msg " + cls; };
+
+  btn.addEventListener("click", async () => {
+    const client_id = clientInput.value.trim();
+    const workouts_done = parseInt(document.getElementById("workouts").value, 10);
+    const weightRaw = document.getElementById("weight").value.trim();
+    const notes = document.getElementById("notes").value.trim();
+
+    if (!client_id) return show("Missing your check-in ID — use the link I sent you.", "err");
+    if (!Number.isInteger(workouts_done) || workouts_done < 0)
+      return show("Enter how many workouts you completed (0 or more).", "err");
+
+    // weight is optional; only send it when provided and valid (server rejects <= 0)
+    let weight = null;
+    if (weightRaw !== "") {
+      weight = parseFloat(weightRaw);
+      if (!Number.isFinite(weight) || weight <= 0) return show("Weight must be a number above 0, or left blank.", "err");
+    }
+
+    const body = { client_id, workouts_done, notes };
+    if (weight !== null) body.weight = weight;
+    if (energy !== null) body.energy = energy;
+
+    btn.disabled = true; show("Sending…", "ok");
+    try {
+      const r = await fetch(`${API_BASE}/checkin`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.error === "invalid_weight" ? "Weight must be above 0, or left blank." : `Something went wrong (${r.status}).`);
+      }
+      document.getElementById("form-view").style.display = "none";
+      document.getElementById("done-view").style.display = "block";
+    } catch (e) {
+      show(e.message || "Couldn't submit — try again in a moment.", "err");
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
