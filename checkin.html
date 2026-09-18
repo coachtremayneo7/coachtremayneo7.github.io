@@ -38,8 +38,9 @@
     <h1>Weekly check-in</h1>
     <p class="sub">Takes about 30 seconds. Be honest — that's the whole point.</p>
 
-    <label for="client_id">Your check-in code <span class="hint">(filled in from your link — leave as-is)</span></label>
-    <input id="client_id" autocomplete="off" readonly placeholder="Open the personal link I sent you">
+    <!-- Token comes from the personal link (?c=<token>) and is submitted silently.
+         Hidden so the client never sees a cryptic code. -->
+    <input id="client_id" type="hidden" autocomplete="off">
 
     <label for="workouts">Workouts completed this week</label>
     <input id="workouts" type="number" inputmode="numeric" min="0" max="14" step="1" placeholder="0">
