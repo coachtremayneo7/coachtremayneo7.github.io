@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check-in Review — Coach TreMayne</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --bg:#f8fafc;
+          --info:#64748b; --minor:#d97706; --major:#ea580c; --severe:#dc2626; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:var(--bg); color:var(--ink); line-height:1.5; }
+  .wrap { max-width:720px; margin:0 auto; padding:22px 16px 64px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
+  .bar input { flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:.95rem; }
+  .bar button { padding:10px 16px; border:0; border-radius:10px; background:var(--brand); color:#fff; font-weight:700; cursor:pointer; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .who { font-weight:700; font-size:1.05rem; }
+  .week { color:var(--muted); font-size:.85rem; }
+  .badges { margin:8px 0 2px; display:flex; gap:6px; flex-wrap:wrap; }
+  .badge { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+           padding:3px 9px; border-radius:999px; color:#fff; }
+  .facts { color:var(--ink); background:var(--bg); border-radius:10px; padding:9px 12px; margin:10px 0; font-size:.92rem; }
+  textarea { width:100%; min-height:96px; padding:12px; border:1px solid var(--line); border-radius:10px; font-size:.98rem; resize:vertical; }
+  .actions { display:flex; gap:8px; margin-top:10px; }
+  .actions button { flex:1; padding:12px; border-radius:10px; font-weight:700; cursor:pointer; border:1px solid var(--line); }
+  .approve { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .dismiss { background:#fff; color:var(--muted); }
+  .empty, .note { text-align:center; color:var(--muted); padding:36px 0; }
+  .cardmsg { margin-top:8px; font-size:.85rem; font-weight:600; }
+  .cardmsg.err { color:#991b1b; } .cardmsg.ok { color:#065f46; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Check-in review</h1>
+  <p class="sub">Drafts wait here for your approval. Nothing sends until you press send.</p>
+
+  <div class="bar">
+    <input id="apibase" placeholder="API base (blank = same origin)">
+    <input id="token" type="password" placeholder="Coach review token">
+    <button id="load">Load</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  // remember settings on this device (fine on your own hosting)
+  $("apibase").value = localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev";
+  $("token").value   = localStorage.getItem("ci_token")   || "";
+
+  const cfg = () => ({ base: $("apibase").value.trim(), token: $("token").value.trim() });
+  const sevColor = { info:"var(--info)", minor:"var(--minor)", major:"var(--major)", severe:"var(--severe)" };
+
+  function factLine(type, facts) {
+    try { facts = typeof facts === "string" ? JSON.parse(facts) : (facts || {}); } catch { facts = {}; }
+    if (type === "skip")       return `Trained ${facts.done}/${facts.target} — missed ${facts.missed}`;
+    if (type === "stall")      return `Weight ${facts.netChange >= 0 ? "+" : ""}${facts.netChange} lb over ${facts.weeksSpanned ?? facts.windowWeeks} wks — ${facts.reason}`;
+    if (type === "no_checkin") return `No check-in submitted for week of ${facts.week_start || ""}`;
+    return facts.reason || "";
+  }
+
+  async function load() {
+    const { base, token } = cfg();
+    localStorage.setItem("ci_apibase", base);
+    localStorage.setItem("ci_token", token);
+    const list = $("list");
+    if (!token) { list.innerHTML = `<p class="note">Enter your review token, then Load.</p>`; return; }
+    list.innerHTML = `<p class="note">Loading…</p>`;
+    try {
+      const r = await fetch(`${base}/review`, { headers: { authorization: `Bearer ${token}` } });
+      if (r.status === 401) { list.innerHTML = `<p class="note">Token rejected. Check it and try again.</p>`; return; }
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = await r.json();
+      render(d.pending || []);
+    } catch (e) {
+      list.innerHTML = `<p class="note">Couldn't reach the API (${e.message}). Check the API base.</p>`;
+    }
+  }
+
+  function render(pending) {
+    const list = $("list");
+    if (!pending.length) { list.innerHTML = `<p class="empty">Nothing pending. All clear. 🎯</p>`; return; }
+    list.innerHTML = "";
+    for (const f of pending) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="top">
+          <span class="who">${esc(f.client_name || f.client_id)}</span>
+          <span class="week">week of ${esc(f.week_start)}</span>
+        </div>
+        <div class="badges">
+          <span class="badge" style="background:${sevColor[f.severity] || "var(--info)"}">${esc(f.severity)}</span>
+          <span class="badge" style="background:#334155">${esc(f.type)}</span>
+        </div>
+        <div class="facts">${esc(factLine(f.type, f.facts))}</div>
+        <textarea>${esc(f.message_draft || "")}</textarea>
+        <div class="actions">
+          <button class="approve">Approve &amp; send</button>
+          <button class="dismiss">Dismiss</button>
+        </div>
+        <div class="cardmsg"></div>`;
+      const ta = card.querySelector("textarea");
+      const note = card.querySelector(".cardmsg");
+      card.querySelector(".approve").addEventListener("click", () => act(f.id, "approve", ta.value, card, note));
+      card.querySelector(".dismiss").addEventListener("click", () => act(f.id, "dismiss", null, card, note));
+      list.appendChild(card);
+    }
+  }
+
+  async function act(id, action, message, card, note) {
+    const { base, token } = cfg();
+    card.querySelectorAll("button").forEach(b => b.disabled = true);
+    note.className = "cardmsg"; note.textContent = action === "approve" ? "Sending…" : "Dismissing…";
+    const body = { action };
+    if (action === "approve" && message != null) body.message = message;
+    try {
+      const r = await fetch(`${base}/review/${encodeURIComponent(id)}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      note.className = "cardmsg ok"; note.textContent = action === "approve" ? "Sent ✓" : "Dismissed";
+      setTimeout(() => card.remove(), 700);
+    } catch (e) {
+      note.className = "cardmsg err";
+      note.textContent = `Failed (${e.message}). ${action === "approve" ? "Not sent — try again." : "Try again."}`;
+      card.querySelectorAll("button").forEach(b => b.disabled = false);
+    }
+  }
+
+  function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  $("load").addEventListener("click", load);
+  if ($("token").value) load();
+</script>
+</body>
+</html>

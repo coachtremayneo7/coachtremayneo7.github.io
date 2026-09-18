@@ -38,8 +38,8 @@
     <h1>Weekly check-in</h1>
     <p class="sub">Takes about 30 seconds. Be honest — that's the whole point.</p>
 
-    <label for="client_id">Your check-in ID <span class="hint">(from your link — leave as-is)</span></label>
-    <input id="client_id" autocomplete="off" placeholder="e.g. nigel">
+    <label for="client_id">Your check-in code <span class="hint">(filled in from your link — leave as-is)</span></label>
+    <input id="client_id" autocomplete="off" readonly placeholder="Open the personal link I sent you">
 
     <label for="workouts">Workouts completed this week</label>
     <input id="workouts" type="number" inputmode="numeric" min="0" max="14" step="1" placeholder="0">
@@ -74,7 +74,8 @@
   // For standalone testing, set to your Worker URL, e.g. "https://checkin-api.<sub>.workers.dev".
   const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
 
-  // Client identity = the temporary dogfood mechanism: a ?c=<id> in the personal link.
+  // Client identity = an opaque per-client token carried in the personal link (?c=<token>).
+  // The token is the only thing that authorizes a check-in; it's posted as `token`.
   const params = new URLSearchParams(location.search);
   const cid = params.get("c");
   const clientInput = document.getElementById("client_id");
@@ -93,12 +94,12 @@
   const show = (t, cls) => { msg.textContent = t; msg.className = "msg " + cls; };
 
   btn.addEventListener("click", async () => {
-    const client_id = clientInput.value.trim();
+    const token = clientInput.value.trim();
     const workouts_done = parseInt(document.getElementById("workouts").value, 10);
     const weightRaw = document.getElementById("weight").value.trim();
     const notes = document.getElementById("notes").value.trim();
 
-    if (!client_id) return show("Missing your check-in ID — use the link I sent you.", "err");
+    if (!token) return show("Open the personal link I sent you — this page needs your code.", "err");
     if (!Number.isInteger(workouts_done) || workouts_done < 0)
       return show("Enter how many workouts you completed (0 or more).", "err");
 
@@ -109,7 +110,7 @@
       if (!Number.isFinite(weight) || weight <= 0) return show("Weight must be a number above 0, or left blank.", "err");
     }
 
-    const body = { client_id, workouts_done, notes };
+    const body = { token, workouts_done, notes };
     if (weight !== null) body.weight = weight;
     if (energy !== null) body.energy = energy;
 
@@ -120,7 +121,13 @@
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
-        throw new Error(d.error === "invalid_weight" ? "Weight must be above 0, or left blank." : `Something went wrong (${r.status}).`);
+        const map = {
+          invalid_weight: "Weight must be above 0, or left blank.",
+          unauthorized:   "This link isn't valid — use the personal link I sent you.",
+          already_submitted: "You've already checked in this week — I've got it. 💪",
+          rate_limited:   "One sec — too many tries just now. Give it a moment and resend.",
+        };
+        throw new Error(map[d.error] || `Something went wrong (${r.status}).`);
       }
       document.getElementById("form-view").style.display = "none";
       document.getElementById("done-view").style.display = "block";
