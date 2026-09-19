@@ -75,20 +75,15 @@ Hidden so the client never sees a cryptic code. -->
 </div>
 
 <script>
-// checkin-api base. Same-origin by default (planned coachtremayne.com/api route).
-// For standalone testing, set to your Worker URL, e.g. "https://checkin-api.<sub>.workers.dev".
 const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
 
 // Client identity = an opaque per-client token carried in the personal link (?c=<token>).
-// The token is the only thing that authorizes a check-in; it's posted as `token`.
 const params = new URLSearchParams(location.search);
 const cid = params.get("c");
 const clientInput = document.getElementById("client_id");
 if (cid) clientInput.value = cid;
 
-// Brand skin (?b=dd|reset|travel) — matches the program page the client came from,
-// so a DD client sees amber end to end, Reset green, Travel orange. Purely cosmetic;
-// identity and submission are unchanged.
+// Brand skin (?b=dd|reset|travel) — matches the program page the client came from.
 const BRANDS = {
 reset: { name:"The Reset", brand:"#37c46b", on:"#04140a" },
 dd: { name:"Diesel & Discipline", brand:"#FFB020", on:"#1a1200" },
@@ -105,9 +100,9 @@ document.title = "Weekly Check-in — " + b.name;
 let energy = null;
 const energyWrap = document.getElementById("energy");
 energyWrap.addEventListener("click", (e) => {
-const b = e.target.closest("button"); if (!b) return;
-energy = Number(b.dataset.v);
-[...energyWrap.children].forEach(x => x.setAttribute("aria-pressed", x === b));
+const bx = e.target.closest("button"); if (!bx) return;
+energy = Number(bx.dataset.v);
+[...energyWrap.children].forEach(x => x.setAttribute("aria-pressed", x === bx));
 });
 
 const msg = document.getElementById("msg");
@@ -124,7 +119,6 @@ if (!token) return show("Open the personal link I sent you — this page needs y
 if (!Number.isInteger(workouts_done) || workouts_done < 0)
 return show("Enter how many workouts you completed (0 or more).", "err");
 
-// weight is optional; only send it when provided and valid (server rejects <= 0)
 let weight = null;
 if (weightRaw !== "") {
 weight = parseFloat(weightRaw);
