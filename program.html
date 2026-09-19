@@ -8,222 +8,222 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* Brand tokens — defaults are The Reset (green). JS overrides these per brand,
-     driven by the track's `brand` field, so this ONE page skins itself DD / Reset / Travel. */
-  :root{
-    --bg:#0e1613; --surface:#16211d; --line:#2a3b34;
-    --ink:#e9f0ec; --muted:#8fa89d;
-    --brand:#37c46b; --brand-deep:#2aa259; --on-brand:#04140a; --ring:#5fe08f;
-    --dot-glow:rgba(55,196,107,.15); --cta-glow:rgba(55,196,107,.6);
-    --shadow:0 1px 0 rgba(255,255,255,.03), 0 10px 30px -18px rgba(0,0,0,.7);
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;line-height:1.55;
-    -webkit-font-smoothing:antialiased;}
-  .wrap{max-width:640px;margin:0 auto;padding:22px 18px 120px;}
-  a{color:inherit;}
+/* Brand tokens — defaults are The Reset (green). JS overrides these per brand,
+driven by the track's `brand` field, so this ONE page skins itself DD / Reset / Travel. */
+:root{
+--bg:#0e1613; --surface:#16211d; --line:#2a3b34;
+--ink:#e9f0ec; --muted:#8fa89d;
+--brand:#37c46b; --brand-deep:#2aa259; --on-brand:#04140a; --ring:#5fe08f;
+--dot-glow:rgba(55,196,107,.15); --cta-glow:rgba(55,196,107,.6);
+--shadow:0 1px 0 rgba(255,255,255,.03), 0 10px 30px -18px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);
+font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;line-height:1.55;
+-webkit-font-smoothing:antialiased;}
+.wrap{max-width:640px;margin:0 auto;padding:22px 18px 120px;}
+a{color:inherit;}
 
-  .brand{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;}
-  .dot{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px var(--dot-glow);}
-  .brand b{color:var(--ink);font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.01em;}
+.brand{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px var(--dot-glow);}
+.brand b{color:var(--ink);font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.01em;}
 
-  h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.02em;
-    font-size:2.1rem;line-height:1.05;margin:20px 0 6px;}
-  .lede{color:var(--muted);margin:0 0 22px;max-width:60ch;}
+h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.02em;
+font-size:2.1rem;line-height:1.05;margin:20px 0 6px;}
+.lede{color:var(--muted);margin:0 0 22px;max-width:60ch;}
 
-  .weeks{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;-webkit-overflow-scrolling:touch;}
-  .weeks button{flex:0 0 auto;padding:9px 15px;border-radius:11px;border:1px solid var(--line);
-    background:var(--surface);color:var(--muted);font:600 .92rem Inter,sans-serif;cursor:pointer;}
-  .weeks button[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand);}
-  .weeks button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}
+.weeks{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;-webkit-overflow-scrolling:touch;}
+.weeks button{flex:0 0 auto;padding:9px 15px;border-radius:11px;border:1px solid var(--line);
+background:var(--surface);color:var(--muted);font:600 .92rem Inter,sans-serif;cursor:pointer;}
+.weeks button[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand);}
+.weeks button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}
 
-  .day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 16px 6px;
-    margin:0 0 14px;box-shadow:var(--shadow);}
-  .day-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px;}
-  .day-head h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.15rem;margin:0;}
-  .day-head .focus{color:var(--brand);font-weight:600;font-size:.9rem;}
-  .ex{display:flex;align-items:baseline;gap:10px;padding:11px 0;border-top:1px solid var(--line);}
-  .ex:first-of-type{border-top:0;}
-  .ex .name{flex:1;font-weight:500;}
-  .ex .note{display:block;color:var(--muted);font-size:.86rem;font-weight:400;margin-top:2px;}
-  .ex .pres{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .ex .watch{color:var(--brand);font-size:.85rem;font-weight:600;text-decoration:none;white-space:nowrap;}
-  .ex .watch:hover{text-decoration:underline;}
-  .rest{color:var(--muted);padding:11px 0;border-top:1px solid var(--line);font-style:italic;}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 16px 6px;
+margin:0 0 14px;box-shadow:var(--shadow);}
+.day-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.day-head h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.15rem;margin:0;}
+.day-head .focus{color:var(--brand);font-weight:600;font-size:.9rem;}
+.ex{display:flex;align-items:baseline;gap:10px;padding:11px 0;border-top:1px solid var(--line);}
+.ex:first-of-type{border-top:0;}
+.ex .name{flex:1;font-weight:500;}
+.ex .note{display:block;color:var(--muted);font-size:.86rem;font-weight:400;margin-top:2px;}
+.ex .pres{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.ex .watch{color:var(--brand);font-size:.85rem;font-weight:600;text-decoration:none;white-space:nowrap;}
+.ex .watch:hover{text-decoration:underline;}
+.rest{color:var(--muted);padding:11px 0;border-top:1px solid var(--line);font-style:italic;}
 
-  .cta{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,transparent,var(--bg) 34%);
-    padding:26px 18px 20px;}
-  .cta .inner{max-width:640px;margin:0 auto;}
-  .cta a{display:block;text-align:center;background:var(--brand);color:var(--on-brand);font-weight:700;
-    padding:15px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px -10px var(--cta-glow);}
-  .cta a:focus-visible{outline:2px solid var(--ring);outline-offset:3px;}
-  .cta p{max-width:640px;margin:0 auto 9px;color:var(--muted);font-size:.85rem;text-align:center;}
+.cta{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,transparent,var(--bg) 34%);
+padding:26px 18px 20px;}
+.cta .inner{max-width:640px;margin:0 auto;}
+.cta a{display:block;text-align:center;background:var(--brand);color:var(--on-brand);font-weight:700;
+padding:15px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px -10px var(--cta-glow);}
+.cta a:focus-visible{outline:2px solid var(--ring);outline-offset:3px;}
+.cta p{max-width:640px;margin:0 auto 9px;color:var(--muted);font-size:.85rem;text-align:center;}
 
-  .missing{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--muted);}
-  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;}}
+.missing{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--muted);}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><span class="dot"></span><b id="wordmark">The Reset</b><span id="track-label"></span></div>
-  <h1 id="title">Your program</h1>
-  <p class="lede" id="lede">Follow the week below. Check in every week — that's how we catch what's working and fix what isn't before it costs you a month.</p>
+<div class="brand"><span class="dot"></span><b id="wordmark">The Reset</b><span id="track-label"></span></div>
+<h1 id="title">Your program</h1>
+<p class="lede" id="lede">Follow the week below. Check in every week — that's how we catch what's working and fix what isn't before it costs you a month.</p>
 
-  <div class="weeks" id="weeks" role="tablist" aria-label="Program weeks"></div>
-  <div id="days"></div>
+<div class="weeks" id="weeks" role="tablist" aria-label="Program weeks"></div>
+<div id="days"></div>
 </div>
 
 <div class="cta">
-  <div class="inner">
-    <p>Done for the week?</p>
-    <a id="checkin-link" href="#">Submit this week's check-in</a>
-  </div>
+<div class="inner">
+<p>Done for the week?</p>
+<a id="checkin-link" href="#">Submit this week's check-in</a>
+</div>
 </div>
 
 <script>
 /* =========================================================================
-   ONE page, three brand skins. A client's link picks the brand+program:
-     coachtremayne.com/program.html?track=<key>&c=<their token>
+ONE page, three brand skins. A client's link picks the brand+program:
+coachtremayne.com/program.html?track=<key>&c=<their token>
 
-   TRACK KEYS you can hand out:
-     dd       -> Diesel & Discipline  (amber)
-     fatloss  -> The Reset · Lose fat (green)
-     muscle   -> The Reset · Build    (green)
-     travel   -> Travel Plan          (orange)
+TRACK KEYS you can hand out:
+dd -> Diesel & Discipline (amber)
+fatloss -> The Reset · Lose fat (green)
+muscle -> The Reset · Build (green)
+travel -> Travel Plan (orange)
 
-   EDIT the PROGRAMS below — each track's weeks/days/exercises are placeholders.
-   exercise fields: name (required), pres (sets×reps), note (optional),
-   video (optional unlisted YouTube URL). Use { rest:"..." } for a rest day.
-   Each track's `brand` decides its colors + wordmark (do not need to touch BRANDS).
-   ========================================================================= */
+EDIT the PROGRAMS below — each track's weeks/days/exercises are placeholders.
+exercise fields: name (required), pres (sets×reps), note (optional),
+video (optional unlisted YouTube URL). Use { rest:"..." } for a rest day.
+Each track's `brand` decides its colors + wordmark (do not need to touch BRANDS).
+========================================================================= */
 
 const BRANDS = {
-  reset:  { wordmark:"The Reset",             bg:"#0e1613", surface:"#16211d", line:"#2a3b34", muted:"#8fa89d",
-            brand:"#37c46b", deep:"#2aa259", onBrand:"#04140a", ring:"#5fe08f", dot:"rgba(55,196,107,.15)", cta:"rgba(55,196,107,.6)" },
-  dd:     { wordmark:"Diesel & Discipline",   bg:"#17130a", surface:"#211b10", line:"#3a3320", muted:"#a89a80",
-            brand:"#FFB020", deep:"#d98e00", onBrand:"#1a1200", ring:"#ffcf6b", dot:"rgba(255,176,32,.16)", cta:"rgba(255,176,32,.55)" },
-  travel: { wordmark:"Travel Plan",           bg:"#171009", surface:"#211710", line:"#3a2c1d", muted:"#a8977f",
-            brand:"#ff7a2d", deep:"#e85f14", onBrand:"#1a0d02", ring:"#ffa970", dot:"rgba(255,122,45,.16)", cta:"rgba(255,122,45,.55)" },
+reset: { wordmark:"The Reset", bg:"#0e1613", surface:"#16211d", line:"#2a3b34", muted:"#8fa89d",
+brand:"#37c46b", deep:"#2aa259", onBrand:"#04140a", ring:"#5fe08f", dot:"rgba(55,196,107,.15)", cta:"rgba(55,196,107,.6)" },
+dd: { wordmark:"Diesel & Discipline", bg:"#17130a", surface:"#211b10", line:"#3a3320", muted:"#a89a80",
+brand:"#FFB020", deep:"#d98e00", onBrand:"#1a1200", ring:"#ffcf6b", dot:"rgba(255,176,32,.16)", cta:"rgba(255,176,32,.55)" },
+travel: { wordmark:"Travel Plan", bg:"#171009", surface:"#211710", line:"#3a2c1d", muted:"#a8977f",
+brand:"#ff7a2d", deep:"#e85f14", onBrand:"#1a0d02", ring:"#ffa970", dot:"rgba(255,122,45,.16)", cta:"rgba(255,122,45,.55)" },
 };
 
 const PROGRAMS = {
-  // ---- Diesel & Discipline (amber) — CDL drivers, DOT-physical retention ----
-  dd: {
-    brand: "dd",
-    label: "Diesel & Discipline",
-    lede: "Built to run from the road and the yard — keep your numbers right for the DOT physical. Log every session honestly in your weekly check-in.",
-    weeks: [
-      { // Week 1  (PLACEHOLDER — drop in the real DD block)
-        days: [
-          { title:"Day 1", focus:"Full body", exercises:[
-            { name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
-            { name:"Push-up (or bench)", pres:"3 × 10" },
-            { name:"1-arm row", pres:"3 × 10 each" },
-            { name:"Plank", pres:"3 × 30s" },
-          ]},
-          { rest:"Rest, or a 20–30 min walk at the truck stop." },
-          { title:"Day 2", focus:"Conditioning", exercises:[
-            { name:"Brisk walk / incline", pres:"20–30 min" },
-          ]},
-        ]
-      },
-    ]
-  },
+// ---- Diesel & Discipline (amber) — CDL drivers, DOT-physical retention ----
+dd: {
+brand: "dd",
+label: "Diesel & Discipline",
+lede: "Built to run from the road and the yard — keep your numbers right for the DOT physical. Log every session honestly in your weekly check-in.",
+weeks: [
+{ // Week 1 (PLACEHOLDER — drop in the real DD block)
+days: [
+{ title:"Day 1", focus:"Full body", exercises:[
+{ name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
+{ name:"Push-up (or bench)", pres:"3 × 10" },
+{ name:"1-arm row", pres:"3 × 10 each" },
+{ name:"Plank", pres:"3 × 30s" },
+]},
+{ rest:"Rest, or a 20–30 min walk at the truck stop." },
+{ title:"Day 2", focus:"Conditioning", exercises:[
+{ name:"Brisk walk / incline", pres:"20–30 min" },
+]},
+]
+},
+]
+},
 
-  // ---- The Reset (green) — general fat loss ----
-  fatloss: {
-    brand: "reset",
-    label: "Lose fat",
-    lede: "Four days on, built to keep muscle while the weight comes off. Log every session honestly in your weekly check-in.",
-    weeks: [
-      { // Week 1
-        days: [
-          { title:"Day 1", focus:"Full body", exercises:[
-            { name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
-            { name:"Dumbbell bench press", pres:"3 × 10" },
-            { name:"1-arm row", pres:"3 × 10 each" },
-            { name:"Plank", pres:"3 × 30s" },
-          ]},
-          { rest:"Rest or a 20–30 min walk." },
-          { title:"Day 2", focus:"Lower + core", exercises:[
-            { name:"Romanian deadlift", pres:"3 × 10", video:"https://youtu.be/REPLACE" },
-            { name:"Walking lunge", pres:"3 × 12 each" },
-            { name:"Hanging or lying leg raise", pres:"3 × 12" },
-          ]},
-          { title:"Day 3", focus:"Upper", exercises:[
-            { name:"Incline press", pres:"3 × 10" },
-            { name:"Lat pulldown", pres:"3 × 12" },
-            { name:"Shoulder press", pres:"3 × 10" },
-            { name:"Face pull", pres:"3 × 15" },
-          ]},
-          { title:"Day 4", focus:"Conditioning", exercises:[
-            { name:"Intervals", pres:"20 min", note:"30s hard / 90s easy, any machine." },
-          ]},
-        ]
-      },
-    ]
-  },
+// ---- The Reset (green) — general fat loss ----
+fatloss: {
+brand: "reset",
+label: "Lose fat",
+lede: "Four days on, built to keep muscle while the weight comes off. Log every session honestly in your weekly check-in.",
+weeks: [
+{ // Week 1
+days: [
+{ title:"Day 1", focus:"Full body", exercises:[
+{ name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
+{ name:"Dumbbell bench press", pres:"3 × 10" },
+{ name:"1-arm row", pres:"3 × 10 each" },
+{ name:"Plank", pres:"3 × 30s" },
+]},
+{ rest:"Rest or a 20–30 min walk." },
+{ title:"Day 2", focus:"Lower + core", exercises:[
+{ name:"Romanian deadlift", pres:"3 × 10", video:"https://youtu.be/REPLACE" },
+{ name:"Walking lunge", pres:"3 × 12 each" },
+{ name:"Hanging or lying leg raise", pres:"3 × 12" },
+]},
+{ title:"Day 3", focus:"Upper", exercises:[
+{ name:"Incline press", pres:"3 × 10" },
+{ name:"Lat pulldown", pres:"3 × 12" },
+{ name:"Shoulder press", pres:"3 × 10" },
+{ name:"Face pull", pres:"3 × 15" },
+]},
+{ title:"Day 4", focus:"Conditioning", exercises:[
+{ name:"Intervals", pres:"20 min", note:"30s hard / 90s easy, any machine." },
+]},
+]
+},
+]
+},
 
-  // ---- The Reset (green) — build muscle ----
-  muscle: {
-    brand: "reset",
-    label: "Build muscle",
-    lede: "An upper/lower split to add size. Push the weight up week over week — your check-in is where we track that it's actually moving.",
-    weeks: [
-      { // Week 1
-        days: [
-          { title:"Day 1", focus:"Upper", exercises:[
-            { name:"Barbell bench press", pres:"4 × 6–8" },
-            { name:"Bent-over row", pres:"4 × 8" },
-            { name:"Overhead press", pres:"3 × 8" },
-            { name:"Chin-up", pres:"3 × max" },
-          ]},
-          { title:"Day 2", focus:"Lower", exercises:[
-            { name:"Back squat", pres:"4 × 6–8" },
-            { name:"Romanian deadlift", pres:"3 × 8" },
-            { name:"Leg press", pres:"3 × 12" },
-            { name:"Calf raise", pres:"4 × 15" },
-          ]},
-          { rest:"Rest." },
-          { title:"Day 3", focus:"Upper", exercises:[
-            { name:"Incline dumbbell press", pres:"4 × 8–10" },
-            { name:"Pull-up or pulldown", pres:"4 × 8–10" },
-            { name:"Lateral raise", pres:"3 × 15" },
-            { name:"Curl + triceps superset", pres:"3 × 12" },
-          ]},
-          { title:"Day 4", focus:"Lower", exercises:[
-            { name:"Front squat", pres:"4 × 8" },
-            { name:"Hip thrust", pres:"3 × 10" },
-            { name:"Hamstring curl", pres:"3 × 12" },
-          ]},
-        ]
-      },
-    ]
-  },
+// ---- The Reset (green) — build muscle ----
+muscle: {
+brand: "reset",
+label: "Build muscle",
+lede: "An upper/lower split to add size. Push the weight up week over week — your check-in is where we track that it's actually moving.",
+weeks: [
+{ // Week 1
+days: [
+{ title:"Day 1", focus:"Upper", exercises:[
+{ name:"Barbell bench press", pres:"4 × 6–8" },
+{ name:"Bent-over row", pres:"4 × 8" },
+{ name:"Overhead press", pres:"3 × 8" },
+{ name:"Chin-up", pres:"3 × max" },
+]},
+{ title:"Day 2", focus:"Lower", exercises:[
+{ name:"Back squat", pres:"4 × 6–8" },
+{ name:"Romanian deadlift", pres:"3 × 8" },
+{ name:"Leg press", pres:"3 × 12" },
+{ name:"Calf raise", pres:"4 × 15" },
+]},
+{ rest:"Rest." },
+{ title:"Day 3", focus:"Upper", exercises:[
+{ name:"Incline dumbbell press", pres:"4 × 8–10" },
+{ name:"Pull-up or pulldown", pres:"4 × 8–10" },
+{ name:"Lateral raise", pres:"3 × 15" },
+{ name:"Curl + triceps superset", pres:"3 × 12" },
+]},
+{ title:"Day 4", focus:"Lower", exercises:[
+{ name:"Front squat", pres:"4 × 8" },
+{ name:"Hip thrust", pres:"3 × 10" },
+{ name:"Hamstring curl", pres:"3 × 12" },
+]},
+]
+},
+]
+},
 
-  // ---- Travel Plan (orange) — bodyweight, professionals 40+ ----
-  travel: {
-    brand: "travel",
-    label: "Travel Plan",
-    lede: "No gym, no problem — bodyweight sessions you can run from a hotel room. Log every session honestly in your weekly check-in.",
-    weeks: [
-      { // Week 1  (PLACEHOLDER — drop in the real Travel block)
-        days: [
-          { title:"Day 1", focus:"Full body", exercises:[
-            { name:"Bodyweight squat", pres:"3 × 15" },
-            { name:"Incline push-up (desk/bed)", pres:"3 × 10" },
-            { name:"Reverse lunge", pres:"3 × 10 each" },
-            { name:"Plank", pres:"3 × 30s" },
-          ]},
-          { rest:"Rest or a 20–30 min walk." },
-          { title:"Day 2", focus:"Conditioning", exercises:[
-            { name:"Walk / stairs", pres:"20–30 min" },
-          ]},
-        ]
-      },
-    ]
-  },
+// ---- Travel Plan (orange) — bodyweight, professionals 40+ ----
+travel: {
+brand: "travel",
+label: "Travel Plan",
+lede: "No gym, no problem — bodyweight sessions you can run from a hotel room. Log every session honestly in your weekly check-in.",
+weeks: [
+{ // Week 1 (PLACEHOLDER — drop in the real Travel block)
+days: [
+{ title:"Day 1", focus:"Full body", exercises:[
+{ name:"Bodyweight squat", pres:"3 × 15" },
+{ name:"Incline push-up (desk/bed)", pres:"3 × 10" },
+{ name:"Reverse lunge", pres:"3 × 10 each" },
+{ name:"Plank", pres:"3 × 30s" },
+]},
+{ rest:"Rest or a 20–30 min walk." },
+{ title:"Day 2", focus:"Conditioning", exercises:[
+{ name:"Walk / stairs", pres:"20–30 min" },
+]},
+]
+},
+]
+},
 };
 /* ===================== stop editing ===================== */
 
@@ -233,63 +233,72 @@ const trackKey = (params.get("track") || "fatloss").toLowerCase();
 const prog = PROGRAMS[trackKey];
 
 // check-in button carries the client's token straight through (brand-neutral form)
-document.getElementById("checkin-link").href = "checkin.html" + (cid ? "?c=" + encodeURIComponent(cid) : "");
+// check-in button carries the client's token AND the brand skin straight through,
+// so the check-in form matches the brand of the program page (amber/green/orange).
+{
+const qs = new URLSearchParams();
+if (cid) qs.set("c", cid);
+if (prog && prog.brand) qs.set("b", prog.brand);
+const q = qs.toString();
+document.getElementById("checkin-link").href = "checkin.html" + (q ? "?" + q : "");
+}
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
 function applyBrand(key) {
-  const b = BRANDS[key] || BRANDS.reset;
-  const r = document.documentElement.style;
-  r.setProperty("--bg", b.bg); r.setProperty("--surface", b.surface); r.setProperty("--line", b.line);
-  r.setProperty("--muted", b.muted); r.setProperty("--brand", b.brand); r.setProperty("--brand-deep", b.deep);
-  r.setProperty("--on-brand", b.onBrand); r.setProperty("--ring", b.ring);
-  r.setProperty("--dot-glow", b.dot); r.setProperty("--cta-glow", b.cta);
-  document.getElementById("wordmark").textContent = b.wordmark;
+const b = BRANDS[key] || BRANDS.reset;
+const r = document.documentElement.style;
+r.setProperty("--bg", b.bg); r.setProperty("--surface", b.surface); r.setProperty("--line", b.line);
+r.setProperty("--muted", b.muted); r.setProperty("--brand", b.brand); r.setProperty("--brand-deep", b.deep);
+r.setProperty("--on-brand", b.onBrand); r.setProperty("--ring", b.ring);
+r.setProperty("--dot-glow", b.dot); r.setProperty("--cta-glow", b.cta);
+document.getElementById("wordmark").textContent = b.wordmark;
 }
 
 if (!prog) {
-  document.getElementById("days").innerHTML =
-    `<div class="missing">This program link looks off. Use the link Coach TreMayne sent you, or reach out and he'll resend it.</div>`;
-  document.querySelector(".cta").style.display = "none";
+document.getElementById("days").innerHTML =
+`<div class="missing">This program link looks off. Use the link Coach TreMayne sent you, or reach out and he'll resend it.</div>`;
+document.querySelector(".cta").style.display = "none";
 } else {
-  applyBrand(prog.brand);
-  const b = BRANDS[prog.brand] || BRANDS.reset;
-  document.getElementById("track-label").textContent = "· " + prog.label;
-  document.getElementById("title").textContent = prog.label;
-  document.getElementById("page-title").textContent = prog.label + " — " + b.wordmark;
-  if (prog.lede) document.getElementById("lede").textContent = prog.lede;
-  buildWeeks(prog.weeks);
+applyBrand(prog.brand);
+const b = BRANDS[prog.brand] || BRANDS.reset;
+document.getElementById("track-label").textContent = "· " + prog.label;
+document.getElementById("title").textContent = prog.label;
+document.getElementById("page-title").textContent = prog.label + " — " + b.wordmark;
+if (prog.lede) document.getElementById("lede").textContent = prog.lede;
+buildWeeks(prog.weeks);
 }
 
 function buildWeeks(weeks) {
-  const tabs = document.getElementById("weeks");
-  weeks.forEach((_, i) => {
-    const btn = document.createElement("button");
-    btn.role = "tab"; btn.textContent = "Week " + (i + 1);
-    btn.setAttribute("aria-selected", i === 0);
-    btn.addEventListener("click", () => { showWeek(i); [...tabs.children].forEach((x, j) => x.setAttribute("aria-selected", j === i)); });
-    tabs.appendChild(btn);
-  });
-  showWeek(0);
+const tabs = document.getElementById("weeks");
+weeks.forEach((_, i) => {
+const btn = document.createElement("button");
+btn.role = "tab"; btn.textContent = "Week " + (i + 1);
+btn.setAttribute("aria-selected", i === 0);
+btn.addEventListener("click", () => { showWeek(i); [...tabs.children].forEach((x, j) => x.setAttribute("aria-selected", j === i)); });
+tabs.appendChild(btn);
+});
+showWeek(0);
 }
 
 function showWeek(i) {
-  const wrap = document.getElementById("days");
-  wrap.innerHTML = "";
-  for (const day of prog.weeks[i].days) {
-    const el = document.createElement("div");
-    if (day.rest) { el.className = "day"; el.innerHTML = `<div class="rest">${esc(day.rest)}</div>`; wrap.appendChild(el); continue; }
-    el.className = "day";
-    let rows = "";
-    for (const ex of day.exercises) {
-      const watch = ex.video ? `<a class="watch" href="${esc(ex.video)}" target="_blank" rel="noopener">Watch</a>` : "";
-      const note = ex.note ? `<span class="note">${esc(ex.note)}</span>` : "";
-      rows += `<div class="ex"><span class="name">${esc(ex.name)}${note}</span>${ex.pres ? `<span class="pres">${esc(ex.pres)}</span>` : ""}${watch}</div>`;
-    }
-    el.innerHTML = `<div class="day-head"><h2>${esc(day.title)}</h2>${day.focus ? `<span class="focus">${esc(day.focus)}</span>` : ""}</div>${rows}`;
-    wrap.appendChild(el);
-  }
+const wrap = document.getElementById("days");
+wrap.innerHTML = "";
+for (const day of prog.weeks[i].days) {
+const el = document.createElement("div");
+if (day.rest) { el.className = "day"; el.innerHTML = `<div class="rest">${esc(day.rest)}</div>`; wrap.appendChild(el); continue; }
+el.className = "day";
+let rows = "";
+for (const ex of day.exercises) {
+const watch = ex.video ? `<a class="watch" href="${esc(ex.video)}" target="_blank" rel="noopener">Watch</a>` : "";
+const note = ex.note ? `<span class="note">${esc(ex.note)}</span>` : "";
+rows += `<div class="ex"><span class="name">${esc(ex.name)}${note}</span>${ex.pres ? `<span class="pres">${esc(ex.pres)}</span>` : ""}${watch}</div>`;
+}
+el.innerHTML = `<div class="day-head"><h2>${esc(day.title)}</h2>${day.focus ? `<span class="focus">${esc(day.focus)}</span>` : ""}</div>${rows}`;
+wrap.appendChild(el);
+}
 }
 </script>
 </body>
 </html>
+
