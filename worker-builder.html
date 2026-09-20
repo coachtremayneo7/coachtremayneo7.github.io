@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workout Builder — Coach TreMayne</title>
+<style>
+:root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --bg:#f8fafc;
+--danger:#dc2626; --ok:#065f46; --okbg:#ecfdf5; --errbg:#fef2f2; --err:#991b1b; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+background:var(--bg); color:var(--ink); line-height:1.5; }
+.wrap { max-width:760px; margin:0 auto; padding:22px 16px 96px; }
+h1 { font-size:1.4rem; margin:0 0 4px; }
+.sub { color:var(--muted); margin:0 0 18px; }
+label { display:block; font-weight:600; font-size:.9rem; margin:0 0 5px; }
+input, select, textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;
+font-size:.95rem; background:#fff; color:var(--ink); }
+.bar { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px; }
+.bar > div { flex:1; min-width:170px; }
+button { cursor:pointer; border:1px solid var(--line); border-radius:10px; font-weight:700; padding:10px 14px;
+background:#fff; color:var(--ink); font-size:.92rem; }
+button.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+button.danger { background:#fff; color:var(--danger); border-color:#f3c9c9; }
+button:disabled { opacity:.5; cursor:default; }
+.card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; margin:0 0 14px; }
+.row2 { display:flex; gap:10px; flex-wrap:wrap; }
+.row2 > div { flex:1; min-width:150px; }
+.meta { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.meta > div { flex:1; min-width:180px; }
+.day { border:1px solid var(--line); border-radius:12px; padding:14px; margin:0 0 12px; background:#fcfdff; }
+.day-top { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px; }
+.day-top > div { flex:1; min-width:120px; }
+.ex { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; padding:8px 0; border-top:1px dashed var(--line); }
+.ex:first-of-type { border-top:0; }
+.ex .exname { flex:2; min-width:150px; }
+.ex .num { flex:1; min-width:70px; }
+.ex .exrest { flex:1; min-width:80px; }
+.ex .xbtn { flex:0 0 auto; }
+.restday textarea { min-height:44px; }
+.tag { display:inline-block; font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase;
+letter-spacing:.03em; margin-bottom:6px; }
+.msg { margin:14px 0; padding:12px 14px; border-radius:10px; font-weight:600; display:none; }
+.msg.ok { display:block; background:var(--okbg); color:var(--ok); }
+.msg.err { display:block; background:var(--errbg); color:var(--err); }
+.actions { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(180deg,transparent,var(--bg) 40%);
+padding:22px 16px 16px; }
+.actions .inner { max-width:760px; margin:0 auto; display:flex; gap:10px; }
+.actions .inner button { flex:1; padding:14px; }
+.small { font-size:.82rem; color:var(--muted); }
+.addbtns { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+hr { border:0; border-top:1px solid var(--line); margin:16px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Workout builder</h1>
+<p class="sub">Build a client's custom plan. No plan = they see the standard brand workout. Fill in fields — the JSON is generated for you.</p>
+
+<!-- Auth + client picker. Reuses the SAME localStorage keys and Bearer scheme as review.html. -->
+<div class="bar">
+<div>
+<label for="apibase">API base</label>
+<input id="apibase" placeholder="https://checkin-api...workers.dev">
+</div>
+<div>
+<label for="token">Coach token</label>
+<input id="token" type="password" placeholder="Your coach token">
+</div>
+<div style="flex:0 0 auto;">
+<button id="loadClients" class="primary">Connect</button>
+</div>
+</div>
+
+<div class="bar">
+<div>
+<label for="client">Client</label>
+<select id="client"><option value="">— connect first —</option></select>
+</div>
+<div style="flex:0 0 auto;">
+<button id="loadPlan">Load plan</button>
+</div>
+</div>
+
+<div id="msg" class="msg"></div>
+
+<!-- Plan editor (hidden until a client is chosen) -->
+<div id="editor" style="display:none;">
+<div class="card">
+<div class="meta">
+<div>
+<label for="planName">Plan name <span class="small">(you'll see this, client sees it as the title)</span></label>
+<input id="planName" placeholder="e.g. Marcus – Fat Loss Block 1">
+</div>
+<div>
+<label for="brand">Brand / look</label>
+<select id="brand">
+<option value="dd">Diesel &amp; Discipline (amber)</option>
+<option value="reset">The Reset (green)</option>
+<option value="travel">Travel Plan (orange)</option>
+</select>
+</div>
+</div>
+<label for="lede">Intro line <span class="small">(optional — shows under the title)</span></label>
+<textarea id="lede" rows="2" placeholder="Optional short intro for the client…"></textarea>
+</div>
+
+<div id="days"></div>
+
+<div class="addbtns">
+<button id="addDay">+ Add workout day</button>
+<button id="addRest">+ Add rest day</button>
+</div>
+<p class="small" style="margin-top:12px;">This builds Week 1. (Multi-week can be added later — the format already supports it.)</p>
+</div>
+</div>
+
+<div class="actions" id="actionbar" style="display:none;">
+<div class="inner">
+<button id="save" class="primary">Save plan</button>
+<button id="del" class="danger">Delete custom plan</button>
+</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+// Reuse review.html's exact storage keys + Bearer scheme. No new auth.
+$("apibase").value = localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev";
+$("token").value = localStorage.getItem("ci_token") || "";
+
+const cfg = () => ({ base: $("apibase").value.trim().replace(/\/+$/,""), token: $("token").value.trim() });
+const authH = () => ({ authorization: `Bearer ${cfg().token}` });
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+function msg(text, kind) { const m = $("msg"); m.textContent = text; m.className = "msg " + (kind || ""); }
+
+// ---- connect: load client list ----
+async function loadClients() {
+const { base, token } = cfg();
+if (!token) return msg("Enter your coach token first.", "err");
+localStorage.setItem("ci_apibase", base);
+localStorage.setItem("ci_token", token);
+msg("Connecting…", "");
+try {
+const r = await fetch(`${base}/coach/clients`, { headers: authH() });
+if (r.status === 401) return msg("Token rejected. Check it and try again.", "err");
+if (!r.ok) throw new Error("HTTP " + r.status);
+const d = await r.json();
+const sel = $("client");
+sel.innerHTML = `<option value="">— choose a client —</option>`;
+for (const c of (d.clients || [])) {
+const o = document.createElement("option");
+o.value = c.id; o.textContent = `${c.name} (${c.id})${c.status !== "active" ? " — " + c.status : ""}`;
+sel.appendChild(o);
+}
+msg(`Connected. ${ (d.clients||[]).length } clients loaded. Pick one, then Load plan.`, "ok");
+} catch (e) { msg("Couldn't reach the API (" + e.message + "). Check the API base.", "err"); }
+}
+
+// ---- load a client's existing plan (or start blank) ----
+async function loadPlan() {
+const { base } = cfg();
+const clientId = $("client").value;
+if (!clientId) return msg("Choose a client first.", "err");
+msg("Loading plan…", "");
+try {
+const r = await fetch(`${base}/coach/workout-plan?client_id=${encodeURIComponent(clientId)}`, { headers: authH() });
+if (r.status === 401) return msg("Token rejected.", "err");
+if (!r.ok) throw new Error("HTTP " + r.status);
+const d = await r.json();
+if (d.has_plan && d.plan) { fillFromPlan(d.name, d.plan); msg("Loaded this client's existing custom plan. Edit and Save to update.", "ok"); }
+else { startBlank(); msg("No custom plan yet — this client currently sees the standard brand workout. Build one below.", "ok"); }
+showEditor();
+} catch (e) { msg("Couldn't load plan (" + e.message + ").", "err"); }
+}
+
+function showEditor() { $("editor").style.display = "block"; $("actionbar").style.display = "block"; }
+
+// ---- editor state is just the DOM; we read it on save ----
+function startBlank() {
+$("planName").value = ""; $("lede").value = ""; $("brand").value = "dd";
+$("days").innerHTML = "";
+addDay();
+}
+
+function fillFromPlan(name, plan) {
+$("planName").value = name || plan.label || "";
+$("lede").value = plan.lede || "";
+$("brand").value = (["dd","reset","travel"].includes(plan.brand)) ? plan.brand : "dd";
+$("days").innerHTML = "";
+const week = (plan.weeks && plan.weeks[0]) ? plan.weeks[0] : { days: [] };
+for (const day of (week.days || [])) {
+if (day.rest) addRest(day.rest);
+else {
+const d = addDay(day.title, day.focus);
+// clear the default blank exercise row, then add the real ones
+d.querySelector(".exlist").innerHTML = "";
+for (const ex of (day.exercises || [])) addExercise(d, ex);
+if (!(day.exercises || []).length) addExercise(d);
+}
+}
+if (!(week.days || []).length) addDay();
+}
+
+// ---- build a workout day block ----
+function addDay(title, focus) {
+const wrap = document.createElement("div");
+wrap.className = "day";
+wrap.dataset.kind = "workout";
+wrap.innerHTML = `
+<span class="tag">Workout day</span>
+<div class="day-top">
+<div><label>Day title</label><input class="dtitle" placeholder="Day 1" value="${esc(title || "")}"></div>
+<div><label>Focus <span class="small">(optional)</span></label><input class="dfocus" placeholder="Full body" value="${esc(focus || "")}"></div>
+<div style="flex:0 0 auto;"><button class="rmday danger" type="button">Remove day</button></div>
+</div>
+<div class="exlist"></div>
+<div class="addbtns"><button class="addex" type="button">+ Add exercise</button></div>`;
+wrap.querySelector(".rmday").addEventListener("click", () => wrap.remove());
+wrap.querySelector(".addex").addEventListener("click", () => addExercise(wrap));
+$("days").appendChild(wrap);
+addExercise(wrap); // start with one blank exercise
+return wrap;
+}
+
+// ---- build a rest day block ----
+function addRest(text) {
+const wrap = document.createElement("div");
+wrap.className = "day restday";
+wrap.dataset.kind = "rest";
+wrap.innerHTML = `
+<span class="tag">Rest day</span>
+<div class="day-top">
+<div style="flex:1;"><label>Rest note</label><textarea class="rtext" placeholder="Rest, or a 20–30 min walk.">${esc(text || "")}</textarea></div>
+<div style="flex:0 0 auto;"><button class="rmday danger" type="button">Remove</button></div>
+</div>`;
+wrap.querySelector(".rmday").addEventListener("click", () => wrap.remove());
+$("days").appendChild(wrap);
+return wrap;
+}
+
+// ---- build an exercise row inside a day ----
+function addExercise(dayEl, ex) {
+ex = ex || {};
+// split an existing "pres" like "3 × 10" back into sets / reps for editing
+let sets = ex.sets ?? "", reps = ex.reps ?? "";
+if ((sets === "" && reps === "") && ex.pres) {
+const m = String(ex.pres).split(/[×x]/);
+if (m.length === 2) { sets = m[0].trim(); reps = m[1].trim(); }
+else { reps = String(ex.pres).trim(); } // things like "20–30 min" go in reps, sets blank
+}
+const row = document.createElement("div");
+row.className = "ex";
+row.innerHTML = `
+<div class="exname"><label>Exercise</label><input class="nm" placeholder="Goblet squat" value="${esc(ex.name || "")}"></div>
+<div class="num"><label>Sets</label><input class="st" placeholder="3" value="${esc(sets)}"></div>
+<div class="num"><label>Reps</label><input class="rp" placeholder="10" value="${esc(reps)}"></div>
+<div class="exrest"><label>Rest <span class="small">(opt)</span></label><input class="rs" placeholder="60s" value="${esc(ex.rest || "")}"></div>
+<div class="xbtn"><label>&nbsp;</label><button class="rmex danger" type="button">✕</button></div>`;
+row.querySelector(".rmex").addEventListener("click", () => row.remove());
+dayEl.querySelector(".exlist").appendChild(row);
+// optional note on its own line
+const noteWrap = document.createElement("div");
+noteWrap.className = "ex";
+noteWrap.innerHTML = `<div style="flex:1;"><input class="nt" placeholder="Coaching note for this exercise (optional)" value="${esc(ex.note || "")}"></div>`;
+row.appendChild(noteWrap);
+return row;
+}
+
+// ---- compose "pres" from sets + reps the way the renderer expects ----
+function composePres(sets, reps) {
+sets = (sets || "").trim(); reps = (reps || "").trim();
+if (sets && reps) return `${sets} x ${reps}`; // plain 'x' renders cleanly everywhere
+return reps || sets || "";
+}
+
+// ---- read the DOM into the exact plan JSON the renderer + worker expect ----
+function buildPlan() {
+const days = [];
+for (const dayEl of $("days").children) {
+if (dayEl.dataset.kind === "rest") {
+const t = dayEl.querySelector(".rtext").value.trim();
+if (t) days.push({ rest: t });
+continue;
+}
+const title = dayEl.querySelector(".dtitle").value.trim();
+const focus = dayEl.querySelector(".dfocus").value.trim();
+const exercises = [];
+for (const row of dayEl.querySelectorAll(".exlist > .ex")) {
+const name = row.querySelector(".nm").value.trim();
+if (!name) continue;
+const pres = composePres(row.querySelector(".st").value, row.querySelector(".rp").value);
+const rest = row.querySelector(".rs").value.trim();
+const note = row.querySelector(".nt") ? row.querySelector(".nt").value.trim() : "";
+const ex = { name };
+if (pres) ex.pres = pres;
+if (rest) ex.rest = rest;
+if (note) ex.note = note;
+exercises.push(ex);
+}
+const day = { title: title || "Day" };
+if (focus) day.focus = focus;
+day.exercises = exercises;
+days.push(day);
+}
+const plan = {
+brand: $("brand").value,
+label: $("planName").value.trim() || "Your program",
+weeks: [ { days } ],
+};
+const lede = $("lede").value.trim();
+if (lede) plan.lede = lede;
+return plan;
+}
+
+// minimal client-side sanity so we don't send an empty plan
+function planIsUsable(plan) {
+if (!plan.weeks[0].days.length) return false;
+const hasWork = plan.weeks[0].days.some(d => Array.isArray(d.exercises) && d.exercises.length);
+return hasWork;
+}
+
+// ---- save ----
+async function save() {
+const { base } = cfg();
+const clientId = $("client").value;
+if (!clientId) return msg("Choose a client first.", "err");
+const plan = buildPlan();
+if (!planIsUsable(plan)) return msg("Add at least one workout day with one exercise before saving.", "err");
+const body = JSON.stringify({ client_id: clientId, name: $("planName").value.trim() || null, plan });
+setBusy(true); msg("Saving…", "");
+try {
+const r = await fetch(`${base}/coach/workout-plan/save`, {
+method: "POST", headers: { ...authH(), "content-type": "application/json" }, body });
+if (r.status === 401) { setBusy(false); return msg("Token rejected.", "err"); }
+const d = await r.json().catch(() => ({}));
+if (!r.ok || !d.ok) throw new Error(d.error || ("HTTP " + r.status));
+msg("Saved ✓ This client now sees this custom plan when they open their link.", "ok");
+} catch (e) { msg("Save failed (" + e.message + "). Nothing was changed.", "err"); }
+setBusy(false);
+}
+
+// ---- delete ----
+async function del() {
+const { base } = cfg();
+const clientId = $("client").value;
+if (!clientId) return msg("Choose a client first.", "err");
+if (!confirm("Remove this client's custom plan? They'll go back to the standard brand workout.")) return;
+setBusy(true); msg("Deleting…", "");
+try {
+const r = await fetch(`${base}/coach/workout-plan/delete`, {
+method: "POST", headers: { ...authH(), "content-type": "application/json" },
+body: JSON.stringify({ client_id: clientId }) });
+if (r.status === 401) { setBusy(false); return msg("Token rejected.", "err"); }
+const d = await r.json().catch(() => ({}));
+if (!r.ok || !d.ok) throw new Error(d.error || ("HTTP " + r.status));
+startBlank();
+msg("Deleted ✓ This client is back to the standard brand workout.", "ok");
+} catch (e) { msg("Delete failed (" + e.message + ").", "err"); }
+setBusy(false);
+}
+
+function setBusy(b) { $("save").disabled = b; $("del").disabled = b; }
+
+$("loadClients").addEventListener("click", loadClients);
+$("loadPlan").addEventListener("click", loadPlan);
+$("addDay").addEventListener("click", () => addDay());
+$("addRest").addEventListener("click", () => addRest());
+$("save").addEventListener("click", save);
+$("del").addEventListener("click", del);
+
+// auto-connect if a token is already remembered from the dashboard
+if ($("token").value) loadClients();
+</script>
+</body>
+</html>
+
