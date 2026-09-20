@@ -45,6 +45,26 @@ border-radius:16px; padding:18px 18px; margin-bottom:14px; text-decoration:none;
 .calc small { display:block; font-weight:500; font-size:11px; color:var(--muted); margin-top:3px; }
 
 .foot { text-align:center; color:var(--muted); font-size:12px; margin-top:28px; }
+
+/* ---- Clients section (added; does not affect the tiles above) ---- */
+.cli-bar { display:flex; gap:8px; margin:10px 0 4px; }
+.cli-bar input { flex:1; min-width:0; padding:11px 12px; border:1px solid var(--line); border-radius:12px;
+background:var(--card); color:#fff; font-size:14px; }
+.cli-bar button { padding:11px 16px; border:0; border-radius:12px; background:var(--blue); color:#fff;
+font-weight:700; font-size:14px; cursor:pointer; }
+.cli-note { color:var(--muted); font-size:13px; padding:10px 4px; }
+.cli-note.err { color:#fca5a5; }
+.client { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 14px; margin-bottom:12px; }
+.client .name { font-size:16px; font-weight:700; }
+.badges { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 12px; }
+.badge { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; padding:3px 9px; border-radius:999px; border:1px solid; }
+.badge.custom { color:#5fd394; border-color:var(--reset); background:rgba(47,178,106,.12); }
+.badge.standard { color:var(--muted); border-color:var(--line); background:transparent; }
+.badge.waiting { color:#f7c266; border-color:var(--dd); background:rgba(240,160,32,.14); }
+.cli-actions { display:flex; gap:8px; }
+.cli-actions a { flex:1; text-align:center; text-decoration:none; padding:11px; border-radius:11px; font-weight:700; font-size:14px; border:1px solid var(--line); color:#fff; }
+.cli-actions a.build { background:rgba(47,178,106,.14); border-color:var(--reset); color:#5fd394; }
+.cli-actions a.review { background:rgba(59,130,246,.14); border-color:var(--blue); color:#93b8fb; }
 </style>
 </head>
 <body>
@@ -74,8 +94,93 @@ border-radius:16px; padding:18px 18px; margin-bottom:14px; text-decoration:none;
 <a class="calc travel" href="calculator-travel.html">Travel<small>On the road</small></a>
 </div>
 
+<!-- ===== Clients section (added) ===== -->
+<div class="section-label">Clients</div>
+<div class="cli-bar">
+<input id="token" type="password" placeholder="Coach token" autocomplete="off">
+<button id="load">Load</button>
+</div>
+<div id="cliList"><div class="cli-note">Enter your coach token and tap Load to see your clients.</div></div>
+
 <div class="foot">Add to Home Screen to use like an app</div>
 </div>
+
+<script>
+// Reuse review.html's exact storage keys + Bearer scheme. No new auth.
+const API_BASE = localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev";
+const tokenEl = document.getElementById("token");
+const listEl = document.getElementById("cliList");
+tokenEl.value = localStorage.getItem("ci_token") || "";
+
+const authH = (t) => ({ authorization: `Bearer ${t}` });
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const note = (t, err) => { listEl.innerHTML = `<div class="cli-note${err ? " err" : ""}">${esc(t)}</div>`; };
+
+async function loadClients() {
+const token = tokenEl.value.trim();
+if (!token) return note("Enter your coach token first.", true);
+localStorage.setItem("ci_token", token);
+localStorage.setItem("ci_apibase", API_BASE);
+note("Loading…");
+
+// 1) client list (required). If this fails, stop with a clean message.
+let clients = [];
+try {
+const r = await fetch(`${API_BASE}/coach/clients`, { headers: authH(token) });
+if (r.status === 401) return note("Token rejected. Check it and try again.", true);
+if (!r.ok) throw new Error("HTTP " + r.status);
+const d = await r.json();
+clients = d.clients || [];
+} catch (e) {
+return note("Couldn't reach the API (" + e.message + "). Check your connection.", true);
+}
+if (!clients.length) return note("No clients yet.");
+
+// 2) pending flags (optional enrichment). If it fails, we still show clients — just no 'waiting' badge.
+let waiting = new Set();
+try {
+const r = await fetch(`${API_BASE}/review`, { headers: authH(token) });
+if (r.ok) {
+const d = await r.json();
+for (const f of (d.pending || [])) waiting.add(f.client_id);
+}
+} catch (_) { /* non-fatal: leave waiting empty */ }
+
+// render base rows now (plan badge fills in per-client below)
+listEl.innerHTML = "";
+for (const c of clients) {
+const row = document.createElement("div");
+row.className = "client";
+row.innerHTML =
+`<div class="name">${esc(c.name || c.id)}</div>
+<div class="badges">
+<span class="badge plan standard" data-plan="${esc(c.id)}">Standard</span>
+${waiting.has(c.id) ? `<span class="badge waiting">Check-in waiting</span>` : ``}
+</div>
+<div class="cli-actions">
+<a class="build" href="workout-builder.html">Build workout</a>
+<a class="review" href="review.html">Review</a>
+</div>`;
+listEl.appendChild(row);
+}
+
+// 3) per-client plan check (optional enrichment). Failures just leave the 'Standard' default.
+for (const c of clients) {
+try {
+const r = await fetch(`${API_BASE}/coach/workout-plan?client_id=${encodeURIComponent(c.id)}`, { headers: authH(token) });
+if (!r.ok) continue;
+const d = await r.json();
+if (d.has_plan) {
+const badge = listEl.querySelector(`.badge.plan[data-plan="${CSS.escape(c.id)}"]`);
+if (badge) { badge.textContent = "Custom plan"; badge.classList.remove("standard"); badge.classList.add("custom"); }
+}
+} catch (_) { /* non-fatal: keep Standard */ }
+}
+}
+
+document.getElementById("load").addEventListener("click", loadClients);
+if (tokenEl.value) loadClients(); // auto-load if a token is already remembered from the dashboard
+</script>
 </body>
 </html>
 
