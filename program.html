@@ -186,12 +186,20 @@ weeks: [
 };
 /* ===== stop editing ===== */
 
+const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+
 const params = new URLSearchParams(location.search);
 const cid = params.get("c");
 const trackKey = (params.get("track") || "fatloss").toLowerCase();
-const prog = PROGRAMS[trackKey];
+
+// `prog` is the program the page is CURRENTLY rendering. It starts as the hardcoded
+// brand template chosen by the URL, and is only reassigned if a valid custom plan loads.
+// showWeek() reads this, so keeping it as the single source of truth means the custom
+// plan flows through the exact same render path as the template.
+let prog = PROGRAMS[trackKey];
 
 // check-in button carries the client's token AND the brand skin straight through.
+// UNCHANGED from the original: token from ?c=, brand from the program in view.
 {
 const qs = new URLSearchParams();
 if (cid) qs.set("c", cid);
@@ -212,22 +220,74 @@ r.setProperty("--dot-glow", b.dot); r.setProperty("--cta-glow", b.cta);
 document.getElementById("wordmark").textContent = b.wordmark;
 }
 
+// Render a whole program object (template OR custom plan) into the page. Pulled out of the
+// original inline block so both sources render through ONE path. Brand for a custom plan is
+// only applied when the plan names a valid brand; otherwise the URL-chosen brand stays.
+function renderProgram(p) {
+prog = p;
+const brandKey = (p.brand && BRANDS[p.brand]) ? p.brand : trackKey_brand();
+applyBrand(brandKey);
+const bb = BRANDS[brandKey] || BRANDS.reset;
+document.getElementById("track-label").textContent = p.label ? ("· " + p.label) : "";
+document.getElementById("title").textContent = p.label || "Your program";
+document.getElementById("page-title").textContent = (p.label || "Your program") + " — " + bb.wordmark;
+if (p.lede) document.getElementById("lede").textContent = p.lede;
+buildWeeks(p.weeks || []);
+}
+
+// the brand the URL/template path would use (fallback when a custom plan omits brand)
+function trackKey_brand() {
+const t = PROGRAMS[trackKey];
+return (t && t.brand) ? t.brand : "reset";
+}
+
+// ----- INITIAL RENDER: hardcoded brand template, exactly as before -----
 if (!prog) {
 document.getElementById("days").innerHTML =
 `<div class="missing">This program link looks off. Use the link Coach TreMayne sent you, or reach out and he'll resend it.</div>`;
 document.querySelector(".cta").style.display = "none";
 } else {
-applyBrand(prog.brand);
-const bb = BRANDS[prog.brand] || BRANDS.reset;
-document.getElementById("track-label").textContent = "· " + prog.label;
-document.getElementById("title").textContent = prog.label;
-document.getElementById("page-title").textContent = prog.label + " — " + bb.wordmark;
-if (prog.lede) document.getElementById("lede").textContent = prog.lede;
-buildWeeks(prog.weeks);
+renderProgram(prog);
+// ----- THEN: if we have a token, try for a custom plan. Template stays unless a valid one loads. -----
+if (cid) tryCustomPlan(cid);
+}
+
+// Fetch the client's custom plan and swap it in ONLY if it's valid. Any failure — network
+// error, timeout, non-2xx, bad JSON, has_plan not true, or a plan that fails validation —
+// is swallowed and the already-rendered hardcoded template is left untouched. The page can
+// never go blank because of this call.
+async function tryCustomPlan(token) {
+try {
+const ctrl = new AbortController();
+const timer = setTimeout(() => ctrl.abort(), 6000); // don't hang forever
+const r = await fetch(API_BASE + "/workout-plan?c=" + encodeURIComponent(token), { signal: ctrl.signal });
+clearTimeout(timer);
+if (!r.ok) return;
+const data = await r.json();
+if (!data || data.has_plan !== true) return; // no plan -> keep template
+const plan = validatePlan(data.plan);
+if (!plan) return; // malformed -> keep template
+renderProgram(plan);
+} catch (_) {
+/* network/timeout/parse error -> keep the hardcoded template already on screen */
+}
+}
+
+// Minimal shape check so a bad stored plan can never break the page. Requires a non-empty
+// weeks array with at least one day; everything else is optional and defaulted by the
+// renderer. Returns the plan if usable, otherwise null (caller keeps the template).
+function validatePlan(plan) {
+if (!plan || typeof plan !== "object") return null;
+if (!Array.isArray(plan.weeks) || plan.weeks.length === 0) return null;
+for (const wk of plan.weeks) {
+if (!wk || !Array.isArray(wk.days)) return null;
+}
+return plan;
 }
 
 function buildWeeks(weeks) {
 const tabs = document.getElementById("weeks");
+tabs.innerHTML = "";
 weeks.forEach((_, i) => {
 const btn = document.createElement("button");
 btn.role = "tab"; btn.textContent = "Week " + (i + 1);
@@ -241,15 +301,17 @@ showWeek(0);
 function showWeek(i) {
 const wrap = document.getElementById("days");
 wrap.innerHTML = "";
-for (const day of prog.weeks[i].days) {
+const week = prog.weeks[i] || { days: [] };
+for (const day of week.days) {
 const el = document.createElement("div");
 if (day.rest) { el.className = "day"; el.innerHTML = `<div class="rest">${esc(day.rest)}</div>`; wrap.appendChild(el); continue; }
 el.className = "day";
 let rows = "";
-for (const ex of day.exercises) {
+for (const ex of (day.exercises || [])) {
 const watch = ex.video ? `<a class="watch" href="${esc(ex.video)}" target="_blank" rel="noopener">Watch</a>` : "";
 const note = ex.note ? `<span class="note">${esc(ex.note)}</span>` : "";
-rows += `<div class="ex"><span class="name">${esc(ex.name)}${note}</span>${ex.pres ? `<span class="pres">${esc(ex.pres)}</span>` : ""}${watch}</div>`;
+const rest = ex.rest ? `<span class="note">Rest ${esc(ex.rest)}</span>` : "";
+rows += `<div class="ex"><span class="name">${esc(ex.name)}${note}${rest}</span>${ex.pres ? `<span class="pres">${esc(ex.pres)}</span>` : ""}${watch}</div>`;
 }
 el.innerHTML = `<div class="day-head"><h2>${esc(day.title)}</h2>${day.focus ? `<span class="focus">${esc(day.focus)}</span>` : ""}</div>${rows}`;
 wrap.appendChild(el);
