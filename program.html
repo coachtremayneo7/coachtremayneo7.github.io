@@ -199,14 +199,19 @@ const trackKey = (params.get("track") || "fatloss").toLowerCase();
 let prog = PROGRAMS[trackKey];
 
 // check-in button carries the client's token AND the brand skin straight through.
-// UNCHANGED from the original: token from ?c=, brand from the program in view.
-{
+// Refactored into setCheckinLink(brandKey) so the SAME brand the page actually
+// displays (template brand at load, or a custom plan's brand once it swaps in) is the
+// brand handed to the check-in form. The token (cid, from ?c=) is carried through
+// exactly as before and is never altered here.
+function setCheckinLink(brandKey) {
 const qs = new URLSearchParams();
-if (cid) qs.set("c", cid);
-if (prog && prog.brand) qs.set("b", prog.brand);
+if (cid) qs.set("c", cid); // same token source, unchanged
+if (brandKey) qs.set("b", brandKey);
 const q = qs.toString();
 document.getElementById("checkin-link").href = "checkin.html" + (q ? "?" + q : "");
 }
+// initial link uses the template brand chosen from the URL (matches today's behavior).
+setCheckinLink(prog && prog.brand ? prog.brand : null);
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
@@ -228,6 +233,7 @@ prog = p;
 const brandKey = (p.brand && BRANDS[p.brand]) ? p.brand : trackKey_brand();
 applyBrand(brandKey);
 const bb = BRANDS[brandKey] || BRANDS.reset;
+setCheckinLink(brandKey); // keep the check-in button's brand in sync with what is displayed
 document.getElementById("track-label").textContent = p.label ? ("· " + p.label) : "";
 document.getElementById("title").textContent = p.label || "Your program";
 document.getElementById("page-title").textContent = (p.label || "Your program") + " — " + bb.wordmark;
