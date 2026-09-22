@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Coach TreMayne — Client Hub</title>
+
+<!-- home-screen app behavior -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach TreMayne">
+<meta name="theme-color" content="#0f1319">
+<meta name="description" content="Your coaching tools — training, check-ins, tracking, and more, all in one place.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f1319'/%3E%3Ctext x='32' y='44' font-size='34' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
+
+<style>
+:root{
+--bg:#0f1319; --card:#1a1f27; --card2:#20262f; --line:#2a303a;
+--ink:#ffffff; --muted:#8a93a2;
+--dd:#f0a020; --reset:#2fb26a; --travel:#ff7a2d; --blue:#3b82f6; --violet:#8b7cf6;
+--ring:#3b82f6;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+body{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+background:var(--bg); color:var(--ink); margin:0; line-height:1.5;
+padding:calc(30px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+min-height:100%;
+-webkit-font-smoothing:antialiased;
+}
+.wrap{ max-width:560px; margin:0 auto; }
+
+.head{ text-align:center; margin-bottom:26px; }
+.logo{ width:64px; height:64px; border-radius:18px; background:var(--card);
+border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+font-size:30px; font-weight:800; margin:0 auto 14px; }
+h1{ font-size:23px; margin:0 0 4px; letter-spacing:-.01em; }
+.sub{ color:var(--muted); font-size:14px; margin:0; }
+
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Active cards are <a>; inactive V1 cards are <div class="card inactive"> */
+.card{
+display:flex; flex-direction:column; justify-content:flex-start; gap:10px;
+background:var(--card); border:1px solid var(--line); border-radius:18px;
+padding:18px 16px; text-decoration:none; color:var(--ink);
+min-height:118px; transition:background .12s ease, transform .05s ease;
+position:relative;
+}
+a.card:hover{ background:var(--card2); }
+a.card:active{ transform:translateY(1px); }
+a.card:focus-visible{ outline:2px solid var(--ring); outline-offset:2px; }
+
+/* inactive placeholder cards: dashed border + dimmer fill so they clearly read as
+"not a button" while staying visually part of the set */
+.card.inactive{ opacity:.72; cursor:default; background:transparent;
+border-style:dashed; border-color:var(--line); }
+
+.card.wide{ grid-column:1 / -1; flex-direction:row; align-items:center; min-height:auto; }
+.card.wide .txt{ flex:1; }
+
+.ic{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center;
+justify-content:center; font-size:22px; flex-shrink:0; }
+.ic.training{ background:rgba(240,160,32,.16); }
+.ic.food{ background:rgba(47,178,106,.16); }
+.ic.checkin{ background:rgba(59,130,246,.16); }
+.ic.progress{ background:rgba(139,124,246,.16); }
+.ic.calc{ background:rgba(47,178,106,.16); }
+.ic.grace{ background:rgba(255,122,45,.16); }
+.ic.contact{ background:rgba(59,130,246,.16); }
+
+.t{ font-size:16px; font-weight:700; letter-spacing:-.01em; }
+.d{ font-size:12.5px; color:var(--muted); }
+
+/* small status badge for inactive cards */
+.tag{ display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase;
+letter-spacing:.04em; padding:2px 8px; border-radius:999px; margin-top:2px;
+border:1px solid var(--line); color:var(--muted); }
+.tag.personal{ color:var(--dd); border-color:rgba(240,160,32,.5); background:rgba(240,160,32,.10); }
+.tag.soon{ color:var(--muted); }
+
+.foot{ text-align:center; color:var(--muted); font-size:12px; margin-top:30px; line-height:1.7; }
+.foot a{ color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="head">
+<div class="logo">T</div>
+<h1>Coach TreMayne</h1>
+<p class="sub">Your coaching tools, all in one place</p>
+</header>
+
+<main>
+<div class="grid">
+
+<!-- My Training (V1 placeholder — inactive; needs the personal link Coach sends) -->
+<div class="card inactive" aria-disabled="true">
+<div class="ic training">&#127947;</div>
+<div class="txt">
+<div class="t">My Training</div>
+<div class="d">Open the personal link Coach sent you</div>
+<span class="tag personal">Personal link</span>
+</div>
+</div>
+
+<!-- Weekly Check-in (V1 placeholder — inactive) -->
+<div class="card inactive" aria-disabled="true">
+<div class="ic checkin">&#128203;</div>
+<div class="txt">
+<div class="t">Weekly Check-in</div>
+<div class="d">Open the personal link Coach sent you</div>
+<span class="tag personal">Personal link</span>
+</div>
+</div>
+
+<!-- Food Tracker (real link) -->
+<a class="card" href="/food-tracker" aria-label="Food Tracker">
+<div class="ic food">&#127869;</div>
+<div class="txt">
+<div class="t">Food Tracker</div>
+<div class="d">Log &amp; review your nutrition</div>
+</div>
+</a>
+
+<!-- The Reset Calculator (real link) -->
+<a class="card" href="/calculator-the-reset" aria-label="The Reset Calculator">
+<div class="ic calc">&#129518;</div>
+<div class="txt">
+<div class="t">Reset Calculator</div>
+<div class="d">Dial in your numbers</div>
+</div>
+</a>
+
+<!-- Progress (V1 placeholder — inactive, not built yet) -->
+<div class="card inactive" aria-disabled="true">
+<div class="ic progress">&#128200;</div>
+<div class="txt">
+<div class="t">Progress</div>
+<span class="tag soon">Coming soon</span>
+</div>
+</div>
+
+<!-- Ask Grace (external) -->
+<a class="card" href="https://chat.coachtremayne.com" target="_blank" rel="noopener noreferrer" aria-label="Ask Grace">
+<div class="ic grace">&#128172;</div>
+<div class="txt">
+<div class="t">Ask Grace</div>
+<div class="d">Quick questions, answered</div>
+</div>
+</a>
+
+<!-- Contact Coach (tel + wide) -->
+<a class="card wide" href="tel:+12709433164" aria-label="Call Coach TreMayne">
+<div class="ic contact">&#128222;</div>
+<div class="txt">
+<div class="t">Call Coach TreMayne</div>
+<div class="d">270-943-3164 · in-person &amp; virtual</div>
+</div>
+</a>
+
+</div>
+</main>
+
+<footer class="foot">
+Coach TreMayne · In-person &amp; virtual training<br>
+Add to your Home Screen to use like an app
+</footer>
+</div>
+</body>
+</html>
+
