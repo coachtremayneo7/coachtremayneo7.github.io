@@ -96,23 +96,23 @@ border:1px solid var(--line); color:var(--muted); }
 <main>
 <div class="grid">
 
-<!-- My Training (V1 placeholder — inactive; needs the personal link Coach sends) -->
-<div class="card inactive" aria-disabled="true">
+<!-- My Training (placeholder by default; upgraded to a real link when ?c= + ?track= are present) -->
+<div class="card inactive" id="card-training" aria-disabled="true">
 <div class="ic training">&#127947;</div>
 <div class="txt">
 <div class="t">My Training</div>
-<div class="d">Open the personal link Coach sent you</div>
-<span class="tag personal">Personal link</span>
+<div class="d" id="d-training">Open the personal link Coach sent you</div>
+<span class="tag personal" id="tag-training">Personal link</span>
 </div>
 </div>
 
-<!-- Weekly Check-in (V1 placeholder — inactive) -->
-<div class="card inactive" aria-disabled="true">
+<!-- Weekly Check-in (placeholder by default; upgraded to a real link when ?c= + ?track= are present) -->
+<div class="card inactive" id="card-checkin" aria-disabled="true">
 <div class="ic checkin">&#128203;</div>
 <div class="txt">
 <div class="t">Weekly Check-in</div>
-<div class="d">Open the personal link Coach sent you</div>
-<span class="tag personal">Personal link</span>
+<div class="d" id="d-checkin">Open the personal link Coach sent you</div>
+<span class="tag personal" id="tag-checkin">Personal link</span>
 </div>
 </div>
 
@@ -169,6 +169,48 @@ Coach TreMayne · In-person, online &amp; hybrid coaching<br>
 Add to your Home Screen to use like an app
 </footer>
 </div>
+
+<script>
+/* Per-client upgrade — additive and self-contained.
+If the hub URL carries BOTH a client token (?c=) and a brand (?track=), turn the
+My Training and Weekly Check-in placeholder cards into real one-tap links to that
+client's existing personal program page. With no/partial params, nothing changes and
+the cards stay in their normal "open the personal link Coach sent you" state.
+This touches nothing else: no other card, no token generation, no backend, no /checkin. */
+(function () {
+try {
+var params = new URLSearchParams(location.search);
+var c = (params.get("c") || "").trim();
+var track = (params.get("track") || "").trim().toLowerCase();
+var VALID = { dd:1, reset:1, travel:1, fatloss:1, muscle:1 };
+if (!c || !VALID[track]) return; // need both, and a known brand — else leave as-is
+
+// The client's personal program link (same format their existing link uses).
+// encodeURIComponent guards the token; both cards point at the program page
+// (Weekly Check-in is the "Submit this week's check-in" button on that page).
+var link = "program.html?track=" + encodeURIComponent(track) + "&c=" + encodeURIComponent(c);
+
+upgrade("training", link, "Open your training");
+upgrade("checkin", link, "Open your weekly check-in");
+} catch (e) { /* any hiccup: leave the page exactly as the no-token fallback */ }
+
+function upgrade(which, href, desc) {
+var card = document.getElementById("card-" + which);
+if (!card) return;
+// swap the inert <div> for a real <a>, preserving classes minus the "inactive" look
+var a = document.createElement("a");
+a.className = "card";
+a.setAttribute("href", href);
+a.setAttribute("aria-label", which === "training" ? "My Training" : "Weekly Check-in");
+a.innerHTML = card.innerHTML;
+card.parentNode.replaceChild(a, card);
+var d = document.getElementById("d-" + which);
+if (d) d.textContent = desc;
+var tag = document.getElementById("tag-" + which);
+if (tag) tag.parentNode.removeChild(tag); // drop the "Personal link" badge — it's live now
+}
+})();
+</script>
 </body>
 </html>
 
