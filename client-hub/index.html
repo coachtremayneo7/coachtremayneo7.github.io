@@ -134,12 +134,13 @@ border:1px solid var(--line); color:var(--muted); }
 </div>
 </a>
 
-<!-- Progress (V1 placeholder — inactive, not built yet) -->
-<div class="card inactive" aria-disabled="true">
+<!-- Progress (placeholder by default; upgraded to a real link when ?c= is present) -->
+<div class="card inactive" id="card-progress" aria-disabled="true">
 <div class="ic progress">&#128200;</div>
 <div class="txt">
 <div class="t">Progress</div>
-<span class="tag soon">Coming soon</span>
+<div class="d" id="d-progress">Open the personal link Coach sent you</div>
+<span class="tag personal" id="tag-progress">Personal link</span>
 </div>
 </div>
 
@@ -183,7 +184,15 @@ var params = new URLSearchParams(location.search);
 var c = (params.get("c") || "").trim();
 var track = (params.get("track") || "").trim().toLowerCase();
 var VALID = { dd:1, reset:1, travel:1, fatloss:1, muscle:1 };
-if (!c || !VALID[track]) return; // need both, and a known brand — else leave as-is
+
+if (!c) return; // no token -> full fallback, nothing changes
+
+// Progress is brand-agnostic — it only needs the token, so upgrade it on ?c= alone.
+upgrade("progress", "/progress.html?c=" + encodeURIComponent(c),
+"See your weight, consistency & check-ins");
+
+// My Training + Weekly Check-in still require BOTH a token AND a known brand — unchanged.
+if (!VALID[track]) return;
 
 // The client's personal program link (same format their existing link uses).
 // encodeURIComponent guards the token; both cards point at the program page
@@ -201,7 +210,8 @@ if (!card) return;
 var a = document.createElement("a");
 a.className = "card";
 a.setAttribute("href", href);
-a.setAttribute("aria-label", which === "training" ? "My Training" : "Weekly Check-in");
+var LABELS = { training:"My Training", checkin:"Weekly Check-in", progress:"Progress" };
+a.setAttribute("aria-label", LABELS[which] || "");
 a.innerHTML = card.innerHTML;
 card.parentNode.replaceChild(a, card);
 var d = document.getElementById("d-" + which);
