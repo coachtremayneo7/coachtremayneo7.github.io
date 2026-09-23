@@ -188,7 +188,7 @@ if (!c || !VALID[track]) return; // need both, and a known brand — else leave 
 // The client's personal program link (same format their existing link uses).
 // encodeURIComponent guards the token; both cards point at the program page
 // (Weekly Check-in is the "Submit this week's check-in" button on that page).
-var link = "program.html?track=" + encodeURIComponent(track) + "&c=" + encodeURIComponent(c);
+var link = "/program.html?track=" + encodeURIComponent(track) + "&c=" + encodeURIComponent(c);
 
 upgrade("training", link, "Open your training");
 upgrade("checkin", link, "Open your weekly check-in");
