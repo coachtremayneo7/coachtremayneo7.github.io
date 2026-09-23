@@ -70,6 +70,7 @@ justify-content:center; font-size:22px; flex-shrink:0; }
 .ic.calc{ background:rgba(47,178,106,.16); }
 .ic.grace{ background:rgba(255,122,45,.16); }
 .ic.contact{ background:rgba(59,130,246,.16); }
+.ic.book{ background:rgba(240,160,32,.16); }
 
 .t{ font-size:16px; font-weight:700; letter-spacing:-.01em; }
 .d{ font-size:12.5px; color:var(--muted); }
@@ -233,7 +234,9 @@ if (!window.fetch) return;
 fetch("https://checkin-api.quantumflexpt.workers.dev/contact?c=" + encodeURIComponent(token))
 .then(function (r) { return r.ok ? r.json() : null; })
 .then(function (data) {
-if (!data || !data.ok || !data.text) return;
+if (!data || !data.ok) return; // not a verified client -> page stays public
+addBookingCard(); // verified client -> show Square booking card
+if (!data.text) return; // no text number set -> keep Schedule a Call card
 var digits = String(data.text).replace(/\D/g, "");
 if (digits.length === 10) digits = "1" + digits; // US number without country code
 if (digits.length !== 11) return; // not a usable US number -> keep booking card
@@ -250,6 +253,30 @@ if (d) d.textContent = "Message me directly — " +
 digits.slice(1, 4) + "-" + digits.slice(4, 7) + "-" + digits.slice(7);
 })
 .catch(function () { /* keep the public booking card */ });
+}
+
+// Client-only Square booking card. Called ONLY from upgradeContact() after checkin-api
+// confirms the token (data.ok). Plain external link — no backend route.
+// Inserted just above the contact card; public visitors never get it.
+function addBookingCard() {
+var SQUARE_BOOKING_URL = "https://book.squareup.com/appointments/pg51d6bwr2qm1y/location/L2MXJXZJWNDPA/services";
+if (document.getElementById("card-book")) return; // never add twice
+var contact = document.getElementById("card-contact");
+if (!contact) return;
+var a = document.createElement("a");
+a.className = "card wide";
+a.id = "card-book";
+a.setAttribute("href", SQUARE_BOOKING_URL);
+a.setAttribute("target", "_blank");
+a.setAttribute("rel", "noopener noreferrer");
+a.setAttribute("aria-label", "Book or reschedule training");
+a.innerHTML =
+'<div class="ic book">&#128467;</div>' +
+'<div class="txt">' +
+'<div class="t">Book / Reschedule Training</div>' +
+'<div class="d">Choose your next training session.</div>' +
+'</div>';
+contact.parentNode.insertBefore(a, contact);
 }
 })();
 </script>
