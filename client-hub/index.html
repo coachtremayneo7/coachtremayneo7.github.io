@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -153,12 +154,13 @@ border:1px solid var(--line); color:var(--muted); }
 </div>
 </a>
 
-<!-- Schedule a Call (tel -> Retell AI books a slot; coach calls back) -->
-<a class="card wide" href="tel:+12709433164" aria-label="Schedule a call with Coach TreMayne">
-<div class="ic contact">&#128197;</div>
+<!-- Schedule a Call (tel -> Retell AI books a slot; coach calls back).
+Public default. Swapped to "Text Coach" ONLY for a verified client (see script below). -->
+<a class="card wide" id="card-contact" href="tel:+12709433164" aria-label="Schedule a call with Coach TreMayne">
+<div class="ic contact" id="ic-contact">&#128197;</div>
 <div class="txt">
-<div class="t">Schedule a Call</div>
-<div class="d">Call to book your session — 270-943-3164</div>
+<div class="t" id="t-contact">Schedule a Call</div>
+<div class="d" id="d-contact">Call to book your session — 270-943-3164</div>
 </div>
 </a>
 
@@ -191,6 +193,10 @@ if (!c) return; // no token -> full fallback, nothing changes
 upgrade("progress", "/progress.html?c=" + encodeURIComponent(c),
 "See your weight, consistency & check-ins");
 
+// Direct text line — brand-agnostic, token only. The number is NOT in this page;
+// checkin-api returns it only if the token belongs to a real client.
+upgradeContact(c);
+
 // My Training + Weekly Check-in still require BOTH a token AND a known brand — unchanged.
 if (!VALID[track]) return;
 
@@ -219,8 +225,34 @@ if (d) d.textContent = desc;
 var tag = document.getElementById("tag-" + which);
 if (tag) tag.parentNode.removeChild(tag); // drop the "Personal link" badge — it's live now
 }
+
+// Ask checkin-api for the coach's text number. Only a valid client token gets one.
+// Any failure (bad/expired token, network, no number set) leaves the public
+// "Schedule a Call" booking card exactly as it is.
+function upgradeContact(token) {
+if (!window.fetch) return;
+fetch("https://checkin-api.quantumflexpt.workers.dev/contact?c=" + encodeURIComponent(token))
+.then(function (r) { return r.ok ? r.json() : null; })
+.then(function (data) {
+if (!data || !data.ok || !data.text) return;
+var digits = String(data.text).replace(/\D/g, "");
+if (digits.length === 10) digits = "1" + digits;   // US number without country code
+if (digits.length !== 11) return;                  // not a usable US number -> keep booking card
+var card = document.getElementById("card-contact");
+if (!card) return;
+card.setAttribute("href", "sms:+" + digits);
+card.setAttribute("aria-label", "Text Coach TreMayne");
+var ic = document.getElementById("ic-contact");
+if (ic) ic.innerHTML = "&#128241;";
+var t = document.getElementById("t-contact");
+if (t) t.textContent = "Text Coach";
+var d = document.getElementById("d-contact");
+if (d) d.textContent = "Message me directly — " +
+digits.slice(1, 4) + "-" + digits.slice(4, 7) + "-" + digits.slice(7);
+})
+.catch(function () { /* keep the public booking card */ });
+}
 })();
 </script>
 </body>
 </html>
-
