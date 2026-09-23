@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Coach TreMayne — Progress</title>
+
+<!-- home-screen app behavior (matches the Client Hub) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach TreMayne">
+<meta name="theme-color" content="#0f1319">
+<meta name="description" content="Your progress — weight, weekly consistency, and check-in history.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f1319'/%3E%3Ctext x='32' y='44' font-size='34' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
+
+<style>
+:root{
+--bg:#0f1319; --card:#1a1f27; --card2:#20262f; --line:#2a303a;
+--ink:#ffffff; --muted:#8a93a2;
+--dd:#f0a020; --reset:#2fb26a; --travel:#ff7a2d; --blue:#3b82f6; --violet:#8b7cf6;
+--ring:#3b82f6;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+body{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+background:var(--bg); color:var(--ink); margin:0; line-height:1.5;
+padding:calc(30px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+min-height:100%;
+-webkit-font-smoothing:antialiased;
+}
+.wrap{ max-width:560px; margin:0 auto; }
+
+.head{ text-align:center; margin-bottom:22px; }
+.logo{ width:60px; height:60px; border-radius:17px; background:var(--card);
+border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+font-size:28px; font-weight:800; margin:0 auto 12px; }
+h1{ font-size:22px; margin:0 0 4px; letter-spacing:-.01em; }
+.sub{ color:var(--muted); font-size:14px; margin:0; }
+
+/* neutral context chip for goal focus — deliberately not colored good/bad */
+.chip{ display:inline-block; margin-top:10px; font-size:11px; font-weight:800;
+text-transform:uppercase; letter-spacing:.04em; padding:4px 10px; border-radius:999px;
+border:1px solid var(--line); color:var(--muted); background:var(--card); }
+
+.section{ margin-top:22px; }
+.section > h2{ font-size:13px; text-transform:uppercase; letter-spacing:.06em;
+color:var(--muted); margin:0 0 10px 2px; font-weight:800; }
+
+.card{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 16px; }
+
+/* Weight: three stat columns */
+.stats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center; }
+.stat .k{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:700; }
+.stat .v{ font-size:24px; font-weight:800; letter-spacing:-.02em; margin-top:4px; }
+.stat .u{ font-size:12px; color:var(--muted); font-weight:600; }
+.divv{ width:1px; background:var(--line); }
+/* change value uses a neutral accent (violet), never red/green — no good/bad signal */
+.change .v{ color:var(--violet); }
+
+.spark{ margin-top:16px; }
+.spark svg{ display:block; width:100%; height:56px; overflow:visible; }
+.sparkcap{ font-size:11px; color:var(--muted); margin-top:6px; text-align:center; }
+
+/* Consistency: one row per week */
+.wk{ display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
+.wk:first-child{ border-top:none; }
+.wk .date{ width:88px; flex-shrink:0; font-size:13px; color:var(--muted); font-weight:600; }
+.wk .barwrap{ flex:1; }
+.wk .bartrack{ height:10px; border-radius:6px; background:var(--card2); overflow:hidden; }
+.wk .barfill{ height:100%; border-radius:6px; background:var(--violet); width:0; }
+.wk .count{ width:52px; flex-shrink:0; text-align:right; font-size:14px; font-weight:800; }
+.wk .count small{ color:var(--muted); font-weight:600; }
+
+/* Check-in history: one block per week */
+.ci{ padding:14px 0; border-top:1px solid var(--line); }
+.ci:first-child{ border-top:none; }
+.ci .row1{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.ci .wdate{ font-size:15px; font-weight:800; letter-spacing:-.01em; }
+.ci .meta{ font-size:13px; color:var(--muted); font-weight:600; }
+.ci .row2{ margin-top:6px; display:flex; flex-wrap:wrap; gap:8px; }
+.pill{ font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px;
+border:1px solid var(--line); color:var(--ink); background:var(--card2); }
+.pill.m{ color:var(--muted); background:transparent; }
+.ci .notes{ margin-top:8px; font-size:13.5px; color:var(--ink); opacity:.9;
+background:var(--card2); border:1px solid var(--line); border-radius:12px; padding:9px 11px;
+white-space:pre-wrap; word-break:break-word; }
+
+.state{ text-align:center; color:var(--muted); font-size:15px; padding:34px 10px; }
+.hide{ display:none; }
+
+.foot{ text-align:center; margin-top:26px; }
+.back{ display:inline-block; color:var(--muted); font-size:13px; text-decoration:none;
+border:1px solid var(--line); border-radius:999px; padding:8px 16px; }
+.back:active{ transform:translateY(1px); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="head">
+<div class="logo">T</div>
+<h1>Progress</h1>
+<p class="sub" id="sub">Loading your progress…</p>
+<span class="chip hide" id="goalchip"></span>
+</header>
+
+<main id="main">
+<!-- states injected by script -->
+<div class="state" id="loading">Loading…</div>
+<div class="state hide" id="empty"></div>
+<div id="content" class="hide"></div>
+</main>
+
+<footer class="foot">
+<a class="back" id="back" href="/client-hub">‹ Back to your hub</a>
+</footer>
+</div>
+
+<script>
+(function () {
+var API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+
+var params = new URLSearchParams(location.search);
+var token = (params.get("c") || "").trim();
+
+var el = {
+sub: document.getElementById("sub"),
+goalchip: document.getElementById("goalchip"),
+loading: document.getElementById("loading"),
+empty: document.getElementById("empty"),
+content: document.getElementById("content"),
+back: document.getElementById("back"),
+};
+
+// Back link: return to the previous page if we came from the hub; else the generic hub.
+el.back.addEventListener("click", function (e) {
+if (history.length > 1) { e.preventDefault(); history.back(); }
+});
+
+if (!token) { return showEmpty("Open the personal progress link Coach sent you."); }
+
+load();
+
+async function load() {
+try {
+var r = await fetch(API_BASE + "/progress?c=" + encodeURIComponent(token), { method: "GET" });
+var data = await r.json();
+if (!data || data.ok !== true) {
+return showEmpty("We couldn't find your progress. Double-check the link Coach sent you.");
+}
+render(data);
+} catch (err) {
+showEmpty("Couldn't load your progress just now. Check your connection and try again.");
+}
+}
+
+// ---------- helpers ----------
+function num(n) {
+if (n === null || n === undefined || isNaN(n)) return null;
+n = Number(n);
+return Number.isInteger(n) ? String(n) : (Math.round(n * 10) / 10).toFixed(1);
+}
+function fmtDate(ymd) {
+if (!ymd) return "";
+var d = new Date(String(ymd).slice(0, 10) + "T00:00:00Z");
+if (isNaN(d)) return String(ymd).slice(0, 10);
+return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}
+var GOAL_LABEL = { fat_loss: "Focus: fat loss", muscle_gain: "Focus: muscle gain", maintenance: "Focus: maintenance" };
+function esc(s) {
+return String(s).replace(/[&<>"']/g, function (c) {
+return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+});
+}
+
+function showEmpty(msg) {
+el.loading.classList.add("hide");
+el.content.classList.add("hide");
+el.empty.textContent = msg;
+el.empty.classList.remove("hide");
+el.sub.textContent = "Your progress";
+}
+
+function render(d) {
+el.loading.classList.add("hide");
+el.empty.classList.add("hide");
+
+el.sub.textContent = d.name ? (d.name + "’s progress") : "Your progress";
+if (d.goal_type && GOAL_LABEL[d.goal_type]) {
+el.goalchip.textContent = GOAL_LABEL[d.goal_type];
+el.goalchip.classList.remove("hide");
+}
+
+var history = Array.isArray(d.history) ? d.history : [];
+var html = "";
+
+// ---------- WEIGHT ----------
+var start = num(d.start_weight);
+var cur = num(d.current_weight);
+var change = null;
+if (d.start_weight != null && d.current_weight != null &&
+!isNaN(d.start_weight) && !isNaN(d.current_weight)) {
+var diff = Number(d.current_weight) - Number(d.start_weight);
+var rounded = Math.round(diff * 10) / 10;
+var sign = rounded > 0 ? "+" : (rounded < 0 ? "\u2212" : "");
+change = sign + num(Math.abs(rounded));
+}
+
+html += '<section class="section"><h2>Weight</h2><div class="card">';
+html += '<div class="stats">';
+html += statCol("Start", start, "lb");
+html += '<div class="divv"></div>';
+html += statCol("Current", cur, "lb");
+html += '<div class="divv"></div>';
+html += '<div class="stat change"><div class="k">Change</div><div class="v">' +
+(change !== null ? change : "—") + '</div><div class="u">' +
+(change !== null ? "lb since start" : "—") + '</div></div>';
+html += '</div>'; // .stats
+
+// trend sparkline from weeks that recorded a weight (objective line, neutral color)
+var pts = history.filter(function (h) { return h.weight != null && !isNaN(h.weight); });
+if (pts.length >= 2) {
+html += '<div class="spark">' + sparkline(pts) +
+'<div class="sparkcap">Weigh-ins over time</div></div>';
+}
+html += '</div></section>'; // card + section
+
+// ---------- CONSISTENCY ----------
+var target = (d.workouts_per_week != null && !isNaN(d.workouts_per_week)) ? Number(d.workouts_per_week) : null;
+if (history.length) {
+html += '<section class="section"><h2>Workout consistency</h2><div class="card">';
+// newest first
+var wk = history.slice().reverse();
+for (var i = 0; i < wk.length; i++) {
+var done = (wk[i].workouts_done != null && !isNaN(wk[i].workouts_done)) ? Number(wk[i].workouts_done) : 0;
+var pct = target && target > 0 ? Math.min(100, Math.round((done / target) * 100)) : (done > 0 ? 100 : 0);
+html += '<div class="wk">' +
+'<div class="date">' + esc(fmtDate(wk[i].week_start)) + '</div>' +
+'<div class="barwrap"><div class="bartrack"><div class="barfill" style="width:' + pct + '%"></div></div></div>' +
+'<div class="count">' + done + '<small>/' + (target != null ? target : "—") + '</small></div>' +
+'</div>';
+}
+html += '</div></section>';
+}
+
+// ---------- CHECK-IN HISTORY ----------
+if (history.length) {
+html += '<section class="section"><h2>Check-in history</h2><div class="card">';
+var hist = history.slice().reverse(); // newest first
+for (var j = 0; j < hist.length; j++) {
+var h = hist[j];
+var w = num(h.weight);
+var e = (h.energy != null && !isNaN(h.energy)) ? Number(h.energy) : null;
+html += '<div class="ci">';
+html += '<div class="row1"><span class="wdate">' + esc(fmtDate(h.week_start)) + '</span>' +
+'<span class="meta">' + (w !== null ? (w + " lb") : "no weigh-in") + '</span></div>';
+html += '<div class="row2">';
+html += '<span class="pill">' + ((h.workouts_done != null && !isNaN(h.workouts_done)) ? Number(h.workouts_done) : 0) +
+(target != null ? (" / " + target) : "") + ' workouts</span>';
+html += (e !== null) ? '<span class="pill m">Energy ' + e + '/5</span>' : '';
+html += '</div>';
+if (h.notes && String(h.notes).trim()) {
+html += '<div class="notes">' + esc(String(h.notes).trim()) + '</div>';
+}
+html += '</div>';
+}
+html += '</div></section>';
+} else {
+html += '<section class="section"><div class="state" style="padding:24px 10px">' +
+'No check-ins yet — your first weekly check-in will show up here.</div></section>';
+}
+
+el.content.innerHTML = html;
+el.content.classList.remove("hide");
+}
+
+function statCol(k, v, u) {
+return '<div class="stat"><div class="k">' + k + '</div><div class="v">' +
+(v !== null ? v : "—") + '</div><div class="u">' + (v !== null ? u : "—") + '</div></div>';
+}
+
+// Minimal, dependency-free sparkline. Objective line only — no thresholds, no color coding.
+function sparkline(pts) {
+var W = 320, H = 56, pad = 6;
+var ys = pts.map(function (p) { return Number(p.weight); });
+var min = Math.min.apply(null, ys), max = Math.max.apply(null, ys);
+var span = (max - min) || 1;
+var n = pts.length;
+var coords = pts.map(function (p, i) {
+var x = pad + (i * (W - 2 * pad)) / (n - 1);
+var y = pad + (H - 2 * pad) * (1 - (Number(p.weight) - min) / span);
+return [x, y];
+});
+var line = coords.map(function (c, i) { return (i ? "L" : "M") + c[0].toFixed(1) + " " + c[1].toFixed(1); }).join(" ");
+var dots = coords.map(function (c) {
+return '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="2.6" fill="var(--violet)"/>';
+}).join("");
+return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Weight over time">' +
+'<path d="' + line + '" fill="none" stroke="var(--violet)" stroke-width="2.5" ' +
+'stroke-linejoin="round" stroke-linecap="round"/>' + dots +
+'</svg>';
+}
+})();
+</script>
+</body>
+</html>
+
