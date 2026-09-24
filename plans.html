@@ -200,6 +200,9 @@ async function loadClients() {
     $("clientBox").hidden = false;
     $("main").innerHTML = clients.length ? `<p class="note">Pick a client above.</p>` : `<p class="note">No clients in the database yet.</p>`;
     $("savebar").hidden = true;
+    // Opened from the coach hub with ?client=<id>: jump straight to that client.
+    const want = new URLSearchParams(location.search).get("client");
+    if (want && clients.some(c => c.id === want) && !client) { sel.value = want; pickClient(want); }
   } catch (e) {
     $("clientBox").hidden = true;
     $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
