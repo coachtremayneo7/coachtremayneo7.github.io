@@ -190,27 +190,27 @@ const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
 
 const params = new URLSearchParams(location.search);
 const cid = params.get("c");
-const trackKey = (params.get("track") || "fatloss").toLowerCase();
+
+// FIX (9/24/2026): client hub links use the BRAND name as the track (e.g. track=reset),
+// but PROGRAMS has no "reset" key, so the page showed "link looks off".
+// TRACK_ALIAS maps brand names onto a program template. A client's custom plan
+// (loaded by token below) still replaces the template when one exists.
+const TRACK_ALIAS = { reset: "fatloss" };
+const rawTrack = (params.get("track") || "fatloss").toLowerCase();
+const trackKey = TRACK_ALIAS[rawTrack] || rawTrack;
 
 // `prog` is the program the page is CURRENTLY rendering. It starts as the hardcoded
 // brand template chosen by the URL, and is only reassigned if a valid custom plan loads.
-// showWeek() reads this, so keeping it as the single source of truth means the custom
-// plan flows through the exact same render path as the template.
 let prog = PROGRAMS[trackKey];
 
 // check-in button carries the client's token AND the brand skin straight through.
-// Refactored into setCheckinLink(brandKey) so the SAME brand the page actually
-// displays (template brand at load, or a custom plan's brand once it swaps in) is the
-// brand handed to the check-in form. The token (cid, from ?c=) is carried through
-// exactly as before and is never altered here.
 function setCheckinLink(brandKey) {
 const qs = new URLSearchParams();
-if (cid) qs.set("c", cid); // same token source, unchanged
+if (cid) qs.set("c", cid);
 if (brandKey) qs.set("b", brandKey);
 const q = qs.toString();
 document.getElementById("checkin-link").href = "checkin.html" + (q ? "?" + q : "");
 }
-// initial link uses the template brand chosen from the URL (matches today's behavior).
 setCheckinLink(prog && prog.brand ? prog.brand : null);
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -225,15 +225,12 @@ r.setProperty("--dot-glow", b.dot); r.setProperty("--cta-glow", b.cta);
 document.getElementById("wordmark").textContent = b.wordmark;
 }
 
-// Render a whole program object (template OR custom plan) into the page. Pulled out of the
-// original inline block so both sources render through ONE path. Brand for a custom plan is
-// only applied when the plan names a valid brand; otherwise the URL-chosen brand stays.
 function renderProgram(p) {
 prog = p;
 const brandKey = (p.brand && BRANDS[p.brand]) ? p.brand : trackKey_brand();
 applyBrand(brandKey);
 const bb = BRANDS[brandKey] || BRANDS.reset;
-setCheckinLink(brandKey); // keep the check-in button's brand in sync with what is displayed
+setCheckinLink(brandKey);
 document.getElementById("track-label").textContent = p.label ? ("· " + p.label) : "";
 document.getElementById("title").textContent = p.label || "Your program";
 document.getElementById("page-title").textContent = (p.label || "Your program") + " — " + bb.wordmark;
@@ -241,47 +238,38 @@ if (p.lede) document.getElementById("lede").textContent = p.lede;
 buildWeeks(p.weeks || []);
 }
 
-// the brand the URL/template path would use (fallback when a custom plan omits brand)
 function trackKey_brand() {
 const t = PROGRAMS[trackKey];
 return (t && t.brand) ? t.brand : "reset";
 }
 
-// ----- INITIAL RENDER: hardcoded brand template, exactly as before -----
+// ----- INITIAL RENDER -----
 if (!prog) {
 document.getElementById("days").innerHTML =
 `<div class="missing">This program link looks off. Use the link Coach TreMayne sent you, or reach out and he'll resend it.</div>`;
 document.querySelector(".cta").style.display = "none";
 } else {
 renderProgram(prog);
-// ----- THEN: if we have a token, try for a custom plan. Template stays unless a valid one loads. -----
 if (cid) tryCustomPlan(cid);
 }
 
-// Fetch the client's custom plan and swap it in ONLY if it's valid. Any failure — network
-// error, timeout, non-2xx, bad JSON, has_plan not true, or a plan that fails validation —
-// is swallowed and the already-rendered hardcoded template is left untouched. The page can
-// never go blank because of this call.
 async function tryCustomPlan(token) {
 try {
 const ctrl = new AbortController();
-const timer = setTimeout(() => ctrl.abort(), 6000); // don't hang forever
+const timer = setTimeout(() => ctrl.abort(), 6000);
 const r = await fetch(API_BASE + "/workout-plan?c=" + encodeURIComponent(token), { signal: ctrl.signal });
 clearTimeout(timer);
 if (!r.ok) return;
 const data = await r.json();
-if (!data || data.has_plan !== true) return; // no plan -> keep template
+if (!data || data.has_plan !== true) return;
 const plan = validatePlan(data.plan);
-if (!plan) return; // malformed -> keep template
+if (!plan) return;
 renderProgram(plan);
 } catch (_) {
-/* network/timeout/parse error -> keep the hardcoded template already on screen */
+/* keep the template already on screen */
 }
 }
 
-// Minimal shape check so a bad stored plan can never break the page. Requires a non-empty
-// weeks array with at least one day; everything else is optional and defaulted by the
-// renderer. Returns the plan if usable, otherwise null (caller keeps the template).
 function validatePlan(plan) {
 if (!plan || typeof plan !== "object") return null;
 if (!Array.isArray(plan.weeks) || plan.weeks.length === 0) return null;
