@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Plan Editor — Coach TreMayne</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --brand-d:#0f9488; --bg:#f8fafc;
+          --danger:#dc2626; --soft:#f1f5f9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:var(--bg); color:var(--ink); line-height:1.5; }
+  .wrap { max-width:760px; margin:0 auto; padding:22px 16px 120px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .bar input { flex:1; min-width:180px; }
+  input, textarea, select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;
+         font:inherit; font-size:.95rem; background:#fff; color:var(--ink); }
+  textarea { min-height:70px; resize:vertical; }
+  input:focus, textarea:focus, select:focus { outline:2px solid var(--brand); border-color:var(--brand); }
+  button { font:inherit; cursor:pointer; }
+  .btn { padding:10px 16px; border-radius:10px; font-weight:700; border:1px solid var(--line); background:#fff; color:var(--ink); }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .btn.primary:hover { background:var(--brand-d); }
+  .btn.danger { color:var(--danger); border-color:#fecaca; }
+  .btn.small { padding:6px 10px; font-size:.85rem; font-weight:600; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  label { display:block; font-weight:600; font-size:.85rem; margin:12px 0 5px; }
+  label .hint { font-weight:400; color:var(--muted); }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .note { text-align:center; color:var(--muted); padding:24px 0; }
+  .note.err { color:#991b1b; }
+  .status { background:var(--soft); border-radius:10px; padding:10px 12px; font-size:.9rem; margin:12px 0; }
+  .tpls { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-top:10px; }
+  .tpls button { text-align:left; padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+  .tpls button b { display:block; }
+  .tpls button span { color:var(--muted); font-size:.82rem; }
+  .tpls button:hover { border-color:var(--brand); }
+  .weeks { display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; }
+  .weeks button { flex:0 0 auto; padding:8px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; font-weight:600; }
+  .weeks button.on { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .row.between { justify-content:space-between; }
+  .day { border-left:4px solid var(--brand); }
+  .day.rest { border-left-color:#94a3b8; }
+  .dayhead { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .ctrls { display:flex; gap:4px; }
+  .ctrls button { width:34px; height:34px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:700; color:var(--muted); }
+  .ctrls button.x { color:var(--danger); }
+  .ex { background:var(--soft); border-radius:12px; padding:10px; margin-top:10px; }
+  .exgrid { display:grid; grid-template-columns:2fr 1fr; gap:8px; }
+  .exgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .exgrid input, .exgrid2 input { padding:8px 10px; font-size:.9rem; }
+  .tag { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .savebar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line);
+             padding:12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .savebar .inner { max-width:760px; margin:0 auto; display:flex; gap:8px; align-items:center; }
+  .savebar .msg { flex:1; font-size:.85rem; color:var(--muted); }
+  .savebar .msg.dirty { color:#b45309; font-weight:600; }
+  .savebar .msg.ok { color:#065f46; font-weight:600; }
+  .savebar .msg.err { color:#991b1b; font-weight:600; }
+  @media (max-width:520px) { .dayhead, .exgrid, .exgrid2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Plan editor</h1>
+  <p class="sub">Build a custom workout plan for one client. Saving replaces the default template on their My Training page.</p>
+
+  <div class="bar">
+    <input id="apibase" placeholder="API base">
+    <input id="token" type="password" placeholder="Coach review token">
+    <button class="btn primary" id="load">Load</button>
+  </div>
+
+  <div id="clientBox" hidden>
+    <label for="client">Client</label>
+    <select id="client"></select>
+  </div>
+
+  <div id="main"><p class="note">Enter your review token, then Load.</p></div>
+</div>
+
+<div class="savebar" id="savebar" hidden>
+  <div class="inner">
+    <span class="msg" id="savemsg"></span>
+    <button class="btn danger" id="del" hidden>Delete plan</button>
+    <button class="btn primary" id="save">Save plan</button>
+  </div>
+</div>
+
+<script>
+/* ===== Starting templates (copied from program.html) ===== */
+const TEMPLATES = {
+  fatloss: { brand:"reset", label:"Lose fat", lede:"Four days on, built to keep muscle while the weight comes off. Log every session honestly in your weekly check-in.",
+    weeks:[{ days:[
+      { title:"Day 1", focus:"Full body", exercises:[
+        { name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
+        { name:"Dumbbell bench press", pres:"3 × 10" },
+        { name:"1-arm row", pres:"3 × 10 each" },
+        { name:"Plank", pres:"3 × 30s" } ]},
+      { rest:"Rest or a 20–30 min walk." },
+      { title:"Day 2", focus:"Lower + core", exercises:[
+        { name:"Romanian deadlift", pres:"3 × 10" },
+        { name:"Walking lunge", pres:"3 × 12 each" },
+        { name:"Hanging or lying leg raise", pres:"3 × 12" } ]},
+      { title:"Day 3", focus:"Upper", exercises:[
+        { name:"Incline press", pres:"3 × 10" },
+        { name:"Lat pulldown", pres:"3 × 12" },
+        { name:"Shoulder press", pres:"3 × 10" },
+        { name:"Face pull", pres:"3 × 15" } ]},
+      { title:"Day 4", focus:"Conditioning", exercises:[
+        { name:"Intervals", pres:"20 min", note:"30s hard / 90s easy, any machine." } ]},
+    ]}]},
+  muscle: { brand:"reset", label:"Build muscle", lede:"An upper/lower split to add size. Push the weight up week over week — your check-in is where we track that it's actually moving.",
+    weeks:[{ days:[
+      { title:"Day 1", focus:"Upper", exercises:[
+        { name:"Barbell bench press", pres:"4 × 6–8" }, { name:"Bent-over row", pres:"4 × 8" },
+        { name:"Overhead press", pres:"3 × 8" }, { name:"Chin-up", pres:"3 × max" } ]},
+      { title:"Day 2", focus:"Lower", exercises:[
+        { name:"Back squat", pres:"4 × 6–8" }, { name:"Romanian deadlift", pres:"3 × 8" },
+        { name:"Leg press", pres:"3 × 12" }, { name:"Calf raise", pres:"4 × 15" } ]},
+      { rest:"Rest." },
+      { title:"Day 3", focus:"Upper", exercises:[
+        { name:"Incline dumbbell press", pres:"4 × 8–10" }, { name:"Pull-up or pulldown", pres:"4 × 8–10" },
+        { name:"Lateral raise", pres:"3 × 15" }, { name:"Curl + triceps superset", pres:"3 × 12" } ]},
+      { title:"Day 4", focus:"Lower", exercises:[
+        { name:"Front squat", pres:"4 × 8" }, { name:"Hip thrust", pres:"3 × 10" }, { name:"Hamstring curl", pres:"3 × 12" } ]},
+    ]}]},
+  dd: { brand:"dd", label:"Diesel & Discipline", lede:"Built to run from the road and the yard — keep your numbers right for the DOT physical. Log every session honestly in your weekly check-in.",
+    weeks:[{ days:[
+      { title:"Day 1", focus:"Full body", exercises:[
+        { name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." }, { name:"Push-up (or bench)", pres:"3 × 10" },
+        { name:"1-arm row", pres:"3 × 10 each" }, { name:"Plank", pres:"3 × 30s" } ]},
+      { rest:"Rest, or a 20–30 min walk at the truck stop." },
+      { title:"Day 2", focus:"Conditioning", exercises:[ { name:"Brisk walk / incline", pres:"20–30 min" } ]},
+    ]}]},
+  travel: { brand:"travel", label:"Travel Plan", lede:"No gym, no problem — bodyweight sessions you can run from a hotel room. Log every session honestly in your weekly check-in.",
+    weeks:[{ days:[
+      { title:"Day 1", focus:"Full body", exercises:[
+        { name:"Bodyweight squat", pres:"3 × 15" }, { name:"Incline push-up (desk/bed)", pres:"3 × 10" },
+        { name:"Reverse lunge", pres:"3 × 10 each" }, { name:"Plank", pres:"3 × 30s" } ]},
+      { rest:"Rest or a 20–30 min walk." },
+      { title:"Day 2", focus:"Conditioning", exercises:[ { name:"Walk / stairs", pres:"20–30 min" } ]},
+    ]}]},
+};
+const TPL_INFO = [
+  ["fatloss","Lose fat","Reset · 4 days"], ["muscle","Build muscle","Reset · 4 days"],
+  ["dd","Diesel & Discipline","DD · 2 days"], ["travel","Travel Plan","Travel · 2 days"],
+  ["blank","Blank plan","Start from scratch"],
+];
+
+const $ = (id) => document.getElementById(id);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+// Same saved settings as review.html (same site = shared on this device).
+$("apibase").value = localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev";
+$("token").value   = localStorage.getItem("ci_token")   || "";
+const cfg = () => ({ base: $("apibase").value.trim().replace(/\/+$/, ""), token: $("token").value.trim() });
+
+const ERR = {
+  invalid_plan: "The plan isn't in a shape the server accepts.",
+  unknown_client: "That client isn't in the database.",
+  missing_client_id: "No client selected.",
+  bad_json: "The plan couldn't be sent.",
+};
+
+async function api(path, opts = {}) {
+  const { base, token } = cfg();
+  const r = await fetch(base + path, { ...opts, headers: { authorization: `Bearer ${token}`, "content-type": "application/json" } });
+  if (r.status === 401) throw new Error("Token rejected. Check it and try again.");
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(ERR[d.error] || `Request failed (HTTP ${r.status})`);
+  return d;
+}
+
+/* ===== state ===== */
+let clients = [], client = null, plan = null, week = 0, dirty = false, hasSaved = false, savedAt = null;
+
+function setMsg(text, cls) { const m = $("savemsg"); m.textContent = text; m.className = "msg " + (cls || ""); }
+function markDirty() { dirty = true; setMsg("Unsaved changes", "dirty"); }
+function firstName() { return String(client?.name || "this client").trim().split(/\s+/)[0]; }
+
+/* ===== load clients ===== */
+async function loadClients() {
+  const { base, token } = cfg();
+  localStorage.setItem("ci_apibase", base);
+  localStorage.setItem("ci_token", token);
+  if (!token) { $("main").innerHTML = `<p class="note">Enter your review token, then Load.</p>`; return; }
+  $("main").innerHTML = `<p class="note">Loading clients…</p>`;
+  try {
+    const d = await api("/coach/clients");
+    clients = d.clients || [];
+    const sel = $("client");
+    sel.innerHTML = `<option value="">Choose a client…</option>` + clients.map(c =>
+      `<option value="${esc(c.id)}">${esc(c.name || c.id)}${c.status && c.status !== "active" ? " (" + esc(c.status) + ")" : ""}</option>`).join("");
+    $("clientBox").hidden = false;
+    $("main").innerHTML = clients.length ? `<p class="note">Pick a client above.</p>` : `<p class="note">No clients in the database yet.</p>`;
+    $("savebar").hidden = true;
+  } catch (e) {
+    $("clientBox").hidden = true;
+    $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+  }
+}
+
+/* ===== pick a client ===== */
+async function pickClient(id) {
+  if (dirty && !confirm("You have unsaved changes. Switch clients and lose them?")) {
+    $("client").value = client ? client.id : ""; return;
+  }
+  dirty = false; plan = null; week = 0; hasSaved = false; savedAt = null;
+  client = clients.find(c => c.id === id) || null;
+  $("savebar").hidden = true;
+  if (!client) { $("main").innerHTML = `<p class="note">Pick a client above.</p>`; return; }
+  $("main").innerHTML = `<p class="note">Loading ${esc(client.name || client.id)}'s plan…</p>`;
+  try {
+    const d = await api("/coach/workout-plan?client_id=" + encodeURIComponent(client.id));
+    if (d.has_plan) {
+      plan = normalize(d.plan); plan.name = d.name || "";
+      hasSaved = true; savedAt = d.updated_at || null;
+      render();
+    } else {
+      renderStart();
+    }
+  } catch (e) {
+    $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+  }
+}
+
+function normalize(p) {
+  const out = { name:"", brand: p.brand || "reset", label: p.label || "", lede: p.lede || "", weeks: [] };
+  for (const w of (p.weeks || [])) {
+    const days = [];
+    for (const d of (w.days || [])) {
+      if (d && d.rest !== undefined && !d.exercises) days.push({ rest: String(d.rest || "") });
+      else days.push({ title: d?.title || "", focus: d?.focus || "",
+        exercises: (d?.exercises || []).map(x => ({ name:x.name||"", pres:x.pres||"", note:x.note||"", rest:x.rest||"", video:x.video||"" })) });
+    }
+    out.weeks.push({ days });
+  }
+  if (!out.weeks.length) out.weeks.push({ days: [] });
+  return out;
+}
+
+/* ===== no plan yet: choose a starting point ===== */
+function renderStart() {
+  $("main").innerHTML = `<div class="card">
+    <b>${esc(client.name || client.id)} has no custom plan.</b>
+    <p class="sub" style="margin:4px 0 0">Right now they see the default template for their track. Pick a starting point to build theirs:</p>
+    <div class="tpls">${TPL_INFO.map(([k, t, s]) => `<button data-tpl="${k}"><b>${esc(t)}</b><span>${esc(s)}</span></button>`).join("")}</div>
+  </div>`;
+  $("main").querySelectorAll("[data-tpl]").forEach(b => b.onclick = () => {
+    const k = b.dataset.tpl;
+    plan = k === "blank"
+      ? normalize({ brand:"reset", label:"", lede:"", weeks:[{ days:[{ title:"Day 1", focus:"", exercises:[{ name:"" }] }] }] })
+      : normalize(clone(TEMPLATES[k]));
+    plan.name = firstName() + " – " + (k === "blank" ? "custom" : TPL_INFO.find(t => t[0] === k)[1]);
+    week = 0; render(); markDirty();
+  });
+}
+
+/* ===== editor ===== */
+function render() {
+  const w = plan.weeks[week];
+  const dayHtml = w.days.map((d, i) => d.rest !== undefined ? `
+    <div class="card day rest">
+      <div class="row between"><span class="tag">Rest day</span>${ctrls(i)}</div>
+      <input data-d="${i}" data-f="rest" value="${esc(d.rest)}" placeholder="Rest or a 20–30 min walk." style="margin-top:8px">
+    </div>` : `
+    <div class="card day">
+      <div class="row between"><span class="tag">Workout day</span>${ctrls(i)}</div>
+      <div class="dayhead" style="margin-top:8px">
+        <input data-d="${i}" data-f="title" value="${esc(d.title)}" placeholder="Day 1">
+        <input data-d="${i}" data-f="focus" value="${esc(d.focus)}" placeholder="Focus (e.g. Upper)">
+      </div>
+      ${d.exercises.map((x, j) => `
+        <div class="ex">
+          <div class="row between"><span class="tag">Exercise ${j + 1}</span>
+            <div class="ctrls">
+              <button data-act="exUp" data-d="${i}" data-e="${j}" title="Move up">↑</button>
+              <button data-act="exDown" data-d="${i}" data-e="${j}" title="Move down">↓</button>
+              <button class="x" data-act="exDel" data-d="${i}" data-e="${j}" title="Remove">×</button>
+            </div></div>
+          <div class="exgrid" style="margin-top:6px">
+            <input data-d="${i}" data-e="${j}" data-f="name" value="${esc(x.name)}" placeholder="Exercise name">
+            <input data-d="${i}" data-e="${j}" data-f="pres" value="${esc(x.pres)}" placeholder="3 × 10">
+          </div>
+          <div class="exgrid2">
+            <input data-d="${i}" data-e="${j}" data-f="note" value="${esc(x.note)}" placeholder="Coaching note (optional)">
+            <input data-d="${i}" data-e="${j}" data-f="rest" value="${esc(x.rest)}" placeholder="Rest between sets (optional)">
+          </div>
+          <input data-d="${i}" data-e="${j}" data-f="video" value="${esc(x.video)}" placeholder="Video link (optional)" style="margin-top:8px;padding:8px 10px;font-size:.9rem">
+        </div>`).join("")}
+      <button class="btn small" data-act="exAdd" data-d="${i}" style="margin-top:10px">+ Exercise</button>
+    </div>`).join("");
+
+  $("main").innerHTML = `
+    <div class="status">${hasSaved
+      ? `${esc(firstName())} has a custom plan${savedAt ? " · last saved " + esc(savedAt) + " UTC" : ""}.`
+      : `Not saved yet — ${esc(firstName())} still sees the default template until you save.`}</div>
+    <div class="card">
+      <label>Plan name <span class="hint">(only you see this)</span></label>
+      <input data-k="name" value="${esc(plan.name)}" placeholder="Amber – fat loss block 1">
+      <label>Title the client sees</label>
+      <input data-k="label" value="${esc(plan.label)}" placeholder="Lose fat">
+      <label>Intro text <span class="hint">(optional)</span></label>
+      <textarea data-k="lede" placeholder="What this block is about…">${esc(plan.lede)}</textarea>
+      <label>Brand colors</label>
+      <select data-k="brand">
+        ${[["reset","The Reset (green)"],["dd","Diesel & Discipline (amber)"],["travel","Travel Plan (orange)"]]
+          .map(([v, t]) => `<option value="${v}"${plan.brand === v ? " selected" : ""}>${t}</option>`).join("")}
+      </select>
+    </div>
+    <div class="weeks">${plan.weeks.map((_, i) => `<button data-act="week" data-w="${i}" class="${i === week ? "on" : ""}">Week ${i + 1}</button>`).join("")}
+      <button data-act="weekAdd">+ Week</button></div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn small" data-act="weekDup">Copy week ${week + 1} to a new week</button>
+      ${plan.weeks.length > 1 ? `<button class="btn small danger" data-act="weekDel">Delete week ${week + 1}</button>` : ""}
+    </div>
+    ${dayHtml || `<p class="note">No days in this week yet.</p>`}
+    <div class="row">
+      <button class="btn" data-act="dayAdd">+ Workout day</button>
+      <button class="btn" data-act="restAdd">+ Rest day</button>
+    </div>`;
+  $("savebar").hidden = false;
+  $("del").hidden = !hasSaved;
+  if (!dirty) setMsg(hasSaved ? "All changes saved" : "", hasSaved ? "ok" : "");
+}
+
+function ctrls(i) {
+  return `<div class="ctrls">
+    <button data-act="dayUp" data-d="${i}" title="Move up">↑</button>
+    <button data-act="dayDown" data-d="${i}" title="Move down">↓</button>
+    <button class="x" data-act="dayDel" data-d="${i}" title="Remove day">×</button></div>`;
+}
+
+function swap(arr, a, b) { if (b < 0 || b >= arr.length) return false; [arr[a], arr[b]] = [arr[b], arr[a]]; return true; }
+
+// typing: update the plan without re-rendering (keeps the cursor in place)
+$("main").addEventListener("input", (e) => {
+  const t = e.target; if (!plan) return;
+  if (t.dataset.k) { plan[t.dataset.k] = t.value; markDirty(); return; }
+  if (t.dataset.d === undefined) return;
+  const day = plan.weeks[week].days[+t.dataset.d];
+  if (t.dataset.e !== undefined) day.exercises[+t.dataset.e][t.dataset.f] = t.value;
+  else day[t.dataset.f] = t.value;
+  markDirty();
+});
+$("main").addEventListener("change", (e) => { if (e.target.dataset.k === "brand") { plan.brand = e.target.value; markDirty(); } });
+
+// buttons
+$("main").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-act]"); if (!b || !plan) return;
+  const days = plan.weeks[week].days, i = +b.dataset.d, j = +b.dataset.e;
+  switch (b.dataset.act) {
+    case "week": week = +b.dataset.w; break;
+    case "weekAdd": plan.weeks.push({ days: [] }); week = plan.weeks.length - 1; break;
+    case "weekDup": plan.weeks.splice(week + 1, 0, clone(plan.weeks[week])); week++; break;
+    case "weekDel": if (!confirm(`Delete week ${week + 1}?`)) return; plan.weeks.splice(week, 1); week = Math.max(0, week - 1); break;
+    case "dayAdd": days.push({ title: "Day " + (days.filter(d => d.rest === undefined).length + 1), focus: "", exercises: [{ name:"", pres:"", note:"", rest:"", video:"" }] }); break;
+    case "restAdd": days.push({ rest: "Rest or a 20–30 min walk." }); break;
+    case "dayUp": if (!swap(days, i, i - 1)) return; break;
+    case "dayDown": if (!swap(days, i, i + 1)) return; break;
+    case "dayDel": if (!confirm("Remove this day?")) return; days.splice(i, 1); break;
+    case "exAdd": days[i].exercises.push({ name:"", pres:"", note:"", rest:"", video:"" }); break;
+    case "exUp": if (!swap(days[i].exercises, j, j - 1)) return; break;
+    case "exDown": if (!swap(days[i].exercises, j, j + 1)) return; break;
+    case "exDel": days[i].exercises.splice(j, 1); break;
+    default: return;
+  }
+  if (b.dataset.act !== "week") markDirty();
+  render();
+});
+
+/* ===== save / delete ===== */
+function buildPayload() {
+  const clean = (s) => String(s || "").trim();
+  const out = { brand: plan.brand || "reset", weeks: [] };
+  if (clean(plan.label)) out.label = clean(plan.label);
+  if (clean(plan.lede)) out.lede = clean(plan.lede);
+  for (let w = 0; w < plan.weeks.length; w++) {
+    const days = [];
+    if (!plan.weeks[w].days.length) throw { week: w, msg: `Week ${w + 1} has no days. Add a day or delete the week.` };
+    for (const d of plan.weeks[w].days) {
+      if (d.rest !== undefined) { days.push({ rest: clean(d.rest) || "Rest." }); continue; }
+      const title = clean(d.title) || "Day";
+      const exercises = [];
+      for (const x of d.exercises) {
+        if (!clean(x.name)) throw { week: w, msg: `Week ${w + 1}, ${title}: an exercise is missing its name.` };
+        const ex = { name: clean(x.name) };
+        for (const f of ["pres", "note", "rest", "video"]) if (clean(x[f])) ex[f] = clean(x[f]);
+        exercises.push(ex);
+      }
+      if (!exercises.length) throw { week: w, msg: `Week ${w + 1}, ${title}: add at least one exercise, or make it a rest day.` };
+      const day = { title, exercises };
+      if (clean(d.focus)) day.focus = clean(d.focus);
+      days.push(day);
+    }
+    out.weeks.push({ days });
+  }
+  return out;
+}
+
+$("save").addEventListener("click", async () => {
+  if (!client || !plan) return;
+  let payload;
+  try { payload = buildPayload(); }
+  catch (e) { if (e.week !== undefined && e.week !== week) { week = e.week; render(); } setMsg(e.msg || String(e), "err"); return; }
+  $("save").disabled = true; setMsg("Saving…");
+  try {
+    await api("/coach/workout-plan/save", { method: "POST",
+      body: JSON.stringify({ client_id: client.id, name: String(plan.name || "").trim(), plan: payload }) });
+    dirty = false; hasSaved = true; savedAt = null;
+    render();
+    setMsg(`Saved. ${firstName()} sees it next time they open My Training.`, "ok");
+  } catch (e) { setMsg(e.message + " Not saved.", "err"); }
+  finally { $("save").disabled = false; }
+});
+
+$("del").addEventListener("click", async () => {
+  if (!client || !hasSaved) return;
+  if (!confirm(`Delete ${firstName()}'s custom plan? They'll go back to the default template.`)) return;
+  $("del").disabled = true; setMsg("Deleting…");
+  try {
+    await api("/coach/workout-plan/delete", { method: "POST", body: JSON.stringify({ client_id: client.id }) });
+    dirty = false; hasSaved = false; plan = null;
+    $("savebar").hidden = true;
+    renderStart();
+  } catch (e) { setMsg(e.message + " Not deleted.", "err"); }
+  finally { $("del").disabled = false; }
+});
+
+window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+$("load").addEventListener("click", loadClients);
+$("client").addEventListener("change", (e) => pickClient(e.target.value));
+if ($("token").value) loadClients();
+</script>
+</body>
+</html>
