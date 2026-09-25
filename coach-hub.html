@@ -166,7 +166,7 @@ ${waiting.has(c.id) ? `<span class="badge waiting">Check-in waiting</span>` : ``
 </div>
 <div class="cli-actions">
 <a class="build" href="plans.html?client=${encodeURIComponent(c.id)}">Edit workout</a>
-<a class="review" href="review.html">Review</a>
+${waiting.has(c.id) ? `<a class="review" href="review.html">Review check-in</a>` : ``}
 </div>`;
 listEl.appendChild(row);
 }
@@ -190,3 +190,4 @@ if (tokenEl.value) loadClients(); // auto-load if a token is already remembered
 </script>
 </body>
 </html>
+
