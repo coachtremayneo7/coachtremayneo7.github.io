@@ -234,7 +234,7 @@ async function pickClient(id) {
 }
 
 function normalize(p) {
-  const out = { name:"", brand: p.brand || "reset", label: p.label || "", lede: p.lede || "", weeks: [] };
+  const out = { name:"", brand: p.brand || "reset", label: p.label || "", lede: p.lede || "", details: p.details || "", weeks: [] };
   for (const w of (p.weeks || [])) {
     const days = [];
     for (const d of (w.days || [])) {
@@ -243,9 +243,10 @@ function normalize(p) {
         // hotel = optional hotel substitution (kept so re-saving never erases it)
         exercises: (d?.exercises || []).map(x => ({ name:x.name||"", pres:x.pres||"", note:x.note||"", rest:x.rest||"", hotel:x.hotel||"", video:x.video||"" })) });
     }
-    out.weeks.push({ days });
+    // title/note = optional weekly focus banner (kept so re-saving never erases it)
+    out.weeks.push({ title: w.title || "", note: w.note || "", days });
   }
-  if (!out.weeks.length) out.weeks.push({ days: [] });
+  if (!out.weeks.length) out.weeks.push({ title:"", note:"", days: [] });
   return out;
 }
 
@@ -313,6 +314,8 @@ function render() {
       <input data-k="label" value="${esc(plan.label)}" placeholder="Lose fat">
       <label>Intro text <span class="hint">(optional)</span></label>
       <textarea data-k="lede" placeholder="What this block is about…">${esc(plan.lede)}</textarea>
+      <label>Details section <span class="hint">(optional — shows below the workouts)</span></label>
+      <textarea data-k="details" placeholder="Reference info the client doesn't need on Day 1…">${esc(plan.details)}</textarea>
       <label>Brand colors</label>
       <select data-k="brand">
         ${[["reset","The Reset (green)"],["dd","Diesel & Discipline (amber)"],["travel","Travel Plan (orange)"]]
@@ -324,6 +327,11 @@ function render() {
     <div class="row" style="margin-bottom:12px">
       <button class="btn small" data-act="weekDup">Copy week ${week + 1} to a new week</button>
       ${plan.weeks.length > 1 ? `<button class="btn small danger" data-act="weekDel">Delete week ${week + 1}</button>` : ""}
+    </div>
+    <div class="card">
+      <span class="tag">Week ${week + 1} focus (optional)</span>
+      <input data-wk="title" value="${esc(w.title)}" placeholder="Week title (e.g. Week 1: Establish your baseline)" style="margin-top:8px">
+      <input data-wk="note" value="${esc(w.note)}" placeholder="One-line focus message" style="margin-top:8px">
     </div>
     ${dayHtml || `<p class="note">No days in this week yet.</p>`}
     <div class="row">
@@ -348,6 +356,7 @@ function swap(arr, a, b) { if (b < 0 || b >= arr.length) return false; [arr[a], 
 $("main").addEventListener("input", (e) => {
   const t = e.target; if (!plan) return;
   if (t.dataset.k) { plan[t.dataset.k] = t.value; markDirty(); return; }
+  if (t.dataset.wk) { plan.weeks[week][t.dataset.wk] = t.value; markDirty(); return; }
   if (t.dataset.d === undefined) return;
   const day = plan.weeks[week].days[+t.dataset.d];
   if (t.dataset.e !== undefined) day.exercises[+t.dataset.e][t.dataset.f] = t.value;
@@ -362,7 +371,7 @@ $("main").addEventListener("click", (e) => {
   const days = plan.weeks[week].days, i = +b.dataset.d, j = +b.dataset.e;
   switch (b.dataset.act) {
     case "week": week = +b.dataset.w; break;
-    case "weekAdd": plan.weeks.push({ days: [] }); week = plan.weeks.length - 1; break;
+    case "weekAdd": plan.weeks.push({ title:"", note:"", days: [] }); week = plan.weeks.length - 1; break;
     case "weekDup": plan.weeks.splice(week + 1, 0, clone(plan.weeks[week])); week++; break;
     case "weekDel": if (!confirm(`Delete week ${week + 1}?`)) return; plan.weeks.splice(week, 1); week = Math.max(0, week - 1); break;
     case "dayAdd": days.push({ title: "Day " + (days.filter(d => d.rest === undefined).length + 1), focus: "", exercises: [{ name:"", pres:"", note:"", rest:"", hotel:"", video:"" }] }); break;
@@ -386,6 +395,7 @@ function buildPayload() {
   const out = { brand: plan.brand || "reset", weeks: [] };
   if (clean(plan.label)) out.label = clean(plan.label);
   if (clean(plan.lede)) out.lede = clean(plan.lede);
+  if (clean(plan.details)) out.details = clean(plan.details);
   for (let w = 0; w < plan.weeks.length; w++) {
     const days = [];
     if (!plan.weeks[w].days.length) throw { week: w, msg: `Week ${w + 1} has no days. Add a day or delete the week.` };
@@ -404,7 +414,10 @@ function buildPayload() {
       if (clean(d.focus)) day.focus = clean(d.focus);
       days.push(day);
     }
-    out.weeks.push({ days });
+    const wk = { days };
+    if (clean(plan.weeks[w].title)) wk.title = clean(plan.weeks[w].title);
+    if (clean(plan.weeks[w].note)) wk.note = clean(plan.weeks[w].note);
+    out.weeks.push(wk);
   }
   return out;
 }
