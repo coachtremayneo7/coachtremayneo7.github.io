@@ -154,6 +154,41 @@ const TPL_INFO = [
 
 const $ = (id) => document.getElementById(id);
 const clone = (o) => JSON.parse(JSON.stringify(o));
+/* ===== Permanent IDs (workout log) =====
+   id  = one exact programmed item (e.g. Week 2 Monday Smith squat). Workout logs point here.
+   key = the same exercise across weeks. Exercise history groups by this.
+   Both are random and never built from the name. Renaming, moving, or changing sets/reps/etc keeps them.
+   New exercise / + Exercise / Replace = new id AND key. Copy week = new ids, same keys. */
+const newId = (p) => p + Array.from(crypto.getRandomValues(new Uint8Array(10)), b => (b % 36).toString(36)).join("");
+const normName = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+function ensureIds(p) {
+  let changed = false;
+  // Legacy plan (no keys anywhere yet): ONE-TIME linking of keys across weeks by day title + name + order.
+  const legacy = !p.weeks.some(w => w.days.some(d => (d.exercises || []).some(x => x.key)));
+  const legacyKeys = {}, seenEx = new Set(), seenDay = new Set();
+  for (const w of p.weeks) for (const d of w.days) {
+    if (d.rest !== undefined) continue;
+    if (!d.id || seenDay.has(d.id)) { d.id = newId("d"); changed = true; }
+    seenDay.add(d.id);
+    const occ = {};
+    for (const x of d.exercises) {
+      if (!x.id || seenEx.has(x.id)) { x.id = newId("x"); changed = true; }
+      seenEx.add(x.id);
+      if (!x.key) {
+        changed = true;
+        if (legacy) {
+          const n = normName(x.name); occ[n] = (occ[n] || 0) + 1;
+          const sig = normName(d.title) + "|" + n + "|" + occ[n];
+          x.key = legacyKeys[sig] || (legacyKeys[sig] = newId("k"));
+        } else x.key = newId("k");
+      }
+    }
+  }
+  return changed;
+}
+let idsJustAdded = false;
+const newEx = () => ({ id:newId("x"), key:newId("k"), baseline:"", name:"", pres:"", note:"", rest:"", hotel:"", video:"" });
+
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
 // Same saved settings as review.html (same site = shared on this device).
@@ -224,7 +259,9 @@ async function pickClient(id) {
     if (d.has_plan) {
       plan = normalize(d.plan); plan.name = d.name || "";
       hasSaved = true; savedAt = d.updated_at || null;
+      const added = idsJustAdded;
       render();
+      if (added) { dirty = true; setMsg("Exercise IDs added for workout logging. Save to keep them.", "dirty"); }
     } else {
       renderStart();
     }
@@ -239,14 +276,15 @@ function normalize(p) {
     const days = [];
     for (const d of (w.days || [])) {
       if (d && d.rest !== undefined && !d.exercises) days.push({ rest: String(d.rest || "") });
-      else days.push({ title: d?.title || "", focus: d?.focus || "",
+      else days.push({ id: d?.id || "", title: d?.title || "", focus: d?.focus || "",
         // hotel = optional hotel substitution (kept so re-saving never erases it)
-        exercises: (d?.exercises || []).map(x => ({ name:x.name||"", pres:x.pres||"", note:x.note||"", rest:x.rest||"", hotel:x.hotel||"", video:x.video||"" })) });
+        exercises: (d?.exercises || []).map(x => ({ id:x.id||"", key:x.key||"", baseline:x.baseline||"", name:x.name||"", pres:x.pres||"", note:x.note||"", rest:x.rest||"", hotel:x.hotel||"", video:x.video||"" })) });
     }
     // title/note = optional weekly focus banner (kept so re-saving never erases it)
     out.weeks.push({ title: w.title || "", note: w.note || "", days });
   }
   if (!out.weeks.length) out.weeks.push({ title:"", note:"", days: [] });
+  idsJustAdded = ensureIds(out);
   return out;
 }
 
@@ -287,6 +325,7 @@ function render() {
             <div class="ctrls">
               <button data-act="exUp" data-d="${i}" data-e="${j}" title="Move up">↑</button>
               <button data-act="exDown" data-d="${i}" data-e="${j}" title="Move down">↓</button>
+              <button data-act="exReplace" data-d="${i}" data-e="${j}" title="Replace with a different exercise (starts a new history)">↻</button>
               <button class="x" data-act="exDel" data-d="${i}" data-e="${j}" title="Remove">×</button>
             </div></div>
           <div class="exgrid" style="margin-top:6px">
@@ -328,6 +367,7 @@ function render() {
       <button class="btn small" data-act="weekDup">Copy week ${week + 1} to a new week</button>
       ${plan.weeks.length > 1 ? `<button class="btn small danger" data-act="weekDel">Delete week ${week + 1}</button>` : ""}
     </div>
+    <p class="sub" style="font-size:.85rem;margin:0 0 10px">Renaming an exercise keeps its logged history. Switching to a different exercise? Use ↻ Replace so its history stays separate.</p>
     <div class="card">
       <span class="tag">Week ${week + 1} focus (optional)</span>
       <input data-wk="title" value="${esc(w.title)}" placeholder="Week title (e.g. Week 1: Establish your baseline)" style="margin-top:8px">
@@ -372,14 +412,24 @@ $("main").addEventListener("click", (e) => {
   switch (b.dataset.act) {
     case "week": week = +b.dataset.w; break;
     case "weekAdd": plan.weeks.push({ title:"", note:"", days: [] }); week = plan.weeks.length - 1; break;
-    case "weekDup": plan.weeks.splice(week + 1, 0, clone(plan.weeks[week])); week++; break;
+    case "weekDup": {
+      const copy = clone(plan.weeks[week]);   // same keys (history links across weeks), new ids
+      for (const d of copy.days) if (d.rest === undefined) { d.id = newId("d"); for (const x of d.exercises) x.id = newId("x"); }
+      plan.weeks.splice(week + 1, 0, copy); week++; break;
+    }
     case "weekDel": if (!confirm(`Delete week ${week + 1}?`)) return; plan.weeks.splice(week, 1); week = Math.max(0, week - 1); break;
-    case "dayAdd": days.push({ title: "Day " + (days.filter(d => d.rest === undefined).length + 1), focus: "", exercises: [{ name:"", pres:"", note:"", rest:"", hotel:"", video:"" }] }); break;
+    case "dayAdd": days.push({ id: newId("d"), title: "Day " + (days.filter(d => d.rest === undefined).length + 1), focus: "", exercises: [newEx()] }); break;
     case "restAdd": days.push({ rest: "Rest or a 20–30 min walk." }); break;
     case "dayUp": if (!swap(days, i, i - 1)) return; break;
     case "dayDown": if (!swap(days, i, i + 1)) return; break;
     case "dayDel": if (!confirm("Remove this day?")) return; days.splice(i, 1); break;
-    case "exAdd": days[i].exercises.push({ name:"", pres:"", note:"", rest:"", hotel:"", video:"" }); break;
+    case "exAdd": days[i].exercises.push(newEx()); break;
+    case "exReplace": {
+      if (!confirm("Replace this with a different exercise? Anything already logged stays with the old exercise's history.")) return;
+      const x = days[i].exercises[j];
+      Object.assign(x, { id: newId("x"), key: newId("k"), baseline: "", name: "", note: "", hotel: "", video: "" });
+      break;
+    }
     case "exUp": if (!swap(days[i].exercises, j, j - 1)) return; break;
     case "exDown": if (!swap(days[i].exercises, j, j + 1)) return; break;
     case "exDel": days[i].exercises.splice(j, 1); break;
@@ -392,6 +442,7 @@ $("main").addEventListener("click", (e) => {
 /* ===== save / delete ===== */
 function buildPayload() {
   const clean = (s) => String(s || "").trim();
+  ensureIds(plan);   // safety net: nothing is ever saved without ids
   const out = { brand: plan.brand || "reset", weeks: [] };
   if (clean(plan.label)) out.label = clean(plan.label);
   if (clean(plan.lede)) out.lede = clean(plan.lede);
@@ -405,12 +456,12 @@ function buildPayload() {
       const exercises = [];
       for (const x of d.exercises) {
         if (!clean(x.name)) throw { week: w, msg: `Week ${w + 1}, ${title}: an exercise is missing its name.` };
-        const ex = { name: clean(x.name) };
-        for (const f of ["pres", "note", "rest", "hotel", "video"]) if (clean(x[f])) ex[f] = clean(x[f]);
+        const ex = { id: x.id, key: x.key, name: clean(x.name) };
+        for (const f of ["baseline", "pres", "note", "rest", "hotel", "video"]) if (clean(x[f])) ex[f] = clean(x[f]);
         exercises.push(ex);
       }
       if (!exercises.length) throw { week: w, msg: `Week ${w + 1}, ${title}: add at least one exercise, or make it a rest day.` };
-      const day = { title, exercises };
+      const day = { id: d.id, title, exercises };
       if (clean(d.focus)) day.focus = clean(d.focus);
       days.push(day);
     }
