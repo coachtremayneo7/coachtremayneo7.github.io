@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Coach TreMayne">
 <meta name="theme-color" content="#0f1319">
+<meta name="referrer" content="no-referrer">
 <meta name="description" content="Your progress — weight, weekly consistency, and check-in history.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f1319'/%3E%3Ctext x='32' y='44' font-size='34' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
 
@@ -87,6 +88,21 @@ border:1px solid var(--line); color:var(--ink); background:var(--card2); }
 background:var(--card2); border:1px solid var(--line); border-radius:12px; padding:9px 11px;
 white-space:pre-wrap; word-break:break-word; }
 
+/* Progress photos (added 9/2026) */
+.ph-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ph-grid.one{ grid-template-columns:1fr; max-width:240px; margin:0 auto; }
+.ph{ background:var(--card2); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.ph img{ display:block; width:100%; aspect-ratio:3/4; object-fit:cover; background:#0b0e13; }
+.ph .cap{ display:flex; justify-content:space-between; align-items:center; gap:6px; padding:8px 10px; font-size:12px; color:var(--muted); font-weight:700; }
+.ph .cap button{ background:none; border:0; color:var(--muted); font:inherit; font-weight:600; text-decoration:underline; cursor:pointer; padding:0; }
+.ph-lead{ margin:0; font-size:14.5px; }
+.ph-btn{ display:block; width:100%; margin-top:14px; padding:13px; border-radius:12px; border:1px solid var(--violet);
+background:rgba(139,124,246,.14); color:#c9c1ff; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit; }
+.ph-btn:disabled{ opacity:.5; cursor:default; }
+.ph-note{ font-size:12.5px; color:var(--muted); margin-top:10px; text-align:center; }
+.ph-msg{ font-size:13px; margin-top:10px; text-align:center; color:#a7f3c4; font-weight:600; }
+.ph-msg:empty{ display:none; }
+.ph-msg.err{ color:#fca5a5; }
 .state{ text-align:center; color:var(--muted); font-size:15px; padding:34px 10px; }
 .hide{ display:none; }
 
@@ -235,6 +251,9 @@ html += '<div class="spark">' + sparkline(pts) +
 }
 html += '</div></section>'; // card + section
 
+// ---------- PROGRESS PHOTOS (filled in by loadPhotos) ----------
+html += '<section class="section" id="photosec"><h2>Progress photos</h2><div class="card"><div class="ph-note" style="margin:0">Loading photos…</div></div></section>';
+
 // ---------- CONSISTENCY ----------
 var target = (d.workouts_per_week != null && !isNaN(d.workouts_per_week)) ? Number(d.workouts_per_week) : null;
 if (history.length) {
@@ -282,7 +301,137 @@ html += '<section class="section"><div class="state" style="padding:24px 10px">'
 
 el.content.innerHTML = html;
 el.content.classList.remove("hide");
+loadPhotos();
 }
+
+// ================= PROGRESS PHOTOS (added 9/2026) =================
+// Photos are private: the API only returns them for this client's own code (?c=).
+var PHOTO_EVERY_DAYS = 28;
+var photos = [];
+var PHOTO_ERRORS = {
+not_an_image: "That file isn't a photo. Try again with a picture.",
+photo_too_large: "That photo is too large. Try a different one.",
+photo_limit_reached: "You've reached the photo limit. Ask Coach to clear out older ones.",
+unknown_client: "This link isn't working. Open the link Coach sent you.",
+photos_not_configured: "Photos aren't available right now. Let Coach know."
+};
+function photoUrl(id) {
+return API_BASE + "/photos/view?c=" + encodeURIComponent(token) + "&id=" + encodeURIComponent(id);
+}
+function tsDate(ts) { return new Date(String(ts).replace(" ", "T") + "Z"); }
+function daysSince(ts) { var d = tsDate(ts); return isNaN(d) ? 0 : (Date.now() - d.getTime()) / 86400000; }
+function photoTile(p, label) {
+var u = photoUrl(p.id);
+return '<div class="ph"><a href="' + u + '" target="_blank" rel="noopener noreferrer">' +
+'<img src="' + u + '" alt="' + label + ' photo" loading="lazy" referrerpolicy="no-referrer"></a>' +
+'<div class="cap"><span>' + label + ' · ' + esc(fmtDate(String(p.taken_at).slice(0, 10))) + '</span>' +
+'<button type="button" data-del="' + esc(p.id) + '">Remove</button></div></div>';
+}
+async function loadPhotos() {
+var sec = document.getElementById("photosec");
+if (!sec) return;
+try {
+var r = await fetch(API_BASE + "/photos?c=" + encodeURIComponent(token));
+var d = await r.json();
+if (!d || d.ok !== true) { sec.classList.add("hide"); return; }
+photos = Array.isArray(d.photos) ? d.photos : [];
+renderPhotos();
+} catch (err) {
+sec.innerHTML = '<h2>Progress photos</h2><div class="card"><div class="ph-msg err">Couldn\'t load your photos just now.</div></div>';
+}
+}
+function renderPhotos(msg, isErr) {
+var sec = document.getElementById("photosec");
+if (!sec) return;
+var h = '<h2>Progress photos</h2><div class="card">';
+if (!photos.length) {
+h += '<p class="ph-lead">Snap a starting photo now. In 4 weeks you\'ll be glad you did. ' +
+'Same spot, same lighting, same pose every time.</p>' +
+'<button type="button" class="ph-btn" data-add>Add your starting photo</button>';
+} else {
+var first = photos[0], last = photos[photos.length - 1];
+h += '<div class="ph-grid' + (photos.length === 1 ? ' one' : '') + '">' +
+photoTile(first, "Start") + (photos.length > 1 ? photoTile(last, "Latest") : '') + '</div>';
+var days = daysSince(last.taken_at);
+if (days >= PHOTO_EVERY_DAYS) {
+h += '<button type="button" class="ph-btn" data-add>Time for your 4-week photo</button>';
+} else {
+var left = Math.max(1, Math.ceil(PHOTO_EVERY_DAYS - days));
+h += '<div class="ph-note" style="margin-top:14px">Next progress photo in ' + left + ' day' + (left === 1 ? '' : 's') + '.</div>';
+}
+if (photos.length > 2) h += '<div class="ph-note">' + photos.length + ' photos saved</div>';
+}
+h += '<div class="ph-msg' + (isErr ? ' err' : '') + '" id="phmsg">' + (msg ? esc(msg) : '') + '</div>';
+h += '<div class="ph-note">\uD83D\uDD12 Only you and Coach can see these.</div></div>';
+h += '<input type="file" id="phfile" accept="image/*" hidden>';
+sec.innerHTML = h;
+
+var fileEl = document.getElementById("phfile");
+var addBtn = sec.querySelector("[data-add]");
+if (addBtn) addBtn.addEventListener("click", function () { fileEl.click(); });
+fileEl.addEventListener("change", function () { if (fileEl.files && fileEl.files[0]) uploadPhoto(fileEl.files[0]); });
+Array.prototype.forEach.call(sec.querySelectorAll("[data-del]"), function (b) {
+b.addEventListener("click", function () { removePhoto(b.getAttribute("data-del")); });
+});
+}
+function setPhotoBusy(text) {
+var m = document.getElementById("phmsg");
+if (m) { m.className = "ph-msg"; m.style.color = "var(--muted)"; m.textContent = text; }
+var sec = document.getElementById("photosec");
+if (sec) Array.prototype.forEach.call(sec.querySelectorAll("button"), function (b) { b.disabled = true; });
+}
+// Shrink on the phone before upload: max 1600px, JPEG ~0.82 quality (~200-400 KB).
+function shrinkPhoto(file) {
+return new Promise(function (resolve, reject) {
+var url = URL.createObjectURL(file);
+var img = new Image();
+img.onload = function () {
+var max = 1600, w = img.naturalWidth, hh = img.naturalHeight;
+var s = Math.min(1, max / Math.max(w, hh));
+var c = document.createElement("canvas");
+c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(hh * s));
+c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+URL.revokeObjectURL(url);
+c.toBlob(function (b) { b ? resolve(b) : reject(new Error("encode")); }, "image/jpeg", 0.82);
+};
+img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("decode")); };
+img.src = url;
+});
+}
+async function uploadPhoto(file) {
+setPhotoBusy("Preparing your photo…");
+var blob;
+try { blob = await shrinkPhoto(file); }
+catch (e) { return renderPhotos("That photo couldn't be opened. Try a different one.", true); }
+setPhotoBusy("Uploading…");
+try {
+var r = await fetch(API_BASE + "/photos/upload?c=" + encodeURIComponent(token), {
+method: "POST", headers: { "content-type": "image/jpeg" }, body: blob
+});
+var d = await r.json().catch(function () { return {}; });
+if (!r.ok || !d.ok || !d.photo) throw new Error(PHOTO_ERRORS[d.error] || "Upload didn't go through. Try again in a minute.");
+photos.push(d.photo);
+renderPhotos("Saved. Nice work.");
+} catch (e) {
+renderPhotos(e.message || "Upload didn't go through. Try again in a minute.", true);
+}
+}
+async function removePhoto(id) {
+if (!confirm("Remove this photo? This can't be undone.")) return;
+setPhotoBusy("Removing…");
+try {
+var r = await fetch(API_BASE + "/photos/delete?c=" + encodeURIComponent(token), {
+method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: id })
+});
+var d = await r.json().catch(function () { return {}; });
+if (!r.ok || !d.ok) throw new Error("Couldn't remove that photo. Try again.");
+photos = photos.filter(function (p) { return p.id !== id; });
+renderPhotos("Photo removed.");
+} catch (e) {
+renderPhotos(e.message, true);
+}
+}
+// ================= end PROGRESS PHOTOS =================
 
 function statCol(k, v, u) {
 return '<div class="stat"><div class="k">' + k + '</div><div class="v">' +
