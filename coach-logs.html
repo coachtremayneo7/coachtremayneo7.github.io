@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Client Workouts — Coach TreMayne</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --brand-d:#0f9488; --bg:#f8fafc; --soft:#f1f5f9;
+          --done:#0f766e; --part:#b45309; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:var(--bg); color:var(--ink); line-height:1.5; }
+  .wrap { max-width:760px; margin:0 auto; padding:22px 16px 64px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .bar input { flex:1; min-width:180px; }
+  input, select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; font-size:.95rem; background:#fff; color:var(--ink); }
+  label { display:block; font-weight:600; font-size:.85rem; margin:12px 0 5px; }
+  .btn { padding:10px 16px; border-radius:10px; font:inherit; font-weight:700; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .note { text-align:center; color:var(--muted); padding:24px 0; }
+  .note.err { color:#991b1b; }
+  .back { display:inline-block; margin-bottom:14px; color:var(--muted); text-decoration:none; font-size:.9rem; }
+  h2 { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:24px 0 10px; }
+  .summary { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:.92rem; }
+  .limit { background:var(--soft); border-radius:10px; padding:10px 12px; font-size:.85rem; color:var(--muted); margin-top:10px; }
+  details.day { background:#fff; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; }
+  details.day > summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
+  details.day > summary::-webkit-details-marker { display:none; }
+  .dname { font-weight:700; }
+  .dname small { font-weight:500; color:var(--muted); }
+  .st { font-size:.85rem; font-weight:700; white-space:nowrap; }
+  .st.done { color:var(--done); } .st.part { color:var(--part); } .st.none { color:var(--muted); font-weight:500; }
+  .exl { border-top:1px solid var(--line); padding:10px 14px; }
+  .exl .n { font-weight:600; }
+  .exl .n button { background:none; border:0; padding:0; font:inherit; color:var(--brand-d); cursor:pointer; text-decoration:underline; text-align:left; }
+  .exl .s { font-variant-numeric:tabular-nums; }
+  .exl .m { color:var(--muted); font-size:.82rem; }
+  .tag { display:inline-block; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:1px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); margin-left:6px; }
+  .tag.hotel { color:#c2410c; border-color:#fdba74; }
+  .hist { background:#fff; border:2px solid var(--brand); border-radius:14px; padding:14px; margin:0 0 16px; }
+  .hist h3 { margin:0 0 8px; font-size:1.05rem; }
+  .hrow { border-top:1px solid var(--line); padding:8px 0; }
+  .hrow:first-of-type { border-top:0; }
+  .lock { font-size:.82rem; color:var(--muted); text-align:center; margin-top:18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="coach-hub.html">‹ Coach hub</a>
+  <h1>Client workouts</h1>
+  <p class="sub">What each client actually logged. View-only.</p>
+
+  <div class="bar">
+    <input id="token" type="password" placeholder="Coach review token">
+    <button class="btn primary" id="load">Load</button>
+  </div>
+
+  <div id="clientBox" hidden>
+    <label for="client">Client</label>
+    <select id="client"></select>
+  </div>
+
+  <div id="hist"></div>
+  <div id="main"><p class="note">Enter your review token, then Load.</p></div>
+  <p class="lock">🔒 Logs load straight from your private database and aren't saved on this device.</p>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+// Same saved settings as review.html / plans.html / coach hub (shared on this device).
+const API = (localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev").replace(/\/+$/, "");
+$("token").value = localStorage.getItem("ci_token") || "";
+const tok = () => $("token").value.trim();
+const auth = () => ({ authorization: `Bearer ${tok()}` });
+
+let clients = [], logs = [], plan = null;
+const byTime = (a, b) => ((a.logged_on || "") + (a.created_at || "")).localeCompare((b.logged_on || "") + (b.created_at || ""));
+const day = (d) => { const x = new Date(String(d) + "T12:00:00"); return isNaN(x) ? String(d || "") : x.toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
+const sets = (s) => (s || []).length ? s.map(x => (x.w != null ? x.w + " × " : "") + (x.r != null ? x.r : "—")).join(", ") : "Done";
+const edited = (l) => l.updated_at && l.created_at && l.updated_at !== l.created_at;
+const tags = (l) => `${l.version === "hotel" ? `<span class="tag hotel">Hotel</span>` : `<span class="tag">Gym</span>`}${edited(l) ? `<span class="tag">Edited</span>` : ""}`;
+
+async function loadClients() {
+  if (!tok()) { $("main").innerHTML = `<p class="note">Enter your review token, then Load.</p>`; return; }
+  localStorage.setItem("ci_token", tok());
+  $("main").innerHTML = `<p class="note">Loading clients…</p>`;
+  try {
+    const r = await fetch(`${API}/coach/clients`, { headers: auth() });
+    if (r.status === 401) throw new Error("Token rejected. Check it and try again.");
+    if (!r.ok) throw new Error(`Couldn't reach the API (HTTP ${r.status}).`);
+    clients = (await r.json()).clients || [];
+    $("client").innerHTML = `<option value="">Choose a client…</option>` +
+      clients.map(c => `<option value="${esc(c.id)}">${esc(c.name || c.id)}</option>`).join("");
+    $("clientBox").hidden = false;
+    $("main").innerHTML = `<p class="note">Pick a client above.</p>`;
+    const want = new URLSearchParams(location.search).get("client");
+    if (want && clients.some(c => c.id === want)) { $("client").value = want; loadLogs(want); }
+  } catch (e) {
+    $("clientBox").hidden = true;
+    $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+  }
+}
+
+async function loadLogs(clientId) {
+  $("hist").innerHTML = "";
+  const c = clients.find(x => x.id === clientId);
+  if (!c) { $("main").innerHTML = `<p class="note">Pick a client above.</p>`; return; }
+  history.replaceState(null, "", "?client=" + encodeURIComponent(clientId));
+  $("main").innerHTML = `<p class="note">Loading ${esc(c.name || c.id)}'s workouts…</p>`;
+  try {
+    const [lr, pr] = await Promise.all([
+      fetch(`${API}/coach/logs?client_id=${encodeURIComponent(clientId)}`, { headers: auth() }),
+      fetch(`${API}/coach/workout-plan?client_id=${encodeURIComponent(clientId)}`, { headers: auth() }),
+    ]);
+    if (lr.status === 401) throw new Error("Token rejected.");
+    if (!lr.ok) throw new Error(`Couldn't load workouts (HTTP ${lr.status}).`);
+    logs = ((await lr.json()).logs || []).sort(byTime);
+    plan = null;
+    if (pr.ok) { const d = await pr.json(); if (d.has_plan && d.plan && Array.isArray(d.plan.weeks)) plan = d.plan; }
+    render(String(c.name || "This client").split(/\s+/)[0]);
+  } catch (e) {
+    $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+  }
+}
+
+function latest(list) { return list && list.length ? list[list.length - 1] : null; }
+
+function render(first) {
+  const exByItem = new Map(), doneByDay = new Map();
+  for (const l of logs) {
+    const m = l.kind === "workout" ? doneByDay : exByItem;
+    if (!m.has(l.item_id)) m.set(l.item_id, []);
+    m.get(l.item_id).push(l);
+  }
+  const nDone = logs.filter(l => l.kind === "workout").length, nEx = logs.filter(l => l.kind === "exercise").length;
+  let h = `<div class="summary"><b>${esc(first)}</b> · ${nDone} workout${nDone === 1 ? "" : "s"} completed · ${nEx} exercise${nEx === 1 ? "" : "s"} logged</div>`;
+  if (!logs.length && !plan) { $("main").innerHTML = h + `<p class="note">${esc(first)} hasn't logged anything yet.</p>`; return; }
+
+  if (plan) {
+    const known = new Set();
+    plan.weeks.forEach((w, i) => {
+      h += `<h2>Week ${i + 1}${w.title ? " · " + esc(w.title.replace(/^Week\s*\d+\s*[:·-]?\s*/i, "")) : ""}</h2>`;
+      for (const d of (w.days || [])) {
+        if (d.rest !== undefined || !d.id) continue;
+        known.add(d.id);
+        const exs = (d.exercises || []).filter(x => x.id);
+        exs.forEach(x => known.add(x.id));
+        const logged = exs.filter(x => exByItem.has(x.id)).length;
+        const done = latest(doneByDay.get(d.id));
+        const st = done ? `<span class="st done">Completed · ${logged} of ${exs.length}</span>`
+          : logged ? `<span class="st part">Partial · ${logged} of ${exs.length}</span>` : `<span class="st none">—</span>`;
+        const when = done ? day(done.logged_on) : logged ? day(latest(exs.flatMap(x => exByItem.get(x.id) || []).sort(byTime)).logged_on) : "";
+        h += `<details class="day"><summary><span class="dname">${esc(d.title)}${d.focus ? ` <small>${esc(d.focus)}</small>` : ""}${when ? ` <small>· ${esc(when)}</small>` : ""}</span>${st}</summary>`;
+        for (const x of exs) {
+          const l = latest(exByItem.get(x.id));
+          let base = "";
+          if (x.baseline) {
+            const b = latest(exByItem.get(x.baseline));
+            base = `<div class="m">Baseline: ${b ? esc(sets(b.sets)) + " (" + esc(day(b.logged_on)) + ")" : "not logged"}</div>`;
+          }
+          h += `<div class="exl"><div class="n">${x.key ? `<button data-key="${esc(x.key)}">${esc(x.name)}</button>` : esc(x.name)}</div>`
+            + (l ? `<div class="s">${esc(sets(l.sets))}${tags(l)}</div>` : `<div class="m">Not logged</div>`) + base + `</div>`;
+        }
+        h += `</details>`;
+      }
+    });
+    const orphans = logs.filter(l => !known.has(l.item_id));
+    if (orphans.length) {
+      h += `<h2>Logged items no longer in the current plan</h2>`;
+      h += orphans.map(l => `<div class="exl" style="background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:6px">`
+        + `<div class="n">${esc(l.name_snapshot || "Workout")}</div><div class="m">${l.week_no ? "Week " + l.week_no + " · " : ""}${esc(l.day_title || "")} · ${esc(day(l.logged_on))}</div>`
+        + `<div class="s">${l.kind === "workout" ? "Workout completed" : esc(sets(l.sets))}${tags(l)}</div></div>`).join("");
+    }
+  } else {
+    // V1 limitation: template clients have no plan here, so we can only list what they logged.
+    h += `<div class="limit">This client is on a standard template, so only logged days show (no "missed day" markers). That's a V1 limitation.</div>`;
+    const groups = new Map();
+    for (const l of logs) {
+      const k = (l.logged_on || "") + "|" + (l.day_title || "");
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(l);
+    }
+    for (const [k, list] of [...groups.entries()].reverse()) {
+      const [date, title] = k.split("|");
+      const done = list.some(l => l.kind === "workout");
+      const exs = list.filter(l => l.kind === "exercise");
+      h += `<details class="day"><summary><span class="dname">${esc(title || "Workout")} <small>· ${esc(day(date))}</small></span>`
+        + `<span class="st ${done ? "done" : "part"}">${done ? "Completed" : "Partial"} · ${exs.length} logged</span></summary>`;
+      h += exs.map(l => `<div class="exl"><div class="n">${l.exercise_key ? `<button data-key="${esc(l.exercise_key)}">${esc(l.name_snapshot)}</button>` : esc(l.name_snapshot)}</div><div class="s">${esc(sets(l.sets))}${tags(l)}</div></div>`).join("");
+      h += `</details>`;
+    }
+  }
+  $("main").innerHTML = h;
+}
+
+function showHistory(key) {
+  const list = logs.filter(l => l.kind === "exercise" && l.exercise_key === key);
+  if (!list.length) return;
+  const name = latest(list).name_snapshot || "Exercise";
+  $("hist").innerHTML = `<div class="hist"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>${esc(name)} — history</h3><button class="btn" data-close>Close</button></div>`
+    + list.map(l => `<div class="hrow"><div class="m">${l.week_no ? "Week " + l.week_no + " · " : ""}${esc(day(l.logged_on))}${l.name_snapshot && l.name_snapshot !== name ? " · logged as “" + esc(l.name_snapshot) + "”" : ""}</div>`
+      + `<div class="s">${esc(sets(l.sets))}${tags(l)}</div></div>`).join("") + `</div>`;
+  $("hist").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("main").addEventListener("click", (e) => { const b = e.target.closest("[data-key]"); if (b) { e.preventDefault(); showHistory(b.dataset.key); } });
+$("hist").addEventListener("click", (e) => { if (e.target.closest("[data-close]")) $("hist").innerHTML = ""; });
+$("load").addEventListener("click", loadClients);
+$("client").addEventListener("change", (e) => loadLogs(e.target.value));
+if (tok()) loadClients();
+</script>
+</body>
+</html>
