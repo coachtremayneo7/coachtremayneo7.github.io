@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Client Photos — Coach TreMayne</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --brand-d:#0f9488; --bg:#f8fafc; --danger:#dc2626; --soft:#f1f5f9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:var(--bg); color:var(--ink); line-height:1.5; }
+  .wrap { max-width:760px; margin:0 auto; padding:22px 16px 64px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .bar input { flex:1; min-width:180px; }
+  input, select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; font-size:.95rem; background:#fff; color:var(--ink); }
+  label { display:block; font-weight:600; font-size:.85rem; margin:12px 0 5px; }
+  .btn { padding:10px 16px; border-radius:10px; font:inherit; font-weight:700; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .note { text-align:center; color:var(--muted); padding:24px 0; }
+  .note.err { color:#991b1b; }
+  h2 { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 0 10px; }
+  .compare { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+  .ph { background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .ph img { display:block; width:100%; aspect-ratio:3/4; object-fit:cover; background:var(--soft); cursor:zoom-in; }
+  .ph .cap { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:8px 10px; font-size:.8rem; color:var(--muted); font-weight:600; }
+  .ph .cap button { background:none; border:0; color:var(--danger); font:inherit; cursor:pointer; padding:0; text-decoration:underline; }
+  .lock { font-size:.82rem; color:var(--muted); text-align:center; margin-top:18px; }
+  .back { display:inline-block; margin-bottom:14px; color:var(--muted); text-decoration:none; font-size:.9rem; }
+  .zoom { position:fixed; inset:0; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; padding:16px; z-index:50; }
+  .zoom.open { display:flex; }
+  .zoom img { max-width:100%; max-height:100%; border-radius:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="coach-hub.html">‹ Coach hub</a>
+  <h1>Client photos</h1>
+  <p class="sub">Private progress photos. Only you and that client can see them.</p>
+
+  <div class="bar">
+    <input id="token" type="password" placeholder="Coach review token">
+    <button class="btn primary" id="load">Load</button>
+  </div>
+
+  <div id="clientBox" hidden>
+    <label for="client">Client</label>
+    <select id="client"></select>
+  </div>
+
+  <div id="main"><p class="note">Enter your review token, then Load.</p></div>
+  <p class="lock">🔒 Photos load straight from your private storage and aren't saved on this device.</p>
+</div>
+
+<div class="zoom" id="zoom"><img id="zoomImg" alt="Full-size photo"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+// Same saved settings as review.html / plans.html / coach hub (shared on this device).
+const API = (localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev").replace(/\/+$/, "");
+$("token").value = localStorage.getItem("ci_token") || "";
+const tok = () => $("token").value.trim();
+const auth = () => ({ authorization: `Bearer ${tok()}` });
+
+let clients = [], blobUrls = [];
+
+function fmt(ts) {
+  const d = new Date(String(ts).replace(" ", "T") + "Z");
+  return isNaN(d) ? String(ts).slice(0, 10) : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function clearBlobs() { blobUrls.forEach(u => URL.revokeObjectURL(u)); blobUrls = []; }
+
+async function loadClients() {
+  if (!tok()) { $("main").innerHTML = `<p class="note">Enter your review token, then Load.</p>`; return; }
+  localStorage.setItem("ci_token", tok());
+  $("main").innerHTML = `<p class="note">Loading clients…</p>`;
+  try {
+    const r = await fetch(`${API}/coach/clients`, { headers: auth() });
+    if (r.status === 401) throw new Error("Token rejected. Check it and try again.");
+    if (!r.ok) throw new Error(`Couldn't reach the API (HTTP ${r.status}).`);
+    clients = (await r.json()).clients || [];
+    $("client").innerHTML = `<option value="">Choose a client…</option>` +
+      clients.map(c => `<option value="${esc(c.id)}">${esc(c.name || c.id)}</option>`).join("");
+    $("clientBox").hidden = false;
+    $("main").innerHTML = `<p class="note">Pick a client above.</p>`;
+    const want = new URLSearchParams(location.search).get("client");
+    if (want && clients.some(c => c.id === want)) { $("client").value = want; loadPhotos(want); }
+  } catch (e) {
+    $("clientBox").hidden = true;
+    $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+  }
+}
+
+async function photoBlobUrl(id) {
+  const r = await fetch(`${API}/coach/photo?id=${encodeURIComponent(id)}`, { headers: auth() });
+  if (!r.ok) throw new Error("photo " + r.status);
+  const u = URL.createObjectURL(await r.blob());
+  blobUrls.push(u);
+  return u;
+}
+
+function tile(p, label) {
+  return `<div class="ph"><img data-id="${esc(p.id)}" alt="${esc(label || "Progress")} photo">
+    <div class="cap"><span>${label ? esc(label) + " · " : ""}${esc(fmt(p.taken_at))}</span>
+    <button type="button" data-del="${esc(p.id)}">Delete</button></div></div>`;
+}
+
+async function loadPhotos(clientId) {
+  clearBlobs();
+  const c = clients.find(x => x.id === clientId);
+  if (!c) { $("main").innerHTML = `<p class="note">Pick a client above.</p>`; return; }
+  history.replaceState(null, "", "?client=" + encodeURIComponent(clientId));
+  $("main").innerHTML = `<p class="note">Loading ${esc(c.name || c.id)}'s photos…</p>`;
+  try {
+    const r = await fetch(`${API}/coach/photos?client_id=${encodeURIComponent(clientId)}`, { headers: auth() });
+    if (r.status === 401) throw new Error("Token rejected.");
+    if (!r.ok) throw new Error(`Couldn't load photos (HTTP ${r.status}).`);
+    const photos = (await r.json()).photos || [];
+    const first = String(c.name || "This client").split(/\s+/)[0];
+    if (!photos.length) {
+      $("main").innerHTML = `<p class="note">${esc(first)} hasn't added any progress photos yet.</p>`;
+      return;
+    }
+    let h = "";
+    if (photos.length > 1) {
+      h += `<h2>Start vs latest</h2><div class="compare">${tile(photos[0], "Start")}${tile(photos[photos.length - 1], "Latest")}</div>`;
+    }
+    h += `<h2>All photos (${photos.length})</h2><div class="grid">${photos.slice().reverse().map(p => tile(p, "")).join("")}</div>`;
+    $("main").innerHTML = h;
+    for (const img of $("main").querySelectorAll("img[data-id]")) {
+      photoBlobUrl(img.dataset.id).then(u => { img.src = u; }).catch(() => { img.alt = "Couldn't load"; });
+    }
+  } catch (e) {
+    $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+  }
+}
+
+$("main").addEventListener("click", async (e) => {
+  const img = e.target.closest("img[data-id]");
+  if (img && img.src) { $("zoomImg").src = img.src; $("zoom").classList.add("open"); return; }
+  const del = e.target.closest("[data-del]");
+  if (!del) return;
+  if (!confirm("Delete this photo? It's removed for you and the client, and can't be undone.")) return;
+  del.disabled = true;
+  try {
+    const r = await fetch(`${API}/coach/photos/delete`, { method: "POST",
+      headers: { ...auth(), "content-type": "application/json" }, body: JSON.stringify({ id: del.dataset.del }) });
+    if (!r.ok) throw new Error();
+    loadPhotos($("client").value);
+  } catch { del.disabled = false; alert("Couldn't delete that photo. Try again."); }
+});
+$("zoom").addEventListener("click", () => $("zoom").classList.remove("open"));
+$("load").addEventListener("click", loadClients);
+$("client").addEventListener("change", (e) => loadPhotos(e.target.value));
+if (tok()) loadClients();
+</script>
+</body>
+</html>
