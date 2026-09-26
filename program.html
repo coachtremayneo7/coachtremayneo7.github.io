@@ -428,7 +428,14 @@ return !Number.isFinite(t) || Date.now() - t < LOG.editDays * 86400000;
 }
 function setCount(pres) { const m = /^\s*(\d+)\s*×/.exec(pres || ""); return m ? Math.min(+m[1], 20) : 0; }
 function unitFor(pres) { const s = pres || ""; return /\d\s*m\b|m\/side/.test(s) ? "m" : /\d\s*s\b|\ds\b|s\/side|sec/.test(s) ? "sec" : "reps"; }
-function fmtSets(sets) { return (sets || []).map(s => (s.w != null ? s.w + " × " : "") + (s.r != null ? s.r : "—")).join(", "); }
+// Units in summaries: reps "95 × 8", timed "75 sec", distance "50 × 40 m".
+function fmtSets(sets, unit) {
+const u = unit === "sec" ? " sec" : unit === "m" ? " m" : "";
+return (sets || []).map(s => (s.w != null ? s.w + " × " : "") + (s.r != null ? s.r + u : "—")).join(", ");
+}
+// No weight box on timed holds and bodyweight moves (plank, push-up, bodyweight squat...). "Weighted ..." keeps it.
+function noWeight(ex, unit) { const n = ex.name || ""; return !/weighted/i.test(n) && (unit === "sec" || /bodyweight|push-?up|plank/i.test(n)); }
+function unitOf(itemId) { const it = LOG.items[itemId]; return it ? unitFor(it.ex.pres) : "reps"; }
 function whenLabel(l) { const wk = l.week_no ? "Week " + l.week_no : ""; const d = l.logged_on ? new Date(l.logged_on + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : ""; return [wk, d].filter(Boolean).join(" · "); }
 
 async function startLogging() {
@@ -492,7 +499,7 @@ document.querySelectorAll("[data-badge]").forEach(el => {
 const e = entryFor(el.dataset.badge);
 if (!e) { el.className = "logline todo"; el.textContent = "Tap to log"; return; }
 el.className = "logline";
-el.textContent = "✓ " + ((e.sets || []).length ? fmtSets(e.sets) : "Done") + (isPending(e.id) ? " · waiting to sync" : "");
+el.textContent = "✓ " + ((e.sets || []).length ? fmtSets(e.sets, unitOf(el.dataset.badge)) : "Done") + (isPending(e.id) ? " · waiting to sync" : "");
 });
 document.querySelectorAll("[data-status]").forEach(el => { const s = statusFor(el.dataset.status); el.textContent = s.text; el.className = "lp-status " + s.cls; });
 document.querySelectorAll("[data-finish]").forEach(el => renderFinish(el));
@@ -505,36 +512,37 @@ const entry = entryFor(itemId);
 const editable = canEdit(entry);
 const prev = prevFor(ex, entry && entry.id);
 const base = ex.baseline ? allLogs().filter(l => l.item_id === ex.baseline).sort(byTime).pop() : null;
-const n = setCount(ex.pres), unit = unitFor(ex.pres);
+const n = setCount(ex.pres), unit = unitFor(ex.pres), noW = noWeight(ex, unit);
 let h = "";
-if (prev) h += `<p class="lp-ref">Last time (${esc(whenLabel(prev))}): <b>${esc(fmtSets(prev.sets))}</b></p>`;
-if (ex.baseline) h += `<p class="lp-ref">Baseline${base && base.week_no ? " (Week " + base.week_no + ")" : ""}: <b>${base ? esc(fmtSets(base.sets)) : "not logged yet"}</b></p>`;
+if (prev) h += `<p class="lp-ref">Last time (${esc(whenLabel(prev))}): <b>${esc(fmtSets(prev.sets, unit))}</b></p>`;
+if (ex.baseline) h += `<p class="lp-ref">Baseline${base && base.week_no ? " (Week " + base.week_no + ")" : ""}: <b>${base ? esc(fmtSets(base.sets, unit)) : "not logged yet"}</b></p>`;
 if (!editable) {
-h += `<p class="lp-ref">Logged: <b>${esc((entry.sets || []).length ? fmtSets(entry.sets) : "Done")}</b></p><p class="lp-ref">Locked (older than ${LOG.editDays} days).</p>`;
+h += `<p class="lp-ref">Logged: <b>${esc((entry.sets || []).length ? fmtSets(entry.sets, unit) : "Done")}</b></p><p class="lp-ref">Locked (older than ${LOG.editDays} days).</p>`;
 } else if (!n) {
 h += `<div class="lp-btns">${entry ? `<button class="lpbtn" data-lp="del">Undo done</button>` : `<button class="lpbtn primary" data-lp="done">Mark done</button>`}</div>`;
 } else {
 const sets = entry && (entry.sets || []).length ? entry.sets : Array.from({ length: n }, () => ({ w: null, r: null }));
-h += `<div data-sets>` + sets.map((s, k) => setRow(k, s, prev && prev.sets[k], unit)).join("") + `</div>`;
+h += `<div data-sets>` + sets.map((s, k) => setRow(k, s, prev && prev.sets[k], unit, noW)).join("") + `</div>`;
 h += `<div class="lp-btns"><button class="lpbtn" data-lp="add">+ Set</button><button class="lpbtn" data-lp="remove">− Set</button></div>`;
 h += `<div class="lp-btns"><button class="lpbtn primary" data-lp="save">Save</button>${entry ? `<button class="lpbtn" data-lp="del">Delete</button>` : ""}</div>`;
 }
 h += `<div class="lp-status" data-status="${esc(itemId)}"></div>`;
-panel.innerHTML = h; panel.hidden = false; panel.dataset.unit = unit;
+panel.innerHTML = h; panel.hidden = false; panel.dataset.unit = unit; panel.dataset.now = noW ? "1" : "";
 LOG.open.add(itemId);
 refreshLog();
 }
-function setRow(k, s, hint, unit) {
+function setRow(k, s, hint, unit, noW) {
 const ph = (v) => v != null ? String(v) : "";
 return `<div class="setrow"><span class="sn">Set ${k + 1}</span>`
-+ `<input inputmode="decimal" data-w value="${s && s.w != null ? esc(s.w) : ""}" placeholder="${esc(ph(hint && hint.w))}" aria-label="Set ${k + 1} weight"><span class="u">lb ×</span>`
++ (noW ? "" : `<input inputmode="decimal" data-w value="${s && s.w != null ? esc(s.w) : ""}" placeholder="${esc(ph(hint && hint.w))}" aria-label="Set ${k + 1} weight"><span class="u">lb ×</span>`)
 + `<input inputmode="numeric" data-r value="${s && s.r != null ? esc(s.r) : ""}" placeholder="${esc(ph(hint && hint.r))}" aria-label="Set ${k + 1} ${unit}"><span class="u">${unit}</span></div>`;
 }
 function readSets(panel) {
 const num = (v) => { v = String(v || "").trim().replace(",", "."); if (!v) return null; const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : NaN; };
 const out = [];
 for (const row of panel.querySelectorAll(".setrow")) {
-const w = num(row.querySelector("[data-w]").value), r = num(row.querySelector("[data-r]").value);
+const wEl = row.querySelector("[data-w]");
+const w = wEl ? num(wEl.value) : null, r = num(row.querySelector("[data-r]").value);
 if (Number.isNaN(w) || Number.isNaN(r)) return null;
 if (w === null && r === null) continue;
 out.push({ w, r });
@@ -594,7 +602,7 @@ const panel = act.closest("[data-panel]"), itemId = panel.dataset.panel, entry =
 const a = act.dataset.lp;
 if (a === "add" || a === "remove") {
 const box = panel.querySelector("[data-sets]"), rows = box.querySelectorAll(".setrow");
-if (a === "add" && rows.length < 20) box.insertAdjacentHTML("beforeend", setRow(rows.length, null, null, panel.dataset.unit));
+if (a === "add" && rows.length < 20) box.insertAdjacentHTML("beforeend", setRow(rows.length, null, null, panel.dataset.unit, !!panel.dataset.now));
 if (a === "remove" && rows.length > 1) rows[rows.length - 1].remove();
 return;
 }

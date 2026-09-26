@@ -81,7 +81,13 @@ const auth = () => ({ authorization: `Bearer ${tok()}` });
 let clients = [], logs = [], plan = null;
 const byTime = (a, b) => ((a.logged_on || "") + (a.created_at || "")).localeCompare((b.logged_on || "") + (b.created_at || ""));
 const day = (d) => { const x = new Date(String(d) + "T12:00:00"); return isNaN(x) ? String(d || "") : x.toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
-const sets = (s) => (s || []).length ? s.map(x => (x.w != null ? x.w + " × " : "") + (x.r != null ? x.r : "—")).join(", ") : "Done";
+// Units come from the plan item when we have it: reps "95 × 8", timed "75 sec", distance "50 × 40 m".
+let presById = new Map();
+function unitFor(pres) { const s = pres || ""; return /\d\s*m\b|m\/side/.test(s) ? "m" : /\d\s*s\b|\ds\b|s\/side|sec/.test(s) ? "sec" : "reps"; }
+const sets = (s, itemId) => {
+  const unit = unitFor(presById.get(itemId)), u = unit === "sec" ? " sec" : unit === "m" ? " m" : "";
+  return (s || []).length ? s.map(x => (x.w != null ? x.w + " × " : "") + (x.r != null ? x.r + u : "—")).join(", ") : "Done";
+};
 const edited = (l) => l.updated_at && l.created_at && l.updated_at !== l.created_at;
 const tags = (l) => `${l.version === "hotel" ? `<span class="tag hotel">Hotel</span>` : `<span class="tag">Gym</span>`}${edited(l) ? `<span class="tag">Edited</span>` : ""}`;
 
@@ -131,6 +137,8 @@ async function loadLogs(clientId) {
 function latest(list) { return list && list.length ? list[list.length - 1] : null; }
 
 function render(first) {
+  presById = new Map();
+  if (plan) for (const w of plan.weeks) for (const d of (w.days || [])) for (const x of (d.exercises || [])) if (x.id) presById.set(x.id, x.pres);
   const exByItem = new Map(), doneByDay = new Map();
   for (const l of logs) {
     const m = l.kind === "workout" ? doneByDay : exByItem;
@@ -161,10 +169,10 @@ function render(first) {
           let base = "";
           if (x.baseline) {
             const b = latest(exByItem.get(x.baseline));
-            base = `<div class="m">Baseline: ${b ? esc(sets(b.sets)) + " (" + esc(day(b.logged_on)) + ")" : "not logged"}</div>`;
+            base = `<div class="m">Baseline: ${b ? esc(sets(b.sets, b.item_id)) + " (" + esc(day(b.logged_on)) + ")" : "not logged"}</div>`;
           }
           h += `<div class="exl"><div class="n">${x.key ? `<button data-key="${esc(x.key)}">${esc(x.name)}</button>` : esc(x.name)}</div>`
-            + (l ? `<div class="s">${esc(sets(l.sets))}${tags(l)}</div>` : `<div class="m">Not logged</div>`) + base + `</div>`;
+            + (l ? `<div class="s">${esc(sets(l.sets, l.item_id))}${tags(l)}</div>` : `<div class="m">Not logged</div>`) + base + `</div>`;
         }
         h += `</details>`;
       }
@@ -174,7 +182,7 @@ function render(first) {
       h += `<h2>Logged items no longer in the current plan</h2>`;
       h += orphans.map(l => `<div class="exl" style="background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:6px">`
         + `<div class="n">${esc(l.name_snapshot || "Workout")}</div><div class="m">${l.week_no ? "Week " + l.week_no + " · " : ""}${esc(l.day_title || "")} · ${esc(day(l.logged_on))}</div>`
-        + `<div class="s">${l.kind === "workout" ? "Workout completed" : esc(sets(l.sets))}${tags(l)}</div></div>`).join("");
+        + `<div class="s">${l.kind === "workout" ? "Workout completed" : esc(sets(l.sets, l.item_id))}${tags(l)}</div></div>`).join("");
     }
   } else {
     // V1 limitation: template clients have no plan here, so we can only list what they logged.
@@ -191,7 +199,7 @@ function render(first) {
       const exs = list.filter(l => l.kind === "exercise");
       h += `<details class="day"><summary><span class="dname">${esc(title || "Workout")} <small>· ${esc(day(date))}</small></span>`
         + `<span class="st ${done ? "done" : "part"}">${done ? "Completed" : "Partial"} · ${exs.length} logged</span></summary>`;
-      h += exs.map(l => `<div class="exl"><div class="n">${l.exercise_key ? `<button data-key="${esc(l.exercise_key)}">${esc(l.name_snapshot)}</button>` : esc(l.name_snapshot)}</div><div class="s">${esc(sets(l.sets))}${tags(l)}</div></div>`).join("");
+      h += exs.map(l => `<div class="exl"><div class="n">${l.exercise_key ? `<button data-key="${esc(l.exercise_key)}">${esc(l.name_snapshot)}</button>` : esc(l.name_snapshot)}</div><div class="s">${esc(sets(l.sets, l.item_id))}${tags(l)}</div></div>`).join("");
       h += `</details>`;
     }
   }
@@ -204,7 +212,7 @@ function showHistory(key) {
   const name = latest(list).name_snapshot || "Exercise";
   $("hist").innerHTML = `<div class="hist"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>${esc(name)} — history</h3><button class="btn" data-close>Close</button></div>`
     + list.map(l => `<div class="hrow"><div class="m">${l.week_no ? "Week " + l.week_no + " · " : ""}${esc(day(l.logged_on))}${l.name_snapshot && l.name_snapshot !== name ? " · logged as “" + esc(l.name_snapshot) + "”" : ""}</div>`
-      + `<div class="s">${esc(sets(l.sets))}${tags(l)}</div></div>`).join("") + `</div>`;
+      + `<div class="s">${esc(sets(l.sets, l.item_id))}${tags(l)}</div></div>`).join("") + `</div>`;
   $("hist").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
