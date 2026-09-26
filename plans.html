@@ -240,7 +240,8 @@ function normalize(p) {
     for (const d of (w.days || [])) {
       if (d && d.rest !== undefined && !d.exercises) days.push({ rest: String(d.rest || "") });
       else days.push({ title: d?.title || "", focus: d?.focus || "",
-        exercises: (d?.exercises || []).map(x => ({ name:x.name||"", pres:x.pres||"", note:x.note||"", rest:x.rest||"", video:x.video||"" })) });
+        // hotel = optional hotel substitution (kept so re-saving never erases it)
+        exercises: (d?.exercises || []).map(x => ({ name:x.name||"", pres:x.pres||"", note:x.note||"", rest:x.rest||"", hotel:x.hotel||"", video:x.video||"" })) });
     }
     out.weeks.push({ days });
   }
@@ -295,6 +296,7 @@ function render() {
             <input data-d="${i}" data-e="${j}" data-f="note" value="${esc(x.note)}" placeholder="Coaching note (optional)">
             <input data-d="${i}" data-e="${j}" data-f="rest" value="${esc(x.rest)}" placeholder="Rest between sets (optional)">
           </div>
+          <input data-d="${i}" data-e="${j}" data-f="hotel" value="${esc(x.hotel)}" placeholder="Hotel substitution (optional)" style="margin-top:8px;padding:8px 10px;font-size:.9rem">
           <input data-d="${i}" data-e="${j}" data-f="video" value="${esc(x.video)}" placeholder="Video link (optional)" style="margin-top:8px;padding:8px 10px;font-size:.9rem">
         </div>`).join("")}
       <button class="btn small" data-act="exAdd" data-d="${i}" style="margin-top:10px">+ Exercise</button>
@@ -363,12 +365,12 @@ $("main").addEventListener("click", (e) => {
     case "weekAdd": plan.weeks.push({ days: [] }); week = plan.weeks.length - 1; break;
     case "weekDup": plan.weeks.splice(week + 1, 0, clone(plan.weeks[week])); week++; break;
     case "weekDel": if (!confirm(`Delete week ${week + 1}?`)) return; plan.weeks.splice(week, 1); week = Math.max(0, week - 1); break;
-    case "dayAdd": days.push({ title: "Day " + (days.filter(d => d.rest === undefined).length + 1), focus: "", exercises: [{ name:"", pres:"", note:"", rest:"", video:"" }] }); break;
+    case "dayAdd": days.push({ title: "Day " + (days.filter(d => d.rest === undefined).length + 1), focus: "", exercises: [{ name:"", pres:"", note:"", rest:"", hotel:"", video:"" }] }); break;
     case "restAdd": days.push({ rest: "Rest or a 20–30 min walk." }); break;
     case "dayUp": if (!swap(days, i, i - 1)) return; break;
     case "dayDown": if (!swap(days, i, i + 1)) return; break;
     case "dayDel": if (!confirm("Remove this day?")) return; days.splice(i, 1); break;
-    case "exAdd": days[i].exercises.push({ name:"", pres:"", note:"", rest:"", video:"" }); break;
+    case "exAdd": days[i].exercises.push({ name:"", pres:"", note:"", rest:"", hotel:"", video:"" }); break;
     case "exUp": if (!swap(days[i].exercises, j, j - 1)) return; break;
     case "exDown": if (!swap(days[i].exercises, j, j + 1)) return; break;
     case "exDel": days[i].exercises.splice(j, 1); break;
@@ -394,7 +396,7 @@ function buildPayload() {
       for (const x of d.exercises) {
         if (!clean(x.name)) throw { week: w, msg: `Week ${w + 1}, ${title}: an exercise is missing its name.` };
         const ex = { name: clean(x.name) };
-        for (const f of ["pres", "note", "rest", "video"]) if (clean(x[f])) ex[f] = clean(x[f]);
+        for (const f of ["pres", "note", "rest", "hotel", "video"]) if (clean(x[f])) ex[f] = clean(x[f]);
         exercises.push(ex);
       }
       if (!exercises.length) throw { week: w, msg: `Week ${w + 1}, ${title}: add at least one exercise, or make it a rest day.` };
