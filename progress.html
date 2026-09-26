@@ -123,6 +123,7 @@ var API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
 
 var params = new URLSearchParams(location.search);
 var token = (params.get("c") || "").trim();
+var track = (params.get("track") || "").trim();
 
 var el = {
 sub: document.getElementById("sub"),
@@ -133,10 +134,11 @@ content: document.getElementById("content"),
 back: document.getElementById("back"),
 };
 
-// Back link: return to the previous page if we came from the hub; else the generic hub.
-el.back.addEventListener("click", function (e) {
-if (history.length > 1) { e.preventDefault(); history.back(); }
-});
+// FIX (9/25/2026): the back link always carries the client's code (and brand, if known),
+// so the hub knows who they are even if Progress was opened directly or from a bookmark.
+if (token) {
+el.back.href = "/client-hub?c=" + encodeURIComponent(token) + (track ? "&track=" + encodeURIComponent(track) : "");
+}
 
 if (!token) { return showEmpty("Open the personal progress link Coach sent you."); }
 
@@ -195,13 +197,21 @@ el.goalchip.classList.remove("hide");
 var history = Array.isArray(d.history) ? d.history : [];
 var html = "";
 
+// weeks that recorded a weight, oldest first (used for start fallback + sparkline)
+var pts = history.filter(function (h) { return h.weight != null && !isNaN(h.weight); });
+
 // ---------- WEIGHT ----------
-var start = num(d.start_weight);
-var cur = num(d.current_weight);
+// FIX (9/25/2026): start weight isn't set when a client is added, so fall back to
+// their FIRST weigh-in. A stored start_weight still wins when one exists.
+var startRaw = (d.start_weight != null && !isNaN(d.start_weight)) ? Number(d.start_weight)
+: (pts.length ? Number(pts[0].weight) : null);
+var curRaw = (d.current_weight != null && !isNaN(d.current_weight)) ? Number(d.current_weight) : null;
+var start = num(startRaw);
+var cur = num(curRaw);
 var change = null;
-if (d.start_weight != null && d.current_weight != null &&
-!isNaN(d.start_weight) && !isNaN(d.current_weight)) {
-var diff = Number(d.current_weight) - Number(d.start_weight);
+// only show a change once there are two different weigh-ins to compare
+if (startRaw !== null && curRaw !== null && (d.start_weight != null || pts.length >= 2)) {
+var diff = curRaw - startRaw;
 var rounded = Math.round(diff * 10) / 10;
 var sign = rounded > 0 ? "+" : (rounded < 0 ? "\u2212" : "");
 change = sign + num(Math.abs(rounded));
@@ -219,7 +229,6 @@ html += '<div class="stat change"><div class="k">Change</div><div class="v">' +
 html += '</div>'; // .stats
 
 // trend sparkline from weeks that recorded a weight (objective line, neutral color)
-var pts = history.filter(function (h) { return h.weight != null && !isNaN(h.weight); });
 if (pts.length >= 2) {
 html += '<div class="spark">' + sparkline(pts) +
 '<div class="sparkcap">Weigh-ins over time</div></div>';
@@ -305,4 +314,3 @@ return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="
 </script>
 </body>
 </html>
-
