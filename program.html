@@ -59,6 +59,29 @@ padding:15px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px -10px
 .details{margin:28px 0 0;padding:18px 16px;border-top:1px solid var(--line);}
 .details h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.3rem;margin:0 0 10px;}
 .details p{margin:0;color:var(--muted);white-space:pre-line;}
+.ex[data-item]{cursor:pointer;}
+.logline{display:block;color:var(--brand);font-size:.84rem;font-weight:600;margin-top:4px;}
+.logline.todo{color:var(--muted);font-weight:500;}
+.logpanel{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 12px;}
+.lp-ref{color:var(--muted);font-size:.86rem;margin:0 0 6px;}
+.lp-ref b{color:var(--ink);font-weight:600;}
+.setrow{display:flex;align-items:center;gap:8px;margin:7px 0;}
+.setrow .sn{color:var(--muted);font-size:.85rem;width:44px;}
+.setrow .u{color:var(--muted);font-size:.85rem;}
+.setrow input{width:82px;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 1rem Inter,sans-serif;}
+.setrow input:focus{outline:2px solid var(--ring);border-color:var(--brand);}
+.lp-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.lpbtn{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 .9rem Inter,sans-serif;cursor:pointer;}
+.lpbtn.primary{background:var(--brand);border-color:var(--brand);color:var(--on-brand);}
+.lpbtn:focus-visible,.where button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}
+.lp-status{font-size:.86rem;margin-top:8px;color:var(--muted);min-height:1.2em;}
+.lp-status.ok{color:var(--brand);font-weight:600;}
+.where{display:flex;gap:8px;align-items:center;margin:0 0 12px;color:var(--muted);font-size:.9rem;}
+.where button{padding:7px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 .88rem Inter,sans-serif;cursor:pointer;}
+.where button.on{background:var(--brand);border-color:var(--brand);color:var(--on-brand);}
+.hotelmode .hotelline{color:var(--brand);font-weight:600;}
+.finish{padding:12px 0 12px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.88rem;}
+.finish .done{color:var(--brand);font-weight:700;}
 .missing{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--muted);}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;}}
 </style>
@@ -90,6 +113,10 @@ brand:"#FFB020", deep:"#d98e00", onBrand:"#1a1200", ring:"#ffcf6b", dot:"rgba(25
 travel: { wordmark:"Travel Plan", bg:"#171009", surface:"#211710", line:"#3a2c1d", muted:"#a8977f",
 brand:"#ff7a2d", deep:"#e85f14", onBrand:"#1a0d02", ring:"#ffa970", dot:"rgba(255,122,45,.16)", cta:"rgba(255,122,45,.55)" },
 };
+/* Template IDs (workout log): every template day/exercise has a FIXED id and key.
+   RULES: changing sets/reps/notes or fixing a typo keeps the id. REPLACING the exercise
+   with a different one = give it a NEW id/key (new name part, or bump .1 -> .2).
+   Never reuse or edit an old id. Duplicates are reported in the browser console on load. */
 const PROGRAMS = {
 dd: {
 brand: "dd",
@@ -97,15 +124,15 @@ label: "Diesel & Discipline",
 lede: "Built to run from the road and the yard — keep your numbers right for the DOT physical. Log every session honestly in your weekly check-in.",
 weeks: [
 { days: [
-{ title:"Day 1", focus:"Full body", exercises:[
-{ name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
-{ name:"Push-up (or bench)", pres:"3 × 10" },
-{ name:"1-arm row", pres:"3 × 10 each" },
-{ name:"Plank", pres:"3 × 30s" },
+{ id:"t.dd.d1", title:"Day 1", focus:"Full body", exercises:[
+{ id:"t.dd.d1.goblet-squat.1", key:"t.dd.goblet-squat.1", name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
+{ id:"t.dd.d1.push-up-or-bench.1", key:"t.dd.push-up-or-bench.1", name:"Push-up (or bench)", pres:"3 × 10" },
+{ id:"t.dd.d1.1-arm-row.1", key:"t.dd.1-arm-row.1", name:"1-arm row", pres:"3 × 10 each" },
+{ id:"t.dd.d1.plank.1", key:"t.dd.plank.1", name:"Plank", pres:"3 × 30s" },
 ]},
 { rest:"Rest, or a 20–30 min walk at the truck stop." },
-{ title:"Day 2", focus:"Conditioning", exercises:[
-{ name:"Brisk walk / incline", pres:"20–30 min" },
+{ id:"t.dd.d2", title:"Day 2", focus:"Conditioning", exercises:[
+{ id:"t.dd.d2.brisk-walk-incline.1", key:"t.dd.brisk-walk-incline.1", name:"Brisk walk / incline", pres:"20–30 min" },
 ]},
 ]},
 ]
@@ -116,26 +143,26 @@ label: "Lose fat",
 lede: "Four days on, built to keep muscle while the weight comes off. Log every session honestly in your weekly check-in.",
 weeks: [
 { days: [
-{ title:"Day 1", focus:"Full body", exercises:[
-{ name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
-{ name:"Dumbbell bench press", pres:"3 × 10" },
-{ name:"1-arm row", pres:"3 × 10 each" },
-{ name:"Plank", pres:"3 × 30s" },
+{ id:"t.fatloss.d1", title:"Day 1", focus:"Full body", exercises:[
+{ id:"t.fatloss.d1.goblet-squat.1", key:"t.fatloss.goblet-squat.1", name:"Goblet squat", pres:"3 × 10", note:"Slow down, drive up." },
+{ id:"t.fatloss.d1.dumbbell-bench-press.1", key:"t.fatloss.dumbbell-bench-press.1", name:"Dumbbell bench press", pres:"3 × 10" },
+{ id:"t.fatloss.d1.1-arm-row.1", key:"t.fatloss.1-arm-row.1", name:"1-arm row", pres:"3 × 10 each" },
+{ id:"t.fatloss.d1.plank.1", key:"t.fatloss.plank.1", name:"Plank", pres:"3 × 30s" },
 ]},
 { rest:"Rest or a 20–30 min walk." },
-{ title:"Day 2", focus:"Lower + core", exercises:[
-{ name:"Romanian deadlift", pres:"3 × 10" },
-{ name:"Walking lunge", pres:"3 × 12 each" },
-{ name:"Hanging or lying leg raise", pres:"3 × 12" },
+{ id:"t.fatloss.d2", title:"Day 2", focus:"Lower + core", exercises:[
+{ id:"t.fatloss.d2.romanian-deadlift.1", key:"t.fatloss.romanian-deadlift.1", name:"Romanian deadlift", pres:"3 × 10" },
+{ id:"t.fatloss.d2.walking-lunge.1", key:"t.fatloss.walking-lunge.1", name:"Walking lunge", pres:"3 × 12 each" },
+{ id:"t.fatloss.d2.hanging-or-lying-leg-raise.1", key:"t.fatloss.hanging-or-lying-leg-raise.1", name:"Hanging or lying leg raise", pres:"3 × 12" },
 ]},
-{ title:"Day 3", focus:"Upper", exercises:[
-{ name:"Incline press", pres:"3 × 10" },
-{ name:"Lat pulldown", pres:"3 × 12" },
-{ name:"Shoulder press", pres:"3 × 10" },
-{ name:"Face pull", pres:"3 × 15" },
+{ id:"t.fatloss.d3", title:"Day 3", focus:"Upper", exercises:[
+{ id:"t.fatloss.d3.incline-press.1", key:"t.fatloss.incline-press.1", name:"Incline press", pres:"3 × 10" },
+{ id:"t.fatloss.d3.lat-pulldown.1", key:"t.fatloss.lat-pulldown.1", name:"Lat pulldown", pres:"3 × 12" },
+{ id:"t.fatloss.d3.shoulder-press.1", key:"t.fatloss.shoulder-press.1", name:"Shoulder press", pres:"3 × 10" },
+{ id:"t.fatloss.d3.face-pull.1", key:"t.fatloss.face-pull.1", name:"Face pull", pres:"3 × 15" },
 ]},
-{ title:"Day 4", focus:"Conditioning", exercises:[
-{ name:"Intervals", pres:"20 min", note:"30s hard / 90s easy, any machine." },
+{ id:"t.fatloss.d4", title:"Day 4", focus:"Conditioning", exercises:[
+{ id:"t.fatloss.d4.intervals.1", key:"t.fatloss.intervals.1", name:"Intervals", pres:"20 min", note:"30s hard / 90s easy, any machine." },
 ]},
 ]},
 ]
@@ -146,29 +173,29 @@ label: "Build muscle",
 lede: "An upper/lower split to add size. Push the weight up week over week — your check-in is where we track that it's actually moving.",
 weeks: [
 { days: [
-{ title:"Day 1", focus:"Upper", exercises:[
-{ name:"Barbell bench press", pres:"4 × 6–8" },
-{ name:"Bent-over row", pres:"4 × 8" },
-{ name:"Overhead press", pres:"3 × 8" },
-{ name:"Chin-up", pres:"3 × max" },
+{ id:"t.muscle.d1", title:"Day 1", focus:"Upper", exercises:[
+{ id:"t.muscle.d1.barbell-bench-press.1", key:"t.muscle.barbell-bench-press.1", name:"Barbell bench press", pres:"4 × 6–8" },
+{ id:"t.muscle.d1.bent-over-row.1", key:"t.muscle.bent-over-row.1", name:"Bent-over row", pres:"4 × 8" },
+{ id:"t.muscle.d1.overhead-press.1", key:"t.muscle.overhead-press.1", name:"Overhead press", pres:"3 × 8" },
+{ id:"t.muscle.d1.chin-up.1", key:"t.muscle.chin-up.1", name:"Chin-up", pres:"3 × max" },
 ]},
-{ title:"Day 2", focus:"Lower", exercises:[
-{ name:"Back squat", pres:"4 × 6–8" },
-{ name:"Romanian deadlift", pres:"3 × 8" },
-{ name:"Leg press", pres:"3 × 12" },
-{ name:"Calf raise", pres:"4 × 15" },
+{ id:"t.muscle.d2", title:"Day 2", focus:"Lower", exercises:[
+{ id:"t.muscle.d2.back-squat.1", key:"t.muscle.back-squat.1", name:"Back squat", pres:"4 × 6–8" },
+{ id:"t.muscle.d2.romanian-deadlift.1", key:"t.muscle.romanian-deadlift.1", name:"Romanian deadlift", pres:"3 × 8" },
+{ id:"t.muscle.d2.leg-press.1", key:"t.muscle.leg-press.1", name:"Leg press", pres:"3 × 12" },
+{ id:"t.muscle.d2.calf-raise.1", key:"t.muscle.calf-raise.1", name:"Calf raise", pres:"4 × 15" },
 ]},
 { rest:"Rest." },
-{ title:"Day 3", focus:"Upper", exercises:[
-{ name:"Incline dumbbell press", pres:"4 × 8–10" },
-{ name:"Pull-up or pulldown", pres:"4 × 8–10" },
-{ name:"Lateral raise", pres:"3 × 15" },
-{ name:"Curl + triceps superset", pres:"3 × 12" },
+{ id:"t.muscle.d3", title:"Day 3", focus:"Upper", exercises:[
+{ id:"t.muscle.d3.incline-dumbbell-press.1", key:"t.muscle.incline-dumbbell-press.1", name:"Incline dumbbell press", pres:"4 × 8–10" },
+{ id:"t.muscle.d3.pull-up-or-pulldown.1", key:"t.muscle.pull-up-or-pulldown.1", name:"Pull-up or pulldown", pres:"4 × 8–10" },
+{ id:"t.muscle.d3.lateral-raise.1", key:"t.muscle.lateral-raise.1", name:"Lateral raise", pres:"3 × 15" },
+{ id:"t.muscle.d3.curl-triceps-superset.1", key:"t.muscle.curl-triceps-superset.1", name:"Curl + triceps superset", pres:"3 × 12" },
 ]},
-{ title:"Day 4", focus:"Lower", exercises:[
-{ name:"Front squat", pres:"4 × 8" },
-{ name:"Hip thrust", pres:"3 × 10" },
-{ name:"Hamstring curl", pres:"3 × 12" },
+{ id:"t.muscle.d4", title:"Day 4", focus:"Lower", exercises:[
+{ id:"t.muscle.d4.front-squat.1", key:"t.muscle.front-squat.1", name:"Front squat", pres:"4 × 8" },
+{ id:"t.muscle.d4.hip-thrust.1", key:"t.muscle.hip-thrust.1", name:"Hip thrust", pres:"3 × 10" },
+{ id:"t.muscle.d4.hamstring-curl.1", key:"t.muscle.hamstring-curl.1", name:"Hamstring curl", pres:"3 × 12" },
 ]},
 ]},
 ]
@@ -179,15 +206,15 @@ label: "Travel Plan",
 lede: "No gym, no problem — bodyweight sessions you can run from a hotel room. Log every session honestly in your weekly check-in.",
 weeks: [
 { days: [
-{ title:"Day 1", focus:"Full body", exercises:[
-{ name:"Bodyweight squat", pres:"3 × 15" },
-{ name:"Incline push-up (desk/bed)", pres:"3 × 10" },
-{ name:"Reverse lunge", pres:"3 × 10 each" },
-{ name:"Plank", pres:"3 × 30s" },
+{ id:"t.travel.d1", title:"Day 1", focus:"Full body", exercises:[
+{ id:"t.travel.d1.bodyweight-squat.1", key:"t.travel.bodyweight-squat.1", name:"Bodyweight squat", pres:"3 × 15" },
+{ id:"t.travel.d1.incline-push-up-desk-bed.1", key:"t.travel.incline-push-up-desk-bed.1", name:"Incline push-up (desk/bed)", pres:"3 × 10" },
+{ id:"t.travel.d1.reverse-lunge.1", key:"t.travel.reverse-lunge.1", name:"Reverse lunge", pres:"3 × 10 each" },
+{ id:"t.travel.d1.plank.1", key:"t.travel.plank.1", name:"Plank", pres:"3 × 30s" },
 ]},
 { rest:"Rest or a 20–30 min walk." },
-{ title:"Day 2", focus:"Conditioning", exercises:[
-{ name:"Walk / stairs", pres:"20–30 min" },
+{ id:"t.travel.d2", title:"Day 2", focus:"Conditioning", exercises:[
+{ id:"t.travel.d2.walk-stairs.1", key:"t.travel.walk-stairs.1", name:"Walk / stairs", pres:"20–30 min" },
 ]},
 ]},
 ]
@@ -256,6 +283,15 @@ const t = PROGRAMS[trackKey];
 return (t && t.brand) ? t.brand : "reset";
 }
 
+// Workout log state (declared before the first render; the rest of the logger is at the bottom).
+const LOG = { ready: false, logs: [], editDays: 14, week: 0, items: {}, days: {}, open: new Set(), status: {}, lastId: {} };
+const LS = {
+get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+function K(name) { return "ctl:" + name + ":" + cid; }
+let memQueue = null;   // fallback if the phone blocks storage (e.g. private browsing)
 // ----- INITIAL RENDER -----
 if (!prog) {
 document.getElementById("days").innerHTML =
@@ -267,20 +303,29 @@ if (cid) tryCustomPlan(cid);
 }
 
 async function tryCustomPlan(token) {
+// Logging only turns on once we KNOW which plan is showing (custom, template, or a saved copy).
+let outcome = "unknown";
 try {
 const ctrl = new AbortController();
 const timer = setTimeout(() => ctrl.abort(), 6000);
 const r = await fetch(API_BASE + "/workout-plan?c=" + encodeURIComponent(token), { signal: ctrl.signal });
 clearTimeout(timer);
-if (!r.ok) return;
+if (r.ok) {
 const data = await r.json();
-if (!data || data.has_plan !== true) return;
+if (data && data.has_plan === true) {
 const plan = validatePlan(data.plan);
-if (!plan) return;
-renderProgram(plan);
+if (plan) { LS.set(K("plan"), plan); renderProgram(plan); outcome = "custom"; }
+} else if (data && data.has_plan === false) { LS.del(K("plan")); outcome = "template"; }
+}
 } catch (_) {
 /* keep the template already on screen */
 }
+if (outcome === "unknown") {
+// Weak signal: show the last copy of their plan saved on this phone, if there is one.
+const cached = validatePlan(LS.get(K("plan"), null));
+if (cached) { renderProgram(cached); outcome = "cached"; }
+}
+if (outcome !== "unknown") startLogging();
 }
 
 function validatePlan(plan) {
@@ -308,7 +353,18 @@ showWeek(0);
 function showWeek(i) {
 const wrap = document.getElementById("days");
 wrap.innerHTML = "";
+LOG.week = i; LOG.items = {}; LOG.days = {};
 const week = prog.weeks[i] || { days: [] };
+const logOn = LOG.ready && !!cid;
+// Gym | Hotel toggle: only when logging is on AND this plan has hotel lines.
+const hasHotel = (prog.weeks || []).some(w => (w.days || []).some(d => (d.exercises || []).some(x => x.hotel)));
+wrap.classList.toggle("hotelmode", logOn && hasHotel && version() === "hotel");
+if (logOn && hasHotel) {
+const t = document.createElement("div");
+t.className = "where";
+t.innerHTML = `<span>Training at</span><button data-where="gym" class="${version() === "gym" ? "on" : ""}">Gym</button><button data-where="hotel" class="${version() === "hotel" ? "on" : ""}">Hotel</button>`;
+wrap.appendChild(t);
+}
 // Optional weekly focus banner above the first day (plans without it look exactly as before).
 if (week.title || week.note) {
 const f = document.createElement("div");
@@ -326,13 +382,248 @@ const watch = ex.video ? `<a class="watch" href="${esc(ex.video)}" target="_blan
 const note = ex.note ? `<span class="note">${esc(ex.note)}</span>` : "";
 const rest = ex.rest ? `<span class="note">Rest ${esc(ex.rest)}</span>` : "";
 // Optional hotel substitution (added for hotel/Planet Fitness plans). Plans without it look exactly as before.
-const hotel = ex.hotel ? `<span class="note">Hotel: ${esc(ex.hotel)}</span>` : "";
-rows += `<div class="ex"><span class="name">${esc(ex.name)}${note}${rest}${hotel}</span>${ex.pres ? `<span class="pres">${esc(ex.pres)}</span>` : ""}${watch}</div>`;
+const hotel = ex.hotel ? `<span class="note hotelline">Hotel: ${esc(ex.hotel)}</span>` : "";
+const loggable = logOn && ex.id;
+if (loggable) LOG.items[ex.id] = { ex, day, week: i };
+const logline = loggable ? `<span class="logline" data-badge="${esc(ex.id)}"></span>` : "";
+rows += `<div class="ex"${loggable ? ` data-item="${esc(ex.id)}"` : ""}><span class="name">${esc(ex.name)}${note}${rest}${hotel}${logline}</span>${ex.pres ? `<span class="pres">${esc(ex.pres)}</span>` : ""}${watch}</div>`;
+if (loggable) rows += `<div class="logpanel" data-panel="${esc(ex.id)}" hidden></div>`;
 }
-el.innerHTML = `<div class="day-head"><h2>${esc(day.title)}</h2>${day.focus ? `<span class="focus">${esc(day.focus)}</span>` : ""}</div>${rows}`;
+const finish = logOn && day.id ? `<div class="finish" data-finish="${esc(day.id)}"></div>` : "";
+if (finish) LOG.days[day.id] = { day, week: i };
+el.innerHTML = `<div class="day-head"><h2>${esc(day.title)}</h2>${day.focus ? `<span class="focus">${esc(day.focus)}</span>` : ""}</div>${rows}${finish}`;
 wrap.appendChild(el);
 }
+if (logOn) { for (const id of LOG.open) if (LOG.items[id]) openPanel(id); refreshLog(); }
 }
+
+/* ===== WORKOUT LOG (added 9/2026) =====
+Tap an exercise -> enter weight x reps per set -> Save. Logs go to checkin-api (/logs).
+Every save is first kept on this phone, then sent. "Saved ✓" only shows after the server confirms.
+The log id is made on the phone, so retrying can never create a duplicate. */
+function queue() { return memQueue || LS.get(K("queue"), []); }
+function setQueue(q) { if (LS.set(K("queue"), q)) memQueue = null; else memQueue = q; }
+const opId = (o) => o.op === "save" ? o.log.id : o.id;
+function newLogId() { return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/-/g, ""); }
+function today() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function version() { return LS.get(K("where"), "gym") === "hotel" ? "hotel" : "gym"; }
+function dayTitle(day) { return (day.title || "") + (day.focus ? " · " + day.focus : ""); }
+const byTime = (a, b) => ((a.logged_on || "") + (a.created_at || "~")).localeCompare((b.logged_on || "") + (b.created_at || "~"));
+
+function allLogs() {
+const map = new Map(LOG.logs.map(l => [l.id, l]));
+for (const o of queue()) { if (o.op === "save") map.set(o.log.id, { ...(map.get(o.log.id) || {}), ...o.log }); else map.delete(o.id); }
+return [...map.values()];
+}
+function isPending(id) { return queue().some(o => opId(o) === id); }
+function entryFor(itemId) { return allLogs().filter(l => l.item_id === itemId).sort(byTime).pop() || null; }
+function prevFor(ex, excludeId) {
+if (!ex.key) return null;
+return allLogs().filter(l => l.kind === "exercise" && l.exercise_key === ex.key && l.id !== excludeId && (l.sets || []).length).sort(byTime).pop() || null;
+}
+function canEdit(e) {
+if (!e || !e.created_at) return true;
+const t = Date.parse(e.created_at.replace(" ", "T") + "Z");
+return !Number.isFinite(t) || Date.now() - t < LOG.editDays * 86400000;
+}
+function setCount(pres) { const m = /^\s*(\d+)\s*×/.exec(pres || ""); return m ? Math.min(+m[1], 20) : 0; }
+function unitFor(pres) { const s = pres || ""; return /\d\s*m\b|m\/side/.test(s) ? "m" : /\d\s*s\b|\ds\b|s\/side|sec/.test(s) ? "sec" : "reps"; }
+function fmtSets(sets) { return (sets || []).map(s => (s.w != null ? s.w + " × " : "") + (s.r != null ? s.r : "—")).join(", "); }
+function whenLabel(l) { const wk = l.week_no ? "Week " + l.week_no : ""; const d = l.logged_on ? new Date(l.logged_on + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : ""; return [wk, d].filter(Boolean).join(" · "); }
+
+async function startLogging() {
+if (!cid || LOG.ready) return;
+LOG.logs = LS.get(K("logs"), []);
+try {
+const r = await fetch(API_BASE + "/logs?c=" + encodeURIComponent(cid));
+if (r.ok) { const d = await r.json(); if (d && d.ok) { LOG.logs = d.logs || []; LOG.editDays = d.edit_days || 14; LS.set(K("logs"), LOG.logs); } }
+} catch (_) { /* weak signal: use the copy saved on this phone */ }
+LOG.ready = true;
+showWeek(LOG.week);
+flush();
+window.addEventListener("online", flush);
+setInterval(flush, 30000);
+}
+
+function enqueue(op) {
+op.t = Date.now() + Math.random();
+let q = queue().filter(o => opId(o) !== opId(op));
+// Deleting something that never reached the server: just forget it.
+if (op.op === "delete" && !LOG.logs.some(l => l.id === op.id)) { setQueue(q); return; }
+q.push(op); setQueue(q);
+}
+let flushing = false;
+async function flush() {
+if (flushing || !cid) return;
+flushing = true;
+try {
+for (;;) {
+const q = queue(); if (!q.length) break;
+const op = q[0]; let r;
+try {
+r = await fetch(API_BASE + (op.op === "save" ? "/logs/save" : "/logs/delete") + "?c=" + encodeURIComponent(cid), {
+method: "POST", headers: { "content-type": "application/json" },
+body: JSON.stringify(op.op === "save" ? op.log : { id: op.id }) });
+} catch (_) { break; }                 // no signal: keep it on the phone, try later
+if (r.status >= 500) break;             // server hiccup: try later
+let d = {}; try { d = await r.json(); } catch (_) {}
+setQueue(queue().filter(o => !(opId(o) === opId(op) && o.t === op.t)));
+if (r.ok && d.ok) {
+if (op.op === "save" && d.log) { LOG.logs = LOG.logs.filter(l => l.id !== d.log.id).concat(d.log); }
+if (op.op === "delete") LOG.logs = LOG.logs.filter(l => l.id !== op.id);
+LS.set(K("logs"), LOG.logs);
+} else {
+LOG.status["err:" + opId(op)] = d.error === "edit_window_closed" ? "This entry is locked (older than " + LOG.editDays + " days)." : "Couldn't save this entry. Please try again.";
+}
+}
+} finally { flushing = false; refreshLog(); }
+}
+
+function statusFor(itemId) {
+const id = LOG.lastId[itemId]; if (!id) return { text: "", cls: "" };
+if (LOG.status["err:" + id]) return { text: LOG.status["err:" + id], cls: "" };
+if (LOG.status["saving:" + id]) return { text: "Saving…", cls: "" };
+if (isPending(id)) return { text: "Saved on this phone — will sync when you're back online.", cls: "" };
+return { text: LOG.status["deleted:" + id] ? "Deleted ✓" : "Saved ✓", cls: "ok" };
+}
+function refreshLog() {
+if (!LOG.ready) return;
+document.querySelectorAll("[data-badge]").forEach(el => {
+const e = entryFor(el.dataset.badge);
+if (!e) { el.className = "logline todo"; el.textContent = "Tap to log"; return; }
+el.className = "logline";
+el.textContent = "✓ " + ((e.sets || []).length ? fmtSets(e.sets) : "Done") + (isPending(e.id) ? " · waiting to sync" : "");
+});
+document.querySelectorAll("[data-status]").forEach(el => { const s = statusFor(el.dataset.status); el.textContent = s.text; el.className = "lp-status " + s.cls; });
+document.querySelectorAll("[data-finish]").forEach(el => renderFinish(el));
+}
+
+function openPanel(itemId) {
+const panel = document.querySelector(`[data-panel="${CSS.escape(itemId)}"]`); if (!panel) return;
+const { ex } = LOG.items[itemId];
+const entry = entryFor(itemId);
+const editable = canEdit(entry);
+const prev = prevFor(ex, entry && entry.id);
+const base = ex.baseline ? allLogs().filter(l => l.item_id === ex.baseline).sort(byTime).pop() : null;
+const n = setCount(ex.pres), unit = unitFor(ex.pres);
+let h = "";
+if (prev) h += `<p class="lp-ref">Last time (${esc(whenLabel(prev))}): <b>${esc(fmtSets(prev.sets))}</b></p>`;
+if (ex.baseline) h += `<p class="lp-ref">Baseline${base && base.week_no ? " (Week " + base.week_no + ")" : ""}: <b>${base ? esc(fmtSets(base.sets)) : "not logged yet"}</b></p>`;
+if (!editable) {
+h += `<p class="lp-ref">Logged: <b>${esc((entry.sets || []).length ? fmtSets(entry.sets) : "Done")}</b></p><p class="lp-ref">Locked (older than ${LOG.editDays} days).</p>`;
+} else if (!n) {
+h += `<div class="lp-btns">${entry ? `<button class="lpbtn" data-lp="del">Undo done</button>` : `<button class="lpbtn primary" data-lp="done">Mark done</button>`}</div>`;
+} else {
+const sets = entry && (entry.sets || []).length ? entry.sets : Array.from({ length: n }, () => ({ w: null, r: null }));
+h += `<div data-sets>` + sets.map((s, k) => setRow(k, s, prev && prev.sets[k], unit)).join("") + `</div>`;
+h += `<div class="lp-btns"><button class="lpbtn" data-lp="add">+ Set</button><button class="lpbtn" data-lp="remove">− Set</button></div>`;
+h += `<div class="lp-btns"><button class="lpbtn primary" data-lp="save">Save</button>${entry ? `<button class="lpbtn" data-lp="del">Delete</button>` : ""}</div>`;
+}
+h += `<div class="lp-status" data-status="${esc(itemId)}"></div>`;
+panel.innerHTML = h; panel.hidden = false; panel.dataset.unit = unit;
+LOG.open.add(itemId);
+refreshLog();
+}
+function setRow(k, s, hint, unit) {
+const ph = (v) => v != null ? String(v) : "";
+return `<div class="setrow"><span class="sn">Set ${k + 1}</span>`
++ `<input inputmode="decimal" data-w value="${s && s.w != null ? esc(s.w) : ""}" placeholder="${esc(ph(hint && hint.w))}" aria-label="Set ${k + 1} weight"><span class="u">lb ×</span>`
++ `<input inputmode="numeric" data-r value="${s && s.r != null ? esc(s.r) : ""}" placeholder="${esc(ph(hint && hint.r))}" aria-label="Set ${k + 1} ${unit}"><span class="u">${unit}</span></div>`;
+}
+function readSets(panel) {
+const num = (v) => { v = String(v || "").trim().replace(",", "."); if (!v) return null; const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : NaN; };
+const out = [];
+for (const row of panel.querySelectorAll(".setrow")) {
+const w = num(row.querySelector("[data-w]").value), r = num(row.querySelector("[data-r]").value);
+if (Number.isNaN(w) || Number.isNaN(r)) return null;
+if (w === null && r === null) continue;
+out.push({ w, r });
+}
+return out;
+}
+async function saveEntry(itemId, sets) {
+const { ex, day, week } = LOG.items[itemId];
+const entry = entryFor(itemId);
+const log = { id: entry ? entry.id : newLogId(), kind: "exercise", item_id: ex.id, exercise_key: ex.key || null,
+name_snapshot: ex.name, week_no: week + 1, day_title: dayTitle(day), version: version(), sets,
+logged_on: entry ? entry.logged_on : today(), created_at: entry ? entry.created_at : undefined };
+await send(itemId, { op: "save", log });
+}
+async function send(key, op) {
+const id = opId(op);
+LOG.lastId[key] = id;
+delete LOG.status["err:" + id]; delete LOG.status["deleted:" + id];
+if (op.op === "delete") LOG.status["deleted:" + id] = true;
+enqueue(op);
+LOG.status["saving:" + id] = true; refreshLog();
+await flush();
+delete LOG.status["saving:" + id]; refreshLog();
+}
+
+function renderFinish(el) {
+const info = LOG.days[el.dataset.finish]; if (!info) return;
+const exs = (info.day.exercises || []).filter(x => x.id);
+const logged = exs.filter(x => entryFor(x.id)).length;
+const done = entryFor(info.day.id);
+const count = `${logged} of ${exs.length} logged`;
+if (done) {
+el.innerHTML = `<span class="done">Workout completed ✓</span><span>${count}${isPending(done.id) ? " · waiting to sync" : ""}</span>${canEdit(done) ? `<button class="lpbtn" data-fin="undo">Undo</button>` : ""}`;
+} else {
+el.innerHTML = `<button class="lpbtn primary" data-fin="finish">Finish workout</button><span>${count}</span>`;
+}
+}
+
+document.getElementById("days").addEventListener("click", async (e) => {
+if (!LOG.ready) return;
+const where = e.target.closest("[data-where]");
+if (where) { LS.set(K("where"), where.dataset.where); showWeek(LOG.week); return; }
+const fin = e.target.closest("[data-fin]");
+if (fin) {
+const dayId = fin.closest("[data-finish]").dataset.finish, { day, week } = LOG.days[dayId];
+if (fin.dataset.fin === "finish") {
+await send("day:" + dayId, { op: "save", log: { id: newLogId(), kind: "workout", item_id: dayId, name_snapshot: dayTitle(day), week_no: week + 1, day_title: dayTitle(day), version: version(), sets: [], logged_on: today() } });
+} else {
+const done = entryFor(dayId);
+if (done && confirm("Mark this workout as not finished?")) await send("day:" + dayId, { op: "delete", id: done.id });
+}
+return;
+}
+const act = e.target.closest("[data-lp]");
+if (act) {
+const panel = act.closest("[data-panel]"), itemId = panel.dataset.panel, entry = entryFor(itemId);
+const a = act.dataset.lp;
+if (a === "add" || a === "remove") {
+const box = panel.querySelector("[data-sets]"), rows = box.querySelectorAll(".setrow");
+if (a === "add" && rows.length < 20) box.insertAdjacentHTML("beforeend", setRow(rows.length, null, null, panel.dataset.unit));
+if (a === "remove" && rows.length > 1) rows[rows.length - 1].remove();
+return;
+}
+if (a === "save") {
+const sets = readSets(panel);
+const st = panel.querySelector("[data-status]");
+if (sets === null) { st.textContent = "Numbers only, please."; st.className = "lp-status"; return; }
+if (!sets.length) { st.textContent = "Enter at least one set."; st.className = "lp-status"; return; }
+await saveEntry(itemId, sets); openPanel(itemId); return;
+}
+if (a === "done") { await saveEntry(itemId, []); openPanel(itemId); return; }
+if (a === "del" && entry && confirm("Delete this entry?")) { await send(itemId, { op: "delete", id: entry.id }); openPanel(itemId); return; }
+return;
+}
+const row = e.target.closest(".ex[data-item]");
+if (row && !e.target.closest("a")) {
+const id = row.dataset.item, panel = document.querySelector(`[data-panel="${CSS.escape(id)}"]`);
+if (panel.hidden) openPanel(id); else { panel.hidden = true; LOG.open.delete(id); }
+}
+});
+
+// Template id safety check (see the rules above PROGRAMS).
+(function () {
+const seen = new Set();
+for (const [t, prg] of Object.entries(PROGRAMS)) for (const w of prg.weeks) for (const d of w.days) for (const x of (d.exercises || [])) {
+if (x.id && seen.has(x.id)) console.warn("Duplicate template id:", x.id, "in", t);
+if (x.id) seen.add(x.id);
+}
+})();
 </script>
 </body>
 </html>
