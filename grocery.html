@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f1319">
+<title>Grocery list | Coach TreMayne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1319;
+    --panel: #161c25;
+    --panel-2: #1c2430;
+    --line: #2a3443;
+    --text: #e9eef4;
+    --muted: #93a1b3;
+    --chalk: #f2f5f8;
+    --ok: #4cc38a;
+    --warn: #f5b94a;
+    --err: #ff7a7a;
+    --radius: 16px;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--body); -webkit-text-size-adjust: 100%; }
+  h1, h2 { font-family: var(--display); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  a { color: inherit; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  .wrap { max-width: 640px; margin: 0 auto; padding: calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom)); }
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 15px; padding: 6px 0; }
+  .back:hover { color: var(--text); }
+  .kicker { color: var(--muted); font-size: 14px; }
+  .title { font-size: 32px; line-height: 1.1; margin-bottom: 12px; }
+
+  .note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--chalk); border-radius: 0 var(--radius) var(--radius) 0;
+          padding: 12px 14px; margin-bottom: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .note b { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+
+  .sync { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); min-height: 24px; margin-bottom: 12px; }
+  .sync.offline { color: var(--warn); }
+  .sync.error { color: var(--err); }
+  .sync button { margin-left: auto; }
+
+  input[type=text], select { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; width: 100%; min-width: 0; font-size: 16px; }
+  input::placeholder { color: #66758a; }
+  .btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 10px 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.primary { background: var(--chalk); color: var(--bg); border-color: var(--chalk); }
+  .btn.small { padding: 6px 10px; font-size: 14px; border-radius: 10px; }
+  .btn.quiet { background: transparent; color: var(--muted); }
+
+  .add { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: grid; gap: 8px;
+         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-bottom: 8px; }
+  .add .name, .add button { grid-column: 1 / -1; }
+  .msg { font-size: 14px; min-height: 22px; margin: 0 2px 8px; }
+  .msg.err { color: var(--err); }
+  .msg.ok { color: var(--ok); }
+
+  .cat { margin-top: 18px; }
+  .cat h2 { font-family: var(--body); font-size: 14px; font-weight: 600; color: var(--muted); margin: 0 0 6px 2px; }
+  .item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 4px 8px;
+          background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 6px 8px 6px 4px; margin-bottom: 6px; }
+  .check { width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; }
+  .check input { width: 22px; height: 22px; accent-color: var(--ok); cursor: pointer; }
+  .label { min-width: 0; padding: 6px 0; }
+  .label .n { overflow-wrap: anywhere; }
+  .label .q { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+  .item.done .n { text-decoration: line-through; color: var(--muted); }
+  .acts { display: flex; gap: 4px; }
+  .state { grid-column: 2 / -1; font-size: 12px; color: var(--muted); margin-top: -4px; padding-bottom: 2px; }
+  .state.local { color: var(--warn); }
+  .state.err { color: var(--err); }
+  .edit { grid-column: 1 / -1; display: grid; gap: 6px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 4px 4px 6px 8px; }
+  .edit .name { grid-column: 1 / -1; }
+  .edit .row { grid-column: 1 / -1; display: flex; gap: 6px; justify-content: flex-end; }
+
+  .footer { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+  .footer .btn { flex: 1 1 160px; text-align: center; text-decoration: none; }
+  .empty { color: var(--muted); text-align: center; padding: 26px 8px; border: 1px dashed var(--line); border-radius: var(--radius); margin-top: 12px; }
+
+  .screen { text-align: center; padding: 18vh 10px 0; }
+  .screen h1 { font-size: 28px; margin-bottom: 10px; }
+  .screen p { color: var(--muted); margin: 0 auto 18px; max-width: 34ch; }
+  .pulse { width: 42px; height: 42px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--chalk); margin: 0 auto 16px; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" id="back" href="https://coachtremayne.com/client-hub/">← Hub</a>
+    <span class="kicker">Grocery list</span>
+  </div>
+
+  <div class="screen" id="loading" role="status">
+    <div class="pulse" aria-hidden="true"></div>
+    <p>Loading your grocery list…</p>
+  </div>
+
+  <div class="screen" id="message" hidden>
+    <h1 id="msgTitle"></h1>
+    <p id="msgText"></p>
+    <button type="button" class="btn" id="msgRetry" hidden>Try again</button>
+  </div>
+
+  <main id="app" hidden>
+    <h1 class="title">Grocery list</h1>
+    <div class="note" id="note" hidden><b>From your coach</b><span id="noteText"></span></div>
+    <div class="sync" id="sync" role="status" aria-live="polite"><span id="syncText"></span><button type="button" class="btn small" id="syncRetry" hidden>Retry now</button></div>
+
+    <form class="add" id="addForm" autocomplete="off">
+      <input class="name" type="text" id="addName" maxlength="120" placeholder="Add an item, e.g. Chicken breast" aria-label="Item name">
+      <input type="text" id="addQty" maxlength="40" placeholder="Qty" aria-label="Quantity">
+      <select id="addCat" aria-label="Category"></select>
+      <button type="submit" class="btn primary">Add</button>
+    </form>
+    <p class="msg" id="msg" role="alert"></p>
+
+    <div id="list"></div>
+
+    <div class="footer">
+      <button type="button" class="btn" id="clearChecked" hidden>Clear checked items</button>
+      <a class="btn quiet" id="hubBtn" href="https://coachtremayne.com/client-hub/">Back to hub</a>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const API = "https://checkin-api.quantumflexpt.workers.dev";
+  const CATEGORIES = ["Protein", "Produce", "Carbs & Grains", "Dairy & Eggs", "Fats & Snacks", "Drinks", "On-the-go / Portable", "Other"];
+  const MAX_ITEMS = 300;
+  const RETRY_DELAYS = [3000, 10000, 30000, 60000];
+  const ERRORS = {
+    missing_name: "Items need a name.",
+    grocery_limit_reached: "Your list is full (300 items). Remove some items first.",
+    not_found: "That item was already removed.",
+    bad_id: "That change couldn't be saved.",
+    too_large: "That text is too long.",
+    server_error: "The server had a problem. It will retry."
+  };
+  const $ = (id) => document.getElementById(id);
+
+  const params = new URLSearchParams(location.search);
+  const token = (params.get("c") || "").trim();
+  const track = (params.get("track") || "").trim();
+
+  // Hub links keep the same token + track this page was opened with.
+  if (token) {
+    const hub = new URL("https://coachtremayne.com/client-hub/");
+    hub.searchParams.set("c", token);
+    if (track) hub.searchParams.set("track", track);
+    $("back").href = hub.toString();
+    $("hubBtn").href = hub.toString();
+  }
+
+  // Safe DOM builder: stored text is only ever set as text.
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : String(v));
+    }
+    for (const c of kids.flat()) {
+      if (c === null || c === undefined || c === false) continue;
+      el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    }
+    return el;
+  }
+  function screen(which) {
+    $("loading").hidden = which !== "loading";
+    $("message").hidden = which !== "message";
+    $("app").hidden = which !== "app";
+  }
+  function fatal(title, text, retry) {
+    $("msgTitle").textContent = title;
+    $("msgText").textContent = text;
+    $("msgRetry").hidden = !retry;
+    screen("message");
+  }
+  function flash(text, kind) { const m = $("msg"); m.textContent = text || ""; m.className = "msg" + (kind ? " " + kind : ""); }
+
+  // ---- local copy on this phone (so changes survive weak signal and reloads) ----
+  function hash(s) { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) >>> 0; return x.toString(36); }
+  const STORE = "ct_grocery_v1_" + hash(token);
+  let items = [];        // what the client sees
+  let note = null;
+  let queue = [];        // pending server operations, oldest first
+  let invalid = false;
+
+  function persist() {
+    try { localStorage.setItem(STORE, JSON.stringify({ items, note, queue })); } catch {}
+  }
+  function restore() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE) || "null");
+      if (s && Array.isArray(s.items) && Array.isArray(s.queue)) {
+        items = s.items; note = s.note || null;
+        queue = s.queue.map((op) => Object.assign(op, { inflight: false }));
+        return true;
+      }
+    } catch {}
+    return false;
+  }
+
+  function newId() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    const a = new Uint8Array(16); crypto.getRandomValues(a);
+    return Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  const pendingFor = (id) => queue.some((op) => op.id === id);
+
+  // Queue a change. Changes to the same item are merged while they wait, so one
+  // tap-storm becomes one request; an item added and removed while offline sends nothing.
+  function enqueue(op) {
+    const waiting = queue.filter((q) => q.id === op.id && !q.inflight);
+    if (op.type === "save") {
+      const last = waiting.find((q) => q.type === "save");
+      if (last) Object.assign(last.fields, op.fields);
+      else queue.push({ type: "save", id: op.id, fields: Object.assign({}, op.fields), isNew: !!op.isNew });
+    } else {
+      const unsentCreate = waiting.find((q) => q.type === "save" && q.isNew);
+      queue = queue.filter((q) => !(q.id === op.id && !q.inflight));
+      const everSent = !unsentCreate || queue.some((q) => q.id === op.id);
+      if (everSent) queue.push({ type: "delete", id: op.id });
+    }
+    persist();
+    flush();
+  }
+
+  // ---- server sync ----
+  let flushing = false, retryTimer = null, attempt = 0, offline = false;
+  async function post(path, body) {
+    let res;
+    try {
+      res = await fetch(API + path + "?c=" + encodeURIComponent(token), {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), cache: "no-store"
+      });
+    } catch { return { net: true }; }
+    let data = null; try { data = await res.json(); } catch {}
+    return { status: res.status, data };
+  }
+
+  async function flush() {
+    if (flushing || invalid) return;
+    flushing = true;
+    clearTimeout(retryTimer);
+    while (queue.length) {
+      const op = queue[0];
+      op.inflight = true; render();
+      const r = op.type === "save"
+        ? await post("/grocery/save", Object.assign({ id: op.id }, op.fields))
+        : await post("/grocery/delete", { id: op.id });
+      op.inflight = false;
+
+      if (r.net || r.status >= 500 || r.status === 0) {           // no signal / server hiccup: keep it and retry later
+        offline = true;
+        const delay = RETRY_DELAYS[Math.min(attempt, RETRY_DELAYS.length - 1)];
+        attempt++;
+        retryTimer = setTimeout(flush, delay);
+        break;
+      }
+      offline = false; attempt = 0;
+      queue.shift();
+      if (r.status === 404 && r.data && r.data.error === "unknown_client") {
+        invalid = true; persist();
+        fatal("This link isn't working", "Open Grocery List from the personal link Coach sent you. If it still doesn't work, text Coach.", false);
+        flushing = false; return;
+      }
+      const ok = r.status >= 200 && r.status < 300 && r.data && r.data.ok;
+      if (ok && op.type === "save" && r.data.item) {
+        const i = items.findIndex((x) => x.id === op.id);
+        if (i >= 0 && !pendingFor(op.id)) items[i] = Object.assign({}, r.data.item);  // server copy wins once nothing newer is waiting
+      } else if (!ok) {
+        const code = r.data && r.data.error;
+        flash(ERRORS[code] || "A change couldn't be saved.", "err");
+        queue = queue.filter((q) => q.id !== op.id);                 // drop the rejected change and resync from the server
+        persist(); flushing = false; await refresh(true); return;
+      }
+      persist();
+    }
+    flushing = false;
+    render();
+  }
+  window.addEventListener("online", () => { attempt = 0; flush(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && !invalid) { attempt = 0; if (queue.length) flush(); else refresh(true); } });
+
+  async function refresh(quiet) {
+    if (!token || invalid) return;
+    let res, data = null;
+    try {
+      res = await fetch(API + "/grocery?c=" + encodeURIComponent(token), { method: "GET", cache: "no-store" });
+      try { data = await res.json(); } catch {}
+    } catch {
+      offline = true;
+      if (!items.length && !queue.length && $("app").hidden) { fatal("Couldn't load your grocery list", "Check your connection and try again.", true); return; }
+      screen("app"); render();
+      if (queue.length) flush();                       // try the waiting changes too; flush schedules its own retries
+      return;
+    }
+    if (res.status === 404 || (data && data.error === "unknown_client")) {
+      invalid = true;
+      fatal("This link isn't working", "Open Grocery List from the personal link Coach sent you. If it still doesn't work, text Coach.", false);
+      return;
+    }
+    if (!res.ok || !data || data.ok !== true) {
+      if ($("app").hidden && !items.length) { fatal("Couldn't load your grocery list", "Something went wrong on our side. Try again in a moment.", true); return; }
+      offline = true; screen("app"); render(); return;
+    }
+    offline = false;
+    note = typeof data.grocery_note === "string" && data.grocery_note.trim() ? data.grocery_note : null;
+    // Server list + this phone's changes that haven't reached the server yet.
+    let merged = (data.items || []).map((x) => Object.assign({}, x));
+    for (const op of queue) {
+      if (op.type === "delete") merged = merged.filter((x) => x.id !== op.id);
+      else {
+        const i = merged.findIndex((x) => x.id === op.id);
+        if (i >= 0) Object.assign(merged[i], op.fields);
+        else if (op.isNew) merged.push(Object.assign({ id: op.id, source: "client", created_at: "~" }, op.fields));
+      }
+    }
+    items = merged;
+    persist();
+    screen("app");
+    render();
+    if (queue.length) flush();
+  }
+
+  // ---- actions (update the screen first, then sync) ----
+  function addItem(e) {
+    e.preventDefault();
+    const name = $("addName").value.trim();
+    if (!name) { flash("Type an item name first.", "err"); $("addName").focus(); return; }
+    if (items.length >= MAX_ITEMS) { flash(ERRORS.grocery_limit_reached, "err"); return; }
+    const fields = { name, qty: $("addQty").value.trim() || null, category: $("addCat").value, checked: false };
+    const id = newId();
+    items.push(Object.assign({ id, source: "client", created_at: "~" + Date.now() }, fields));
+    $("addName").value = ""; $("addQty").value = "";
+    flash("");
+    render();
+    enqueue({ type: "save", id, fields, isNew: true });
+    $("addName").focus();
+  }
+  function update(item, fields) {
+    Object.assign(item, fields);
+    render();
+    enqueue({ type: "save", id: item.id, fields });
+  }
+  function remove(item) {
+    items = items.filter((x) => x.id !== item.id);
+    render();
+    enqueue({ type: "delete", id: item.id });
+  }
+
+  // ---- rendering ----
+  let editing = null;
+  function itemState(item) {
+    const ops = queue.filter((q) => q.id === item.id);
+    if (!ops.length) return null;
+    if (ops.some((q) => q.inflight)) return { text: "Saving…", cls: "" };
+    return offline ? { text: "Saved on this phone, not synced yet", cls: "local" } : { text: "Saving…", cls: "" };
+  }
+
+  function renderItem(item) {
+    const st = itemState(item);
+    if (editing === item.id) {
+      const n = h("input", { type: "text", class: "name", maxlength: 120, "aria-label": "Item name" }); n.value = item.name || "";
+      const q = h("input", { type: "text", maxlength: 40, placeholder: "Qty", "aria-label": "Quantity" }); q.value = item.qty || "";
+      const c = h("select", { "aria-label": "Category" }, ...catOptions(item.category)); c.value = item.category;
+      const save = () => {
+        const name = n.value.trim();
+        if (!name) { flash("Items need a name.", "err"); n.focus(); return; }
+        editing = null;
+        const fields = {};
+        if (name !== item.name) fields.name = name;
+        const qty = q.value.trim() || null;
+        if (qty !== (item.qty || null)) fields.qty = qty;
+        if (c.value !== item.category) fields.category = c.value;
+        if (Object.keys(fields).length) update(item, fields); else render();
+      };
+      n.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+      q.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+      setTimeout(() => n.focus(), 0);
+      return h("div", { class: "item" }, h("div", { class: "edit" }, n, q, c,
+        h("div", { class: "row" },
+          h("button", { type: "button", class: "btn small quiet", onclick: () => { editing = null; render(); } }, "Cancel"),
+          h("button", { type: "button", class: "btn small primary", onclick: save }, "Save"))));
+    }
+    const box = h("input", { type: "checkbox", "aria-label": (item.checked ? "Uncheck " : "Check ") + (item.name || "item") });
+    box.checked = !!item.checked;
+    box.addEventListener("change", () => update(item, { checked: box.checked }));
+    return h("div", { class: "item" + (item.checked ? " done" : "") },
+      h("label", { class: "check" }, box),
+      h("div", { class: "label" }, h("div", { class: "n", text: item.name || "" }), item.qty ? h("div", { class: "q", text: item.qty }) : null),
+      h("div", { class: "acts" },
+        h("button", { type: "button", class: "btn small quiet", "aria-label": "Edit " + (item.name || "item"), onclick: () => { editing = item.id; render(); } }, "Edit"),
+        h("button", { type: "button", class: "btn small quiet", "aria-label": "Remove " + (item.name || "item"),
+          onclick: () => { if (confirm("Remove \"" + (item.name || "this item") + "\" from your list?")) remove(item); } }, "✕")),
+      st ? h("div", { class: "state " + st.cls, text: st.text }) : null);
+  }
+  function catOptions(current) {
+    const list = CATEGORIES.includes(current) || !current ? CATEGORIES : CATEGORIES.concat(current);
+    return list.map((c) => h("option", { value: c, text: c }));
+  }
+
+  function render() {
+    // coach note
+    $("note").hidden = !note;
+    $("noteText").textContent = note || "";
+    // sync line
+    const waiting = queue.length;
+    const s = $("sync");
+    if (offline && waiting) { s.className = "sync offline"; $("syncText").textContent = waiting + (waiting === 1 ? " change is" : " changes are") + " saved on this phone. They'll sync when you have signal."; $("syncRetry").hidden = false; }
+    else if (offline) { s.className = "sync offline"; $("syncText").textContent = "No connection. Showing the list saved on this phone."; $("syncRetry").hidden = false; }
+    else if (waiting) { s.className = "sync"; $("syncText").textContent = "Saving…"; $("syncRetry").hidden = true; }
+    else { s.className = "sync"; $("syncText").textContent = items.length ? "All changes saved" : ""; $("syncRetry").hidden = true; }
+
+    const list = $("list");
+    if (!items.length) {
+      list.replaceChildren(h("p", { class: "empty", text: "Your list is empty. Add your first item above." }));
+    } else {
+      const cats = CATEGORIES.slice();
+      items.forEach((x) => { if (x.category && !cats.includes(x.category)) cats.push(x.category); });
+      list.replaceChildren(...cats.map((cat) => {
+        const inCat = items.filter((x) => (x.category || "Other") === cat)
+          .sort((a, b) => (a.checked === b.checked ? String(a.created_at).localeCompare(String(b.created_at)) : a.checked ? 1 : -1));
+        if (!inCat.length) return null;
+        return h("section", { class: "cat" }, h("h2", { text: cat }), inCat.map(renderItem));
+      }).filter(Boolean));
+    }
+    const checked = items.filter((x) => x.checked).length;
+    $("clearChecked").hidden = !checked;
+    $("clearChecked").textContent = "Clear checked items (" + checked + ")";
+  }
+
+  $("addCat").replaceChildren(...CATEGORIES.map((c) => h("option", { value: c, text: c })));
+  $("addCat").value = "Other";
+  $("addForm").addEventListener("submit", addItem);
+  $("clearChecked").addEventListener("click", () => {
+    const done = items.filter((x) => x.checked);
+    if (!done.length || !confirm("Remove " + done.length + " checked " + (done.length === 1 ? "item" : "items") + " from your list?")) return;
+    items = items.filter((x) => !x.checked);
+    render();
+    done.forEach((x) => enqueue({ type: "delete", id: x.id }));
+  });
+  $("syncRetry").addEventListener("click", () => { attempt = 0; if (queue.length) flush(); else refresh(true); });
+  $("msgRetry").addEventListener("click", () => { screen("loading"); refresh(false); });
+
+  // ---- start ----
+  if (!token) {
+    fatal("Open your personal link", "This page needs the personal link Coach sent you. Open Grocery List from your client hub link.", false);
+  } else {
+    if (restore()) { screen("app"); render(); }   // show the saved copy right away
+    refresh(false);
+  }
+})();
+</script>
+</body>
+</html>

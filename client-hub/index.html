@@ -71,6 +71,8 @@ justify-content:center; font-size:22px; flex-shrink:0; }
 .ic.grace{ background:rgba(255,122,45,.16); }
 .ic.contact{ background:rgba(59,130,246,.16); }
 .ic.book{ background:rgba(240,160,32,.16); }
+.ic.meal{ background:rgba(47,178,106,.16); }
+.ic.grocery{ background:rgba(240,160,32,.16); }
 
 .t{ font-size:16px; font-weight:700; letter-spacing:-.01em; }
 .d{ font-size:12.5px; color:var(--muted); }
@@ -107,15 +109,14 @@ border:1px solid var(--line); color:var(--muted); }
 </div>
 </div>
 
-<!-- Weekly Check-in (placeholder by default; upgraded to a real link when ?c= + ?track= are present) -->
-<div class="card inactive" id="card-checkin" aria-disabled="true">
-<div class="ic checkin">&#128203;</div>
+<!-- Calorie Calculator (real link) -->
+<a class="card" href="/calculator-the-reset" aria-label="Calorie Calculator">
+<div class="ic calc">&#129518;</div>
 <div class="txt">
-<div class="t">Weekly Check-in</div>
-<div class="d" id="d-checkin">Open the personal link Coach sent you</div>
-<span class="tag personal" id="tag-checkin">Personal link</span>
+<div class="t">Calorie Calculator</div>
+<div class="d">Dial in your numbers</div>
 </div>
-</div>
+</a>
 
 <!-- Food Tracker (real link) -->
 <a class="card" href="/food-tracker" aria-label="Food Tracker">
@@ -126,14 +127,25 @@ border:1px solid var(--line); color:var(--muted); }
 </div>
 </a>
 
-<!-- The Reset Calculator (real link) -->
-<a class="card" href="/calculator-the-reset" aria-label="The Reset Calculator">
-<div class="ic calc">&#129518;</div>
+<!-- Meal Plan (placeholder by default; upgraded to a real link when ?c= is present) -->
+<div class="card inactive" id="card-meal" aria-disabled="true">
+<div class="ic meal">&#129367;</div>
 <div class="txt">
-<div class="t">Reset Calculator</div>
-<div class="d">Dial in your numbers</div>
+<div class="t">Meal Plan</div>
+<div class="d" id="d-meal">Open the personal link Coach sent you</div>
+<span class="tag personal" id="tag-meal">Personal link</span>
 </div>
-</a>
+</div>
+
+<!-- Grocery List (placeholder by default; upgraded to a real link when ?c= is present) -->
+<div class="card inactive" id="card-grocery" aria-disabled="true">
+<div class="ic grocery">&#128722;</div>
+<div class="txt">
+<div class="t">Grocery List</div>
+<div class="d" id="d-grocery">Open the personal link Coach sent you</div>
+<span class="tag personal" id="tag-grocery">Personal link</span>
+</div>
+</div>
 
 <!-- Progress (placeholder by default; upgraded to a real link when ?c= is present) -->
 <div class="card inactive" id="card-progress" aria-disabled="true">
@@ -142,6 +154,16 @@ border:1px solid var(--line); color:var(--muted); }
 <div class="t">Progress</div>
 <div class="d" id="d-progress">Open the personal link Coach sent you</div>
 <span class="tag personal" id="tag-progress">Personal link</span>
+</div>
+</div>
+
+<!-- Weekly Check-in (placeholder by default; upgraded to a real link when ?c= + ?track= are present) -->
+<div class="card inactive" id="card-checkin" aria-disabled="true">
+<div class="ic checkin">&#128203;</div>
+<div class="txt">
+<div class="t">Weekly Check-in</div>
+<div class="d" id="d-checkin">Open the personal link Coach sent you</div>
+<span class="tag personal" id="tag-checkin">Personal link</span>
 </div>
 </div>
 
@@ -193,6 +215,13 @@ if (!c) return; // no token -> full fallback, nothing changes
 upgrade("progress", "/progress.html?c=" + encodeURIComponent(c),
 "See your weight, consistency & check-ins");
 
+// Meal Plan + Grocery List are brand-agnostic like Progress: token only, plus the
+// same ?track= value (unchanged) when the hub link has one, so their Hub links return here.
+var trackParam = (params.get("track") || "").trim();
+var nutQs = "?c=" + encodeURIComponent(c) + (trackParam ? "&track=" + encodeURIComponent(trackParam) : "");
+upgrade("meal", "/meal-plan.html" + nutQs, "See your meal plan");
+upgrade("grocery", "/grocery.html" + nutQs, "Your shopping list");
+
 // Direct text line — brand-agnostic, token only. The number is NOT in this page;
 // checkin-api returns it only if the token belongs to a real client.
 upgradeContact(c);
@@ -216,7 +245,7 @@ if (!card) return;
 var a = document.createElement("a");
 a.className = "card";
 a.setAttribute("href", href);
-var LABELS = { training:"My Training", checkin:"Weekly Check-in", progress:"Progress" };
+var LABELS = { training:"My Training", checkin:"Weekly Check-in", progress:"Progress", meal:"Meal Plan", grocery:"Grocery List" };
 a.setAttribute("aria-label", LABELS[which] || "");
 a.innerHTML = card.innerHTML;
 card.parentNode.replaceChild(a, card);
@@ -282,4 +311,3 @@ contact.parentNode.insertBefore(a, contact);
 </script>
 </body>
 </html>
-

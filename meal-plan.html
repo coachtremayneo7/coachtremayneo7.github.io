@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f1319">
+<title>Meal plan | Coach TreMayne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1319;
+    --panel: #161c25;
+    --panel-2: #1c2430;
+    --line: #2a3443;
+    --text: #e9eef4;
+    --muted: #93a1b3;
+    --chalk: #f2f5f8;
+    --radius: 16px;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 var(--body); -webkit-text-size-adjust: 100%; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  .wrap { max-width: 640px; margin: 0 auto; padding: calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom)); }
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 15px; padding: 6px 0; }
+  .back:hover { color: var(--text); }
+  .kicker { color: var(--muted); font-size: 14px; }
+
+  .title { font-size: 34px; line-height: 1.1; margin-bottom: 14px; overflow-wrap: anywhere; }
+  .targets { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  .target { flex: 1 1 140px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+  .target b { display: block; font-family: var(--display); font-size: 28px; line-height: 1.1; }
+  .target span { color: var(--muted); font-size: 14px; }
+  .prose { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 18px; }
+  .intro { color: #c9d3de; }
+
+  .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin: 6px 0 16px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: 0 0 auto; border: 1px solid var(--line); background: transparent; color: var(--muted);
+         border-radius: 999px; padding: 8px 16px; font: 600 15px/1.2 var(--body); cursor: pointer; max-width: 80vw;
+         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tab[aria-selected="true"] { background: var(--chalk); color: var(--bg); border-color: var(--chalk); }
+  .daylabel { font-size: 15px; color: var(--muted); margin: 0 0 12px; overflow-wrap: anywhere; }
+
+  .meal { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .meal h2 { font-size: 21px; margin-bottom: 10px; overflow-wrap: anywhere; }
+  .opts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .opt { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 10px;
+         padding: 7px 12px; font: 500 14px/1.25 var(--body); cursor: pointer; text-align: left; max-width: 100%; overflow-wrap: anywhere; }
+  .opt[aria-selected="true"] { color: var(--text); border-color: var(--chalk); }
+  .foods { list-style: none; margin: 0; padding: 0; }
+  .foods li { display: flex; justify-content: space-between; gap: 14px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .foods li:first-child { border-top: none; padding-top: 2px; }
+  .food { overflow-wrap: anywhere; }
+  .portion { color: var(--muted); text-align: right; flex-shrink: 0; max-width: 45%; overflow-wrap: anywhere; }
+  .approx { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  .extra { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .extra h3 { font-family: var(--body); font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }
+  .extra p { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .none { color: var(--muted); font-style: italic; margin: 0; }
+
+  .section-title { font-size: 22px; margin: 28px 0 12px; }
+  .guide { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+  .guide h3 { font-size: 18px; margin-bottom: 4px; overflow-wrap: anywhere; }
+  .guide p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  .track { display: block; text-align: center; text-decoration: none; background: var(--chalk); color: var(--bg);
+           font-weight: 600; border-radius: 14px; padding: 15px; margin-top: 28px; }
+
+  .state { text-align: center; padding: 18vh 10px 0; }
+  .state h1 { font-size: 28px; margin-bottom: 10px; }
+  .state p { color: var(--muted); margin: 0 auto 18px; max-width: 34ch; }
+  .retry { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 12px; padding: 10px 18px; font: 600 15px var(--body); cursor: pointer; }
+  .pulse { width: 42px; height: 42px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--chalk); margin: 0 auto 16px; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" id="back" href="https://coachtremayne.com/client-hub/">← Hub</a>
+    <span class="kicker">Meal plan</span>
+  </div>
+
+  <div class="state" id="loading" role="status">
+    <div class="pulse" aria-hidden="true"></div>
+    <p>Loading your meal plan…</p>
+  </div>
+
+  <div class="state" id="message" hidden>
+    <h1 id="msgTitle"></h1>
+    <p id="msgText"></p>
+    <button type="button" class="retry" id="retry" hidden>Try again</button>
+  </div>
+
+  <main id="plan" hidden></main>
+
+  <a class="track" id="track" href="https://coachtremayne.com/food-tracker" hidden>Track today in Food Tracker</a>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const API = "https://checkin-api.quantumflexpt.workers.dev";
+  const FOOD_TRACKER = "https://coachtremayne.com/food-tracker";
+  const $ = (id) => document.getElementById(id);
+
+  const params = new URLSearchParams(location.search);
+  const token = (params.get("c") || "").trim();
+  const track = (params.get("track") || "").trim();
+
+  // Back to this client's own hub link (same token + track the page was opened with).
+  if (token) {
+    const hub = new URL("https://coachtremayne.com/client-hub/");
+    hub.searchParams.set("c", token);
+    if (track) hub.searchParams.set("track", track);
+    $("back").href = hub.toString();
+  }
+  $("track").href = FOOD_TRACKER;
+
+  // Safe DOM builder: stored text is only ever set as text, never parsed as HTML.
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : String(v));
+    }
+    for (const c of kids.flat()) {
+      if (c === null || c === undefined || c === false) continue;
+      el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    }
+    return el;
+  }
+  const txt = (v) => (typeof v === "string" && v.trim() ? v.trim() : typeof v === "number" ? String(v) : "");
+  const numOk = (v) => typeof v === "number" && Number.isFinite(v);
+  const fmt = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 1 });
+
+  function show(which) {
+    $("loading").hidden = which !== "loading";
+    $("message").hidden = which !== "message";
+    $("plan").hidden = which !== "plan";
+  }
+  function message(title, text, canRetry, showTracker) {
+    $("msgTitle").textContent = title;
+    $("msgText").textContent = text;
+    $("retry").hidden = !canRetry;
+    $("track").hidden = !showTracker;
+    show("message");
+  }
+
+  // ---- rendering ----
+  let plan = null;
+  let dayIndex = 0;
+  const optionIndex = {}; // "day-meal" -> selected option
+
+  function renderMeal(meal, di, mi) {
+    const options = Array.isArray(meal.options) ? meal.options : [];
+    const key = di + "-" + mi;
+    const sel = Math.min(optionIndex[key] || 0, Math.max(options.length - 1, 0));
+    const card = h("article", { class: "meal" }, h("h2", { text: txt(meal.name) || "Meal " + (mi + 1) }));
+
+    if (options.length > 1) {
+      card.append(h("div", { class: "opts", role: "tablist", "aria-label": "Choices for " + (txt(meal.name) || "this meal") },
+        options.map((o, oi) => h("button", {
+          type: "button", class: "opt", role: "tab", "aria-selected": oi === sel ? "true" : "false",
+          onclick: () => { optionIndex[key] = oi; renderPlan(); },
+          text: txt(o.label) || (oi === 0 ? "Main" : "Option " + (oi + 1))
+        }))));
+    }
+    const o = options[sel];
+    if (o) {
+      if (options.length === 1 && txt(o.label)) card.append(h("p", { class: "approx", text: txt(o.label) }));
+      const foods = (Array.isArray(o.foods) ? o.foods : []).filter((f) => txt(f.food));
+      if (foods.length) {
+        card.append(h("ul", { class: "foods" }, foods.map((f) =>
+          h("li", {}, h("span", { class: "food", text: txt(f.food) }), txt(f.portion) ? h("span", { class: "portion", text: txt(f.portion) }) : null))));
+      }
+      const parts = [];
+      if (numOk(o.approx_calories)) parts.push("about " + fmt(o.approx_calories) + " calories");
+      if (numOk(o.approx_protein)) parts.push(fmt(o.approx_protein) + " g protein");
+      if (parts.length) { const t = parts.join(", "); card.append(h("p", { class: "approx", text: t.charAt(0).toUpperCase() + t.slice(1) })); }
+    }
+    const extras = [];
+    if (txt(meal.swaps)) extras.push(h("h3", { text: "Swaps" }), h("p", { text: txt(meal.swaps) }));
+    if (txt(meal.note)) extras.push(h("h3", { text: "Note" }), h("p", { text: txt(meal.note) }));
+    if (extras.length) card.append(h("div", { class: "extra" }, extras));
+    return card;
+  }
+
+  function renderPlan() {
+    const days = Array.isArray(plan.days) ? plan.days : [];
+    if (dayIndex >= days.length) dayIndex = 0;
+    const root = $("plan");
+    const nodes = [h("h1", { class: "title", text: txt(plan.title) || "Your meal plan" })];
+
+    const targets = [];
+    if (numOk(plan.calorie_target)) targets.push(h("div", { class: "target" }, h("b", { text: fmt(plan.calorie_target) }), h("span", { text: "calories a day" })));
+    if (numOk(plan.protein_target)) targets.push(h("div", { class: "target" }, h("b", { text: fmt(plan.protein_target) + " g" }), h("span", { text: "protein a day" })));
+    if (targets.length) nodes.push(h("div", { class: "targets" }, targets));
+    if (txt(plan.intro)) nodes.push(h("p", { class: "prose intro", text: txt(plan.intro) }));
+
+    if (days.length > 1) {
+      nodes.push(h("div", { class: "tabs", role: "tablist", "aria-label": "Day guides" },
+        days.map((d, di) => h("button", {
+          type: "button", class: "tab", role: "tab", "aria-selected": di === dayIndex ? "true" : "false",
+          onclick: () => { dayIndex = di; renderPlan(); },
+          text: txt(d.label) || "Day " + (di + 1)
+        }))));
+    } else if (days[0] && txt(days[0].label)) {
+      nodes.push(h("p", { class: "daylabel", text: txt(days[0].label) }));
+    }
+
+    const day = days[dayIndex];
+    const meals = day && Array.isArray(day.meals) ? day.meals : [];
+    if (meals.length) nodes.push(h("div", { role: days.length > 1 ? "tabpanel" : null }, meals.map((m, mi) => renderMeal(m, dayIndex, mi))));
+    else nodes.push(h("p", { class: "none", text: "No meals listed here yet." }));
+
+    const guides = (Array.isArray(plan.guides) ? plan.guides : []).filter((g) => txt(g.title) || txt(g.text));
+    if (guides.length) {
+      nodes.push(h("h2", { class: "section-title", text: "Guides" }));
+      guides.forEach((g) => nodes.push(h("section", { class: "guide" },
+        txt(g.title) ? h("h3", { text: txt(g.title) }) : null,
+        txt(g.text) ? h("p", { text: txt(g.text) }) : null)));
+    }
+    if (txt(plan.notes)) {
+      nodes.push(h("h2", { class: "section-title", text: "Notes" }));
+      nodes.push(h("p", { class: "prose", text: txt(plan.notes) }));
+    }
+    root.replaceChildren(...nodes);
+    $("track").hidden = false;
+    show("plan");
+  }
+
+  // ---- load (read-only: this page only ever sends GET /meal-plan) ----
+  async function load() {
+    if (!token) {
+      message("Open your personal link", "This page needs the personal link Coach sent you. Open Meal Plan from your client hub link.", false, false);
+      return;
+    }
+    show("loading"); $("track").hidden = true;
+    let res, data = null;
+    try {
+      res = await fetch(API + "/meal-plan?c=" + encodeURIComponent(token), { method: "GET", cache: "no-store" });
+      try { data = await res.json(); } catch {}
+    } catch {
+      message("Couldn't load your meal plan", "Check your connection and try again.", true, false);
+      return;
+    }
+    if (res.status === 404 || (data && data.error === "unknown_client")) {
+      message("This link isn't working", "Open Meal Plan from the personal link Coach sent you. If it still doesn't work, text Coach.", false, false);
+      return;
+    }
+    if (!res.ok || !data || data.ok !== true) {
+      message("Couldn't load your meal plan", "Something went wrong on our side. Try again in a moment.", true, false);
+      return;
+    }
+    if (!data.has_plan || !data.plan) {
+      message("Coach is building your meal plan.", "Check back soon. In the meantime you can keep logging in Food Tracker.", false, true);
+      return;
+    }
+    plan = data.plan;
+    renderPlan();
+  }
+  $("retry").addEventListener("click", load);
+  load();
+})();
+</script>
+</body>
+</html>
