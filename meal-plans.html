@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Meal plan editor | Coach TreMayne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1319;
+    --panel: #161c25;
+    --panel-2: #1b2330;
+    --line: #2a3443;
+    --line-strong: #3a4659;
+    --text: #e9eef4;
+    --muted: #93a1b3;
+    --chalk: #f2f5f8;
+    --ok: #4cc38a;
+    --err: #ff7a7a;
+    --warn: #f5b94a;
+    --radius-lg: 14px;
+    --radius-sm: 8px;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--body); }
+  h1, h2, h3, h4 { font-family: var(--display); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  /* top bar */
+  .bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center;
+         padding: 14px 24px; background: rgba(15, 19, 25, 0.96); border-bottom: 1px solid var(--line); }
+  .bar h1 { font-size: 22px; }
+  .bar .who { color: var(--muted); font-size: 13px; }
+  .bar .grow { flex: 1; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  input[type=text], input[type=password], input[type=number], select, textarea {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 8px 10px; min-width: 0; width: 100%; }
+  textarea { resize: vertical; min-height: 64px; }
+  input::placeholder, textarea::placeholder { color: #66758a; }
+  input:focus, select:focus, textarea:focus { border-color: var(--line-strong); }
+  input.bad { border-color: var(--err); }
+
+  button { cursor: pointer; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+           background: var(--panel-2); padding: 8px 14px; font-weight: 600; }
+  button:hover:not(:disabled) { border-color: var(--muted); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.primary { background: var(--chalk); color: #0f1319; border-color: var(--chalk); }
+  button.add { background: transparent; border-style: dashed; color: var(--muted); font-weight: 500; }
+  button.add:hover:not(:disabled) { color: var(--text); }
+  button.icon { padding: 4px 9px; font-weight: 500; line-height: 1.2; }
+  button.danger:hover:not(:disabled) { border-color: var(--err); color: var(--err); }
+  button.link { background: none; border: none; padding: 0; color: var(--muted); text-decoration: underline; font-weight: 500; }
+
+  .gate { max-width: 460px; margin: 12vh auto; padding: 0 24px; }
+  .gate h2 { font-size: 30px; margin-bottom: 8px; }
+  .gate p { color: var(--muted); }
+  .gate form { display: flex; gap: 8px; margin-top: 18px; }
+
+  /* layout */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; padding: 24px 24px 120px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+  .side { display: flex; flex-direction: column; gap: 20px; }
+  @media (min-width: 1101px) { .side { position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow: auto; padding-right: 4px; } }
+
+  .client-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .client-head h2 { font-size: 34px; line-height: 1.1; }
+  .pill { font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+  .pill.saved { color: var(--ok); border-color: rgba(76, 195, 138, 0.4); }
+
+  .banner { border: 1px solid var(--warn); color: var(--warn); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 18px; }
+  .banner.err { border-color: var(--err); color: var(--err); }
+
+  section.block { margin-bottom: 30px; }
+  section.block > h3 { font-size: 19px; margin-bottom: 4px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field .lab { font-size: 13px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+
+  /* nesting: the depth of the left rule shows where you are */
+  .day { border-left: 4px solid var(--chalk); background: var(--panel); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; padding: 16px 18px; }
+  .meal { border-left: 3px solid var(--line-strong); background: var(--panel-2); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 14px 16px; }
+  .option { border-left: 2px dashed var(--line-strong); padding: 10px 0 10px 14px; }
+  .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .head .title-in { flex: 1; }
+  .head .tag { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+  .day > .head .tag { font-size: 17px; }
+  .meal-name { font-size: 16px; font-weight: 600; }
+  .tools { display: flex; gap: 4px; flex-shrink: 0; }
+  .foods { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .food { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+  .approx { display: grid; grid-template-columns: repeat(2, minmax(0, 170px)); gap: 10px; margin-top: 8px; }
+  .count { color: var(--muted); font-size: 12px; margin-left: 8px; font-weight: 400; }
+  .empty-note { color: var(--muted); font-size: 13px; font-style: italic; margin: 0 0 8px; }
+
+  /* side panels */
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 16px; }
+  .panel h3 { font-size: 17px; margin-bottom: 4px; }
+  .status { font-size: 13px; min-height: 1.4em; }
+  .status.ok { color: var(--ok); }
+  .status.err { color: var(--err); }
+  .status.busy { color: var(--muted); }
+  .gform { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 6px; }
+  .gform button { white-space: nowrap; }
+  .gcat { margin-top: 14px; }
+  .gcat h4 { font-family: var(--body); font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .gitem { display: grid; grid-template-columns: auto minmax(0, 1fr) 72px auto; gap: 6px; align-items: center; padding: 4px 0; }
+  .gitem input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--ok); }
+  .gitem.checked input[type=text] { color: var(--muted); text-decoration: line-through; }
+  .gmeta { grid-column: 2 / -1; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .gmeta select { width: auto; padding: 2px 6px; font-size: 12px; }
+  .rs.err { color: var(--err); }
+  .rs.ok { color: var(--ok); }
+
+  /* save bar */
+  .savebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; gap: 14px; align-items: center; justify-content: flex-end;
+             padding: 12px 24px; background: rgba(22, 28, 37, 0.97); border-top: 1px solid var(--line); }
+  .savebar .status { flex: 1; text-align: right; }
+  .dirty-dot { color: var(--warn); }
+
+  @media (max-width: 640px) {
+    .bar { padding: 12px 14px; }
+    .layout { padding: 16px 14px 120px; }
+    .food { grid-template-columns: 1fr 1fr; }
+    .head { flex-wrap: wrap; }
+    .head .title-in { flex-basis: 100%; order: 3; }
+    .food .tools { grid-column: 1 / -1; justify-content: flex-end; }
+    .client-head h2 { font-size: 26px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1>Meal plans</h1>
+  <span class="who">Coach tool</span>
+  <span class="grow"></span>
+  <div class="row" id="clientArea" hidden>
+    <label for="clientSel" class="who">Client</label>
+    <select id="clientSel" style="width:auto;min-width:220px"></select>
+    <button type="button" id="lockBtn">Lock</button>
+  </div>
+</header>
+
+<div class="gate" id="gate">
+  <h2>Enter your coach key</h2>
+  <p>The same key you use for Coach Hub. It stays in this browser tab only and is cleared when you close the tab or press Lock.</p>
+  <form id="keyForm" autocomplete="off">
+    <input type="password" id="keyInput" placeholder="Coach key" aria-label="Coach key" autocomplete="current-password">
+    <button type="submit" class="primary" id="unlockBtn">Unlock</button>
+  </form>
+  <p class="status err" id="gateStatus" role="alert"></p>
+</div>
+
+<div class="gate" id="pick" hidden>
+  <h2>Choose a client</h2>
+  <p>Pick a client from the list at the top to open their meal plan and grocery list.</p>
+</div>
+
+<div class="layout" id="app" hidden>
+  <main>
+    <div class="client-head">
+      <h2 id="clientName"></h2>
+      <span class="pill" id="planState"></span>
+    </div>
+    <div class="banner" id="banner" hidden role="status"></div>
+    <div id="editor"></div>
+  </main>
+
+  <aside class="side">
+    <div class="panel">
+      <h3>Copy from another client</h3>
+      <p class="hint">Loads their meal plan into this editor as a starting point. Nothing is saved until you press Save plan. Their grocery list is never copied.</p>
+      <div class="row">
+        <select id="copySel" style="flex:1"></select>
+        <button type="button" id="copyBtn">Load plan</button>
+      </div>
+      <p class="status" id="copyStatus"></p>
+    </div>
+
+    <div class="panel">
+      <h3>Grocery note</h3>
+      <p class="hint">Shown at the top of the client's grocery list. Saved separately from the plan.</p>
+      <textarea id="noteInput" maxlength="500" rows="3" placeholder="e.g. Buy enough protein for the week."></textarea>
+      <div class="row" style="margin-top:8px">
+        <button type="button" id="noteBtn">Save note</button>
+        <span class="status" id="noteStatus"></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <h3>Grocery list <span class="count" id="gCount"></span></h3>
+        <button type="button" class="link" id="gRefresh">Refresh</button>
+      </div>
+      <p class="hint">Each change saves right away. The client sees the same list.</p>
+      <form class="gform" id="gAddForm" autocomplete="off">
+        <input type="text" id="gName" maxlength="120" placeholder="Item, e.g. Chicken breast" aria-label="New item name">
+        <input type="text" id="gQty" maxlength="40" placeholder="Qty" aria-label="New item quantity">
+        <select id="gCat" aria-label="New item category"></select>
+        <button type="submit">Add item</button>
+      </form>
+      <p class="status" id="gStatus"></p>
+      <div id="gList"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="savebar" id="savebar" hidden>
+  <span class="status" id="saveStatus" role="status"></span>
+  <button type="button" class="primary" id="saveBtn">Save plan</button>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- settings ----
+  const API = "https://checkin-api.quantumflexpt.workers.dev";
+  const KEY_STORE = "ct_coach_key_session"; // sessionStorage only: cleared when the tab closes
+  const LIMITS = { days: 7, meals: 12, options: 6, foods: 25, guides: 10, grocery: 300 };
+  const CATEGORIES = ["Protein", "Produce", "Carbs & Grains", "Dairy & Eggs", "Fats & Snacks", "Drinks", "On-the-go / Portable", "Other"];
+  const ERRORS = {
+    unauthorized: "Coach key not accepted. Press Lock and enter it again.",
+    unknown_client: "That client wasn't found.",
+    missing_client_id: "No client selected.",
+    invalid_plan: "The plan couldn't be read. Reload the page and try again.",
+    invalid_plan_days: "A plan needs between 1 and 7 day guides.",
+    bad_meal_options: "Every meal needs 1 to 6 options.",
+    food_name_required: "A food has a portion but no name.",
+    plan_too_large: "This plan is too large to save. Shorten some text or remove items.",
+    too_large: "Too much text in one save. Shorten some fields.",
+    grocery_limit_reached: "This grocery list is full (300 items). Remove some items first.",
+    missing_name: "Grocery items need a name.",
+    not_found: "That item no longer exists. Press Refresh.",
+    server_error: "The server had a problem. Try again in a moment."
+  };
+  const errText = (code) => ERRORS[code] || (code ? "Save failed (" + code + ")." : "Couldn't reach the server. Check your connection and try again.");
+
+  // ---- state ----
+  let coachKey = "";
+  let clients = [];
+  let current = null;       // { id, name } — always an entry from the server's client list
+  let plan = null;          // editor copy of the plan (strings while editing)
+  let savedSnap = "";
+  let hasSavedPlan = false;
+  let noteSaved = "";
+  let groceries = [];
+  let saving = false;
+  let skipUnloadGuard = false;
+
+  const $ = (id) => document.getElementById(id);
+
+  // ---- network ----
+  async function api(method, path, body) {
+    const init = { method, headers: { authorization: "Bearer " + coachKey } };
+    if (body !== undefined) { init.headers["content-type"] = "application/json"; init.body = JSON.stringify(body); }
+    let res;
+    try { res = await fetch(API + path, init); } catch { return { ok: false, status: 0, data: null, error: null }; }
+    let data = null;
+    try { data = await res.json(); } catch {}
+    const ok = res.ok && !!data && data.ok !== false;
+    return { ok, status: res.status, data, error: data && data.error };
+  }
+
+  // ---- safe DOM builder: text is always set as text, never as HTML ----
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : String(v));
+    }
+    for (const c of kids.flat()) {
+      if (c === null || c === undefined || c === false) continue;
+      el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    }
+    return el;
+  }
+  function setStatus(el, text, kind) { el.textContent = text || ""; el.className = "status" + (kind ? " " + kind : ""); }
+  const timeNow = () => new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  // ---- plan shape (matches the approved Nutrition V1 schema) ----
+  const blankFood = () => ({ food: "", portion: "" });
+  const blankOption = () => ({ label: "", foods: [blankFood()], approx_calories: "", approx_protein: "" });
+  const blankMeal = () => ({ name: "", options: [blankOption()], swaps: "", note: "" });
+  const blankDay = () => ({ label: "", meals: [blankMeal()] });
+  const blankPlan = () => ({ title: "", calorie_target: "", protein_target: "", intro: "", days: [blankDay()], guides: [], notes: "" });
+  const s = (v) => (v === null || v === undefined ? "" : String(v));
+
+  // Server plan -> editor copy (always brand-new objects, so a copied plan is fully independent).
+  function toEditor(p) {
+    p = p || {};
+    const days = Array.isArray(p.days) && p.days.length ? p.days : [{ meals: [] }];
+    return {
+      title: s(p.title), calorie_target: s(p.calorie_target), protein_target: s(p.protein_target),
+      intro: s(p.intro), notes: s(p.notes),
+      days: days.map((d) => ({
+        label: s(d && d.label),
+        meals: ((d && d.meals) || []).map((m) => ({
+          name: s(m.name), swaps: s(m.swaps), note: s(m.note),
+          options: (m.options && m.options.length ? m.options : [{}]).map((o) => ({
+            label: s(o.label), approx_calories: s(o.approx_calories), approx_protein: s(o.approx_protein),
+            foods: (o.foods || []).map((f) => ({ food: s(f.food), portion: s(f.portion) }))
+          }))
+        }))
+      })),
+      guides: (p.guides || []).map((g) => ({ title: s(g.title), text: s(g.text) }))
+    };
+  }
+
+  // Editor copy -> payload. Empty optional fields become null; blank rows are dropped.
+  const str = (v) => { const t = String(v === undefined || v === null ? "" : v).trim(); return t || null; };
+  function num(v, what) {
+    const t = String(v === undefined || v === null ? "" : v).trim();
+    if (!t) return null;
+    const n = Number(t);
+    if (!Number.isFinite(n) || n < 0 || n > 20000) throw new Error(what + " must be a number from 0 to 20000.");
+    return n;
+  }
+  function dayName(i) { return plan.days.length > 1 ? (str(plan.days[i].label) || "Day guide " + (i + 1)) : "the plan"; }
+  function toPayload(e) {
+    return {
+      title: str(e.title),
+      calorie_target: num(e.calorie_target, "Calorie target"),
+      protein_target: num(e.protein_target, "Protein target"),
+      intro: str(e.intro),
+      days: e.days.map((d, di) => ({
+        label: str(d.label),
+        meals: d.meals.map((m, mi) => ({
+          name: str(m.name),
+          options: m.options.map((o, oi) => {
+            const where = dayName(di) + ", " + (str(m.name) || "meal " + (mi + 1)) + ", option " + (oi + 1);
+            return {
+              label: str(o.label),
+              foods: o.foods.filter((f) => str(f.food) || str(f.portion)).map((f) => {
+                if (!str(f.food)) throw new Error("A food in " + where + " has a portion but no name.");
+                return { food: str(f.food), portion: str(f.portion) };
+              }),
+              approx_calories: num(o.approx_calories, "Approx calories in " + where),
+              approx_protein: num(o.approx_protein, "Approx protein in " + where)
+            };
+          }),
+          swaps: str(m.swaps),
+          note: str(m.note)
+        }))
+      })),
+      guides: e.guides.filter((g) => str(g.title) || str(g.text)).map((g) => ({ title: str(g.title), text: str(g.text) })),
+      notes: str(e.notes)
+    };
+  }
+
+  // ---- unsaved-change tracking ----
+  const planDirty = () => !!plan && JSON.stringify(plan) !== savedSnap;
+  const noteDirty = () => !!current && $("noteInput").value !== noteSaved;
+  function refreshSaveBar() {
+    if (saving) return;
+    if (planDirty()) setStatus($("saveStatus"), "Unsaved changes", "busy");
+    else if ($("saveStatus").dataset.keep !== "1") setStatus($("saveStatus"), hasSavedPlan ? "All changes saved" : "No plan saved yet", "busy");
+    $("saveStatus").dataset.keep = "";
+    $("saveBtn").disabled = saving;
+  }
+  function markDirty() { refreshSaveBar(); }
+  window.addEventListener("beforeunload", (e) => {
+    if (skipUnloadGuard) return;
+    if (planDirty() || noteDirty()) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  // ---- editor rendering ----
+  function hasContent(x) {
+    if (x === null || x === undefined) return false;
+    if (typeof x === "string") return x.trim() !== "";
+    if (typeof x === "number") return true;
+    if (Array.isArray(x)) return x.some(hasContent);
+    if (typeof x === "object") return Object.values(x).some(hasContent);
+    return false;
+  }
+  function changed() { markDirty(); render(); }
+
+  function textIn(obj, key, opts) {
+    opts = opts || {};
+    const el = opts.multi
+      ? h("textarea", { rows: opts.rows || 3, maxlength: opts.max, placeholder: opts.ph, "aria-label": opts.aria || opts.label || opts.ph })
+      : h("input", { type: "text", maxlength: opts.max, placeholder: opts.ph, class: opts.cls, "aria-label": opts.aria || opts.label || opts.ph });
+    el.value = obj[key];
+    el.addEventListener("input", () => { obj[key] = el.value; markDirty(); });
+    if (!opts.label) return el;
+    return h("label", { class: "field" }, h("span", { class: "lab", text: opts.label }), el);
+  }
+  function numIn(obj, key, label, ph) {
+    const el = h("input", { type: "number", min: 0, max: 20000, step: "any", inputmode: "decimal", placeholder: ph, "aria-label": label });
+    el.value = obj[key];
+    el.addEventListener("input", () => { obj[key] = el.value; markDirty(); });
+    return h("label", { class: "field" }, h("span", { class: "lab", text: label }), el);
+  }
+  function tools(arr, i, what, min) {
+    const move = (d) => { const j = i + d; if (j < 0 || j >= arr.length) return; const t = arr[i]; arr[i] = arr[j]; arr[j] = t; changed(); };
+    const del = () => {
+      if (arr.length <= min) return;
+      if (what !== "food" && hasContent(arr[i]) && !confirm("Remove this " + what + " and everything in it?")) return;
+      arr.splice(i, 1); changed();
+    };
+    return h("div", { class: "tools" },
+      h("button", { type: "button", class: "icon", title: "Move " + what + " up", "aria-label": "Move " + what + " up", disabled: i === 0, onclick: () => move(-1) }, "↑"),
+      h("button", { type: "button", class: "icon", title: "Move " + what + " down", "aria-label": "Move " + what + " down", disabled: i === arr.length - 1, onclick: () => move(1) }, "↓"),
+      h("button", { type: "button", class: "icon danger", title: arr.length <= min ? "At least " + min + " " + what + " required" : "Remove " + what,
+        "aria-label": "Remove " + what, disabled: arr.length <= min, onclick: del }, "✕"));
+  }
+  function addBtn(label, arr, max, make) {
+    const full = arr.length >= max;
+    return h("button", { type: "button", class: "add", disabled: full, title: full ? "Limit reached (" + max + ")" : null,
+      onclick: () => { arr.push(make()); changed(); } }, full ? label + " (limit " + max + ")" : "+ " + label);
+  }
+
+  function renderOption(meal, o, oi) {
+    return h("div", { class: "option" },
+      h("div", { class: "head" },
+        h("span", { class: "tag", text: "Option " + (oi + 1) }),
+        textIn(o, "label", { max: 60, cls: "title-in", ph: oi === 0 ? "Label (optional)" : "Label, e.g. Quick option, Truck-stop option, Hotel breakfast", aria: "Option " + (oi + 1) + " label" }),
+        tools(meal.options, oi, "option", 1)),
+      h("div", { class: "foods" },
+        o.foods.length ? null : h("p", { class: "empty-note", text: "No foods yet." }),
+        o.foods.map((f, fi) => h("div", { class: "food" },
+          textIn(f, "food", { max: 80, ph: "Food, e.g. Chicken breast", aria: "Food " + (fi + 1) }),
+          textIn(f, "portion", { max: 60, ph: "Portion, e.g. 6 oz", aria: "Portion " + (fi + 1) }),
+          tools(o.foods, fi, "food", 0)))),
+      addBtn("Add food", o.foods, LIMITS.foods, blankFood),
+      h("div", { class: "approx" },
+        numIn(o, "approx_calories", "Approx calories (optional)", "e.g. 450"),
+        numIn(o, "approx_protein", "Approx protein, g (optional)", "e.g. 40")));
+  }
+
+  function renderMeal(day, m, mi) {
+    return h("div", { class: "meal" },
+      h("div", { class: "head" },
+        textIn(m, "name", { max: 60, cls: "title-in meal-name", ph: "Meal name, e.g. Breakfast", aria: "Meal " + (mi + 1) + " name" }),
+        tools(day.meals, mi, "meal", 0)),
+      h("div", { class: "stack" },
+        m.options.map((o, oi) => renderOption(m, o, oi)),
+        h("div", {}, addBtn("Add option", m.options, LIMITS.options, blankOption)),
+        h("div", { class: "grid2" },
+          textIn(m, "swaps", { multi: true, rows: 2, max: 1000, label: "Swaps (optional)", ph: "e.g. Turkey for chicken, rice for potatoes" }),
+          textIn(m, "note", { multi: true, rows: 2, max: 1000, label: "Meal note (optional)", ph: "e.g. Eat within an hour of training" }))));
+  }
+
+  function renderDay(d, di) {
+    const single = plan.days.length === 1;
+    return h("div", { class: "day" },
+      h("div", { class: "head" },
+        h("span", { class: "tag", text: single ? "Day guide" : "Day guide " + (di + 1) }),
+        textIn(d, "label", { max: 60, cls: "title-in", ph: single ? "Name (optional), e.g. Every day" : "Name, e.g. Training day, Driving day", aria: "Day guide " + (di + 1) + " name" }),
+        tools(plan.days, di, "day guide", 1)),
+      h("div", { class: "stack" },
+        d.meals.length ? null : h("p", { class: "empty-note", text: "No meals in this day guide yet." }),
+        d.meals.map((m, mi) => renderMeal(d, m, mi)),
+        h("div", {}, addBtn("Add meal", d.meals, LIMITS.meals, blankMeal),
+          h("span", { class: "count", text: d.meals.length + " of " + LIMITS.meals + " meals" }))));
+  }
+
+  function render() {
+    const root = $("editor");
+    if (!plan) { root.replaceChildren(); return; }
+    const y = window.scrollY;
+    root.replaceChildren(
+      h("section", { class: "block" },
+        h("h3", { text: "Plan basics" }),
+        h("p", { class: "hint", text: "Everything is optional except at least one day guide. Targets are typed in by you; nothing is calculated." }),
+        h("div", { class: "stack" },
+          textIn(plan, "title", { max: 100, label: "Plan title", ph: "e.g. Fat loss plan, phase 1" }),
+          h("div", { class: "grid2" },
+            numIn(plan, "calorie_target", "Daily calorie target", "e.g. 2000"),
+            numIn(plan, "protein_target", "Daily protein target, g", "e.g. 160")),
+          textIn(plan, "intro", { multi: true, rows: 3, max: 3000, label: "Intro", ph: "A short welcome or how to use this plan" }))),
+      h("section", { class: "block" },
+        h("h3", {}, "Day guides", h("span", { class: "count", text: plan.days.length + " of " + LIMITS.days })),
+        h("p", { class: "hint", text: "One guide means the same plan every day. Add more when days differ, like Training day and Rest day." }),
+        h("div", { class: "stack" },
+          plan.days.map(renderDay),
+          h("div", {}, addBtn("Add day guide", plan.days, LIMITS.days, () => ({ label: "", meals: [] }))))),
+      h("section", { class: "block" },
+        h("h3", {}, "Guides", h("span", { class: "count", text: plan.guides.length + " of " + LIMITS.guides })),
+        h("p", { class: "hint", text: "Extra advice with your own title, like gas-station go-tos or restaurant ordering." }),
+        h("div", { class: "stack" },
+          plan.guides.length ? null : h("p", { class: "empty-note", text: "No guides yet." }),
+          plan.guides.map((g, gi) => h("div", { class: "meal" },
+            h("div", { class: "head" },
+              textIn(g, "title", { max: 80, cls: "title-in meal-name", ph: "Guide title, e.g. Fast and easy", aria: "Guide " + (gi + 1) + " title" }),
+              tools(plan.guides, gi, "guide", 0)),
+            textIn(g, "text", { multi: true, rows: 4, max: 3000, ph: "Guide text", aria: "Guide " + (gi + 1) + " text" }))),
+          h("div", {}, addBtn("Add guide", plan.guides, LIMITS.guides, () => ({ title: "", text: "" }))))),
+      h("section", { class: "block" },
+        h("h3", { text: "Notes" }),
+        textIn(plan, "notes", { multi: true, rows: 3, max: 3000, ph: "Anything else the client should know", aria: "Plan notes" })));
+    window.scrollTo(0, y);
+  }
+
+  // ---- auth ----
+  async function unlock(key) {
+    coachKey = key;
+    setStatus($("gateStatus"), "Checking…", "busy");
+    const r = await api("GET", "/coach/clients");
+    if (!r.ok || !Array.isArray(r.data && r.data.clients)) {
+      coachKey = "";
+      sessionStorage.removeItem(KEY_STORE);
+      setStatus($("gateStatus"), r.status === 401 ? "Coach key not accepted." : errText(r.error), "err");
+      return;
+    }
+    sessionStorage.setItem(KEY_STORE, key);
+    $("keyInput").value = "";
+    setStatus($("gateStatus"), "");
+    clients = r.data.clients;
+    const sel = $("clientSel");
+    sel.replaceChildren(h("option", { value: "", text: "Choose a client" }),
+      ...clients.map((c) => h("option", { value: c.id, text: c.name + (c.status === "paused" ? " (paused)" : "") })));
+    $("gate").hidden = true;
+    $("clientArea").hidden = false;
+    $("pick").hidden = false;
+  }
+  $("keyForm").addEventListener("submit", (e) => { e.preventDefault(); const k = $("keyInput").value.trim(); if (k) unlock(k); });
+  $("lockBtn").addEventListener("click", () => {
+    if ((planDirty() || noteDirty()) && !confirm("You have unsaved changes. Lock anyway and lose them?")) return;
+    sessionStorage.removeItem(KEY_STORE);
+    skipUnloadGuard = true;
+    location.reload();
+  });
+
+  // ---- client switching ----
+  let lastSel = "";
+  $("clientSel").addEventListener("change", async (e) => {
+    const id = e.target.value;
+    if ((planDirty() || noteDirty()) && !confirm("You have unsaved changes for " + current.name + ". Switch anyway and lose them?")) {
+      e.target.value = lastSel; return;
+    }
+    lastSel = id;
+    if (!id) { current = null; plan = null; $("app").hidden = true; $("savebar").hidden = true; $("pick").hidden = false; return; }
+    await loadClient(id);
+  });
+
+  async function loadClient(id) {
+    const c = clients.find((x) => x.id === id);
+    if (!c) return;                       // only ids from the server's own client list are ever used
+    current = { id: c.id, name: c.name };
+    plan = null; render();
+    $("pick").hidden = true; $("app").hidden = false; $("savebar").hidden = false;
+    $("clientName").textContent = c.name;
+    $("banner").hidden = true;
+    setStatus($("planState"), "Loading…"); $("planState").className = "pill";
+    setStatus($("copyStatus"), ""); setStatus($("noteStatus"), ""); setStatus($("gStatus"), ""); setStatus($("saveStatus"), "");
+    $("copySel").replaceChildren(h("option", { value: "", text: "Choose a client to copy from" }),
+      ...clients.filter((x) => x.id !== id).map((x) => h("option", { value: x.id, text: x.name })));
+    $("noteInput").value = ""; noteSaved = "";
+    groceries = []; renderGroceries();
+
+    const r = await api("GET", "/coach/meal-plan?client_id=" + encodeURIComponent(id));
+    if (!current || current.id !== id) return;
+    if (!r.ok) { showBanner(errText(r.error), true); $("planState").textContent = "Couldn't load"; return; }
+    hasSavedPlan = !!r.data.has_plan;
+    plan = hasSavedPlan ? toEditor(r.data.plan) : blankPlan();
+    savedSnap = JSON.stringify(plan);
+    noteSaved = r.data.grocery_note || "";
+    $("noteInput").value = noteSaved;
+    showPlanState(r.data.updated_at);
+    render(); refreshSaveBar();
+    loadGroceries();
+  }
+  function showPlanState(updatedAt) {
+    const el = $("planState");
+    if (hasSavedPlan) { el.textContent = "Saved plan" + (updatedAt ? ", last saved " + updatedAt + " UTC" : ""); el.className = "pill saved"; }
+    else { el.textContent = "No plan saved yet"; el.className = "pill"; }
+  }
+  function showBanner(text, isErr) { const b = $("banner"); b.textContent = text; b.className = "banner" + (isErr ? " err" : ""); b.hidden = !text; }
+
+  // ---- save plan ----
+  $("saveBtn").addEventListener("click", async () => {
+    if (!current || !plan || saving) return;
+    let payload;
+    try { payload = toPayload(plan); }
+    catch (err) { setStatus($("saveStatus"), err.message, "err"); return; }
+    const id = current.id;
+    saving = true; $("saveBtn").disabled = true;
+    setStatus($("saveStatus"), "Saving…", "busy");
+    const r = await api("POST", "/coach/meal-plan/save", { client_id: id, plan: payload });
+    saving = false; $("saveBtn").disabled = false;
+    if (!current || current.id !== id) return;
+    if (!r.ok) { setStatus($("saveStatus"), errText(r.error), "err"); return; }
+    hasSavedPlan = !!r.data.has_plan;
+    plan = toEditor(r.data.plan);          // show exactly what the server stored
+    savedSnap = JSON.stringify(plan);
+    render();
+    showPlanState(r.data.updated_at);
+    showBanner("");
+    setStatus($("saveStatus"), "Plan saved at " + timeNow(), "ok");
+    $("saveStatus").dataset.keep = "1";
+  });
+
+  // ---- copy from client (plan only; grocery list is never touched) ----
+  $("copyBtn").addEventListener("click", async () => {
+    const srcId = $("copySel").value;
+    if (!current || !srcId) { setStatus($("copyStatus"), "Choose a client to copy from.", "err"); return; }
+    const src = clients.find((x) => x.id === srcId);
+    if (!src || src.id === current.id) return;
+    const id = current.id;
+    setStatus($("copyStatus"), "Loading " + src.name + "'s plan…", "busy");
+    const r = await api("GET", "/coach/meal-plan?client_id=" + encodeURIComponent(src.id));
+    if (!current || current.id !== id) return;
+    if (!r.ok) { setStatus($("copyStatus"), errText(r.error), "err"); return; }
+    if (!r.data.has_plan) { setStatus($("copyStatus"), src.name + " has no saved meal plan to copy.", "err"); return; }
+    if (hasContent(plan) && !confirm("Replace what's in the editor for " + current.name + " with " + src.name + "'s plan? Nothing is saved until you press Save plan.")) {
+      setStatus($("copyStatus"), ""); return;
+    }
+    plan = toEditor(JSON.parse(JSON.stringify(r.data.plan)));  // brand-new objects: fully independent copy
+    render(); markDirty();
+    setStatus($("copyStatus"), "Loaded. Grocery list not copied.", "ok");
+    showBanner("This is a copy of " + src.name + "'s plan. Press Save plan to save it for " + current.name + ". " + src.name + "'s plan and grocery list are not changed.");
+  });
+
+  // ---- grocery note ----
+  $("noteInput").addEventListener("input", () => {
+    setStatus($("noteStatus"), $("noteInput").value !== noteSaved ? "Unsaved" : "", "busy");
+  });
+  $("noteBtn").addEventListener("click", async () => {
+    if (!current) return;
+    const id = current.id;
+    setStatus($("noteStatus"), "Saving…", "busy");
+    $("noteBtn").disabled = true;
+    const r = await api("POST", "/coach/meal-plan/save", { client_id: id, grocery_note: $("noteInput").value });
+    $("noteBtn").disabled = false;
+    if (!current || current.id !== id) return;
+    if (!r.ok) { setStatus($("noteStatus"), errText(r.error), "err"); return; }
+    noteSaved = r.data.grocery_note || "";
+    $("noteInput").value = noteSaved;
+    setStatus($("noteStatus"), "Note saved at " + timeNow(), "ok");
+    if (!hasSavedPlan) showPlanState(null);
+  });
+
+  // ---- grocery list (every change is one item-level request) ----
+  $("gCat").replaceChildren(...CATEGORIES.map((c) => h("option", { value: c, text: c })));
+  $("gCat").value = "Other";
+
+  async function loadGroceries() {
+    if (!current) return;
+    const id = current.id;
+    setStatus($("gStatus"), "Loading list…", "busy");
+    const r = await api("GET", "/coach/grocery?client_id=" + encodeURIComponent(id));
+    if (!current || current.id !== id) return;
+    if (!r.ok) { setStatus($("gStatus"), errText(r.error), "err"); return; }
+    groceries = r.data.items || [];
+    setStatus($("gStatus"), "");
+    renderGroceries();
+  }
+  $("gRefresh").addEventListener("click", loadGroceries);
+
+  function newId() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    const a = new Uint8Array(16); crypto.getRandomValues(a);
+    return Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  $("gAddForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!current) return;
+    const name = $("gName").value.trim();
+    if (!name) { setStatus($("gStatus"), "Type an item name first.", "err"); $("gName").focus(); return; }
+    const id = current.id;
+    const body = { client_id: id, id: newId(), name, qty: $("gQty").value.trim() || null, category: $("gCat").value, checked: false };
+    setStatus($("gStatus"), "Adding…", "busy");
+    const r = await api("POST", "/coach/grocery/save", body);
+    if (!current || current.id !== id) return;
+    if (!r.ok) { setStatus($("gStatus"), errText(r.error), "err"); return; }
+    groceries.push(r.data.item);
+    $("gName").value = ""; $("gQty").value = "";
+    setStatus($("gStatus"), "Added " + r.data.item.name + ".", "ok");
+    renderGroceries();
+    $("gName").focus();
+  });
+
+  async function saveItem(item, fields, rs, rerender) {
+    const id = current.id;
+    rs.textContent = "Saving…"; rs.className = "rs";
+    const r = await api("POST", "/coach/grocery/save", Object.assign({ client_id: id, id: item.id }, fields));
+    if (!current || current.id !== id) return false;
+    if (!r.ok) { rs.textContent = errText(r.error); rs.className = "rs err"; return false; }
+    Object.assign(item, r.data.item);
+    if (rerender) renderGroceries();
+    else { rs.textContent = "Saved"; rs.className = "rs ok"; setTimeout(() => { if (rs.textContent === "Saved") rs.textContent = ""; }, 1500); }
+    return true;
+  }
+
+  function renderGroceries() {
+    const list = $("gList");
+    $("gCount").textContent = current ? groceries.length + " of " + LIMITS.grocery : "";
+    if (!groceries.length) { list.replaceChildren(h("p", { class: "empty-note", text: "No items yet. Add the first one above." })); return; }
+    const cats = CATEGORIES.slice();
+    groceries.forEach((g) => { if (!cats.includes(g.category)) cats.push(g.category); });
+    list.replaceChildren(...cats.map((cat) => {
+      const items = groceries.filter((g) => g.category === cat)
+        .sort((a, b) => (a.checked === b.checked ? String(a.created_at).localeCompare(String(b.created_at)) : a.checked ? 1 : -1));
+      if (!items.length) return null;
+      return h("div", { class: "gcat" }, h("h4", { text: cat }), items.map(renderItem));
+    }).filter(Boolean));
+  }
+
+  function renderItem(item) {
+    const rs = h("span", { class: "rs" });
+    const box = h("input", { type: "checkbox", "aria-label": "Bought: " + item.name });
+    box.checked = !!item.checked;
+    box.addEventListener("change", async () => { if (!(await saveItem(item, { checked: box.checked }, rs, true))) box.checked = !!item.checked; });
+    const name = h("input", { type: "text", maxlength: 120, "aria-label": "Item name" });
+    name.value = item.name;
+    name.addEventListener("change", async () => {
+      const v = name.value.trim();
+      if (!v) { name.value = item.name; rs.textContent = "Name can't be empty."; rs.className = "rs err"; return; }
+      if (v !== item.name && !(await saveItem(item, { name: v }, rs, false))) name.value = item.name;
+    });
+    const qty = h("input", { type: "text", maxlength: 40, placeholder: "Qty", "aria-label": "Quantity" });
+    qty.value = item.qty || "";
+    qty.addEventListener("change", async () => {
+      const v = qty.value.trim();
+      if (v !== (item.qty || "") && !(await saveItem(item, { qty: v || null }, rs, false))) qty.value = item.qty || "";
+    });
+    const cat = h("select", { "aria-label": "Category" },
+      (CATEGORIES.includes(item.category) ? CATEGORIES : CATEGORIES.concat(item.category)).map((c) => h("option", { value: c, text: c })));
+    cat.value = item.category;
+    cat.addEventListener("change", async () => { if (!(await saveItem(item, { category: cat.value }, rs, true))) cat.value = item.category; });
+    const del = h("button", { type: "button", class: "icon danger", title: "Remove item", "aria-label": "Remove " + item.name, onclick: async () => {
+      if (!confirm("Remove \"" + item.name + "\" from " + current.name + "'s list?")) return;
+      const id = current.id;
+      rs.textContent = "Removing…"; rs.className = "rs";
+      const r = await api("POST", "/coach/grocery/delete", { client_id: id, id: item.id });
+      if (!current || current.id !== id) return;
+      if (!r.ok) { rs.textContent = errText(r.error); rs.className = "rs err"; return; }
+      groceries = groceries.filter((g) => g.id !== item.id);
+      renderGroceries();
+    } }, "✕");
+    return h("div", { class: "gitem" + (item.checked ? " checked" : "") },
+      box, name, qty, del,
+      h("div", { class: "gmeta" }, cat, h("span", { text: item.source === "client" ? "added by client" : item.source === "plan" ? "from plan" : "added by coach" }), rs));
+  }
+
+  // ---- start ----
+  const remembered = sessionStorage.getItem(KEY_STORE);
+  if (remembered) unlock(remembered);
+})();
+</script>
+</body>
+</html>

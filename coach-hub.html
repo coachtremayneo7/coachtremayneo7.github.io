@@ -68,6 +68,7 @@ font-weight:700; font-size:14px; cursor:pointer; }
 .cli-actions a.logs { background:rgba(255,122,45,.14); border-color:var(--travel); color:#ff9a5e; }
 .cli-actions a.photos { background:rgba(139,124,246,.14); border-color:#8b7cf6; color:#c9c1ff; }
 .cli-actions a.review { background:rgba(59,130,246,.14); border-color:var(--blue); color:#93b8fb; }
+.cli-actions a.meals { background:rgba(240,160,32,.14); border-color:var(--dd); color:#f7c266; }
 </style>
 </head>
 <body>
@@ -170,6 +171,7 @@ ${waiting.has(c.id) ? `<span class="badge waiting">Check-in waiting</span>` : ``
 <a class="build" href="plans.html?client=${encodeURIComponent(c.id)}">Edit workout</a>
 <a class="logs" href="coach-logs.html?client=${encodeURIComponent(c.id)}">Workouts</a>
 <a class="photos" href="coach-photos.html?client=${encodeURIComponent(c.id)}">Photos</a>
+<a class="meals" href="meal-plans.html">Meals</a>
 ${waiting.has(c.id) ? `<a class="review" href="review.html">Review check-in</a>` : ``}
 </div>`;
 listEl.appendChild(row);
