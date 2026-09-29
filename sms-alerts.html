@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--
+  Network lockdown for this phase: the page may not make any network request
+  (connect-src 'none') and may not submit a form anywhere (form-action 'none').
+  This policy must be changed, in a separately approved step, before the real
+  client mode can ever talk to alerts-api.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>Coach TreMayne Alerts | Text Updates</title>
+<meta name="description" content="Opt in to Coach TreMayne Alerts, informational text messages from Quantum Flex Training, LLC about class status, schedule changes, and training reminders.">
+<meta name="theme-color" content="#14181f">
+<style>
+  :root {
+    --bg:#0f1319; --card:#1a1f27; --line:#2a303a;
+    --text:#e8ebf0; --muted:#8a93a2; --link:#6ea3ff;
+    --ok:#2fb26a; --warn:#f0a020; --err:#ff6b6b;
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px; line-height:1.6;
+    padding:40px 20px calc(48px + env(safe-area-inset-bottom));
+  }
+  main { max-width:560px; margin:0 auto; }
+
+  .banner {
+    border:1px solid var(--warn); background:rgba(240,160,32,.10);
+    border-radius:12px; padding:14px 16px; margin:0 0 24px; font-size:15px;
+  }
+  .banner p { margin:0; }
+
+  header { margin-bottom:24px; }
+  h1 { font-size:30px; line-height:1.2; margin:0 0 4px; letter-spacing:-0.01em; }
+  .provider { margin:0 0 20px; color:var(--muted); font-size:14px; }
+  h2 { font-size:20px; line-height:1.3; margin:0 0 8px; }
+  .intro { margin:0; color:var(--text); }
+
+  .card {
+    background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:20px;
+  }
+  .identity { margin:0 0 18px; font-size:15px; color:var(--muted); }
+  .identity strong { color:var(--text); }
+
+  label.field { display:block; font-weight:600; margin:0 0 6px; }
+  input[type="tel"] {
+    width:100%; font:inherit; font-size:18px; color:var(--text);
+    background:var(--bg); border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; margin:0 0 18px;
+  }
+  input[type="tel"]:focus { outline:2px solid var(--link); outline-offset:1px; border-color:transparent; }
+
+  .consent { display:flex; gap:12px; align-items:flex-start; margin:0 0 14px; }
+  .consent input[type="checkbox"] {
+    flex:0 0 auto; width:22px; height:22px; margin:3px 0 0; accent-color:var(--ok);
+  }
+  .consent input[type="checkbox"]:focus-visible { outline:2px solid var(--link); outline-offset:2px; }
+  .consent label { font-size:15px; line-height:1.55; }
+
+  .nonsharing { margin:0 0 18px; font-size:14px; color:var(--muted); }
+
+  button {
+    width:100%; font:inherit; font-weight:700; font-size:17px;
+    color:#0f1319; background:var(--ok); border:0; border-radius:12px;
+    padding:14px 16px; cursor:pointer;
+  }
+  button:focus-visible { outline:2px solid var(--link); outline-offset:3px; }
+  button[disabled] { opacity:.6; cursor:default; }
+
+  .msg { margin:14px 0 0; font-size:15px; }
+  .msg.error { color:var(--err); }
+  .msg.example { color:var(--warn); }
+
+  .done h2 { color:var(--ok); }
+  .done p { margin:0; }
+
+  a { color:var(--link); text-underline-offset:2px; }
+  a:focus-visible { outline:2px solid var(--link); outline-offset:2px; border-radius:2px; }
+
+  footer {
+    margin-top:32px; padding-top:20px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:14px;
+  }
+  footer p { margin:0 0 6px; }
+
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- Public reviewer version only -->
+  <div class="banner" id="reviewerBanner" hidden>
+    <p>Example of the Coach TreMayne Alerts opt-in form. Coach TreMayne clients receive a personal link to this page. Submissions on this example page are not saved and no messages are sent.</p>
+  </div>
+
+  <header>
+    <h1>Coach TreMayne Alerts</h1>
+    <p class="provider">Provided by Quantum Flex Training, LLC</p>
+    <h2>Get class and training updates by text</h2>
+    <p class="intro">Get texts from Coach TreMayne when a class is on or canceled, when your schedule changes, and for training reminders.</p>
+  </header>
+
+  <div class="card" id="formCard">
+    <!-- Identity line: reviewer text, or the client's first name in the real version -->
+    <p class="identity" id="identityReviewer" hidden>Clients see their first name here.</p>
+    <p class="identity" id="identityClient" hidden>Signing up as: <strong id="firstName"></strong>. Not you? Email <a href="mailto:coach@coachtremayne.com">coach@coachtremayne.com</a>.</p>
+
+    <form id="optinForm" novalidate>
+      <label class="field" for="phone">Mobile phone number</label>
+      <input type="tel" id="phone" name="phone" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" aria-describedby="formMsg">
+
+      <!-- Consent: unchecked by default, required, separate from all other terms -->
+      <div class="consent">
+        <input type="checkbox" id="consent" name="consent">
+        <label for="consent">Yes, I agree to receive recurring informational text messages from <strong>Coach TreMayne Alerts</strong> (Quantum Flex Training, LLC) about class status, schedule changes, and training reminders at the mobile number above. Message frequency varies depending on your coaching schedule and program activity. Message and data rates may apply. Reply HELP for help or STOP to opt out at any time. Consent is not a condition of purchase. View our <a href="https://coachtremayne.com/sms-terms.html">SMS Terms</a> and <a href="https://coachtremayne.com/privacy.html">Privacy Policy</a>.</label>
+      </div>
+
+      <p class="nonsharing">Mobile numbers and SMS opt-in data are not sold or shared with third parties or affiliates for marketing or promotional purposes.</p>
+
+      <button type="submit" id="submitBtn">Turn on text alerts</button>
+      <p class="msg" id="formMsg" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <!-- Real client success screen (never shown in this phase) -->
+  <div class="card done" id="successCard" hidden>
+    <h2>You're signed up.</h2>
+    <p>You'll get a confirmation text shortly. Reply STOP anytime to opt out.</p>
+  </div>
+
+  <footer>
+    <p>Coach TreMayne is operated by Quantum Flex Training, LLC.</p>
+    <p><a href="https://coachtremayne.com/sms-terms.html">SMS Terms</a> &nbsp;|&nbsp; <a href="https://coachtremayne.com/privacy.html">Privacy Policy</a></p>
+  </footer>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ------------------------------------------------------------------
+  // PHASE SWITCH
+  // ALERTS_API_URL is null in this phase. While it is null, the page is
+  // ALWAYS the public reviewer version, even if a ?c= token is present.
+  // Enabling the real client version requires, in a separately approved
+  // step: alerts-api live, this value set, and the Content-Security-Policy
+  // above updated to allow that one API origin.
+  // ------------------------------------------------------------------
+  var ALERTS_API_URL = null;
+  var DISCLOSURE_VERSION = "rev5";
+
+  var token = new URLSearchParams(window.location.search).get("c");
+  var realMode = Boolean(ALERTS_API_URL && token);
+
+  var el = function (id) { return document.getElementById(id); };
+  var form = el("optinForm");
+  var phone = el("phone");
+  var consent = el("consent");
+  var msg = el("formMsg");
+  var btn = el("submitBtn");
+
+  function show(id) { el(id).hidden = false; }
+  function setMsg(text, kind) {
+    msg.textContent = text;
+    msg.className = "msg" + (kind ? " " + kind : "");
+  }
+  function digitsOnly(v) { return String(v || "").replace(/\D/g, ""); }
+  function toE164US(v) {
+    var d = digitsOnly(v);
+    if (d.length === 11 && d.charAt(0) === "1") d = d.slice(1);
+    return d.length === 10 ? "+1" + d : null;
+  }
+
+  // ---------------- Public reviewer version (active) ----------------
+  if (!realMode) {
+    show("reviewerBanner");
+    show("identityReviewer");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!toE164US(phone.value)) {
+        setMsg("Enter a 10-digit U.S. mobile number.", "error");
+        phone.focus();
+        return;
+      }
+      if (!consent.checked) {
+        setMsg("Please check the consent box to receive text alerts.", "error");
+        consent.focus();
+        return;
+      }
+      // Nothing is stored or sent. No network request, no storage, no message.
+      setMsg("Example only. No subscription was created and no messages will be sent.", "example");
+    });
+    return;
+  }
+
+  // ---------------- Real client version (dormant in this phase) ----------------
+  // Endpoint names are provisional and will be finalized when alerts-api
+  // is designed and approved.
+  show("identityClient");
+  el("firstName").textContent = "…";
+
+  fetch(ALERTS_API_URL + "/alerts/optin/context?c=" + encodeURIComponent(token))
+    .then(function (r) { if (!r.ok) throw new Error("bad_link"); return r.json(); })
+    .then(function (data) { el("firstName").textContent = data.first_name || "you"; })
+    .catch(function () {
+      el("identityClient").hidden = true;
+      btn.disabled = true;
+      setMsg("This link isn't working. Email coach@coachtremayne.com for a new link.", "error");
+    });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var e164 = toE164US(phone.value);
+    if (!e164) {
+      setMsg("Enter a 10-digit U.S. mobile number.", "error");
+      phone.focus();
+      return;
+    }
+    if (!consent.checked) {
+      setMsg("Please check the consent box to receive text alerts.", "error");
+      consent.focus();
+      return;
+    }
+    btn.disabled = true;
+    setMsg("");
+    fetch(ALERTS_API_URL + "/alerts/optin", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        c: token,
+        phone: e164,
+        consent: true,
+        disclosure_version: DISCLOSURE_VERSION
+      })
+    })
+      .then(function (r) { if (!r.ok) throw new Error("save_failed"); })
+      .then(function () {
+        el("formCard").hidden = true;
+        show("successCard");
+      })
+      .catch(function () {
+        btn.disabled = false;
+        setMsg("Your number was not saved. Try again, or email coach@coachtremayne.com.", "error");
+      });
+  });
+})();
+</script>
+</body>
+</html>
