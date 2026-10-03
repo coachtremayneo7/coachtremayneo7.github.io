@@ -126,7 +126,12 @@
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        if (r.status === 409 && d.error === "already_processed") { note.className = "cardmsg ok"; note.textContent = "Already handled"; setTimeout(() => card.remove(), 700); return; }
+        const M = { sender_not_configured: "Email sending isn't set up for your account yet. Nothing was sent.", no_recipient: "This client has no email on file. Nothing was sent.", send_failed: "The email didn't go out. Nothing was sent", not_found: "This check-in isn't available", bad_message: "That message can't be sent (too long or empty)" };
+        throw new Error(M[d.error] || `HTTP ${r.status}`);
+      }
       note.className = "cardmsg ok"; note.textContent = action === "approve" ? "Sent ✓" : "Dismissed";
       setTimeout(() => card.remove(), 700);
     } catch (e) {

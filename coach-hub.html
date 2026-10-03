@@ -74,8 +74,8 @@ font-weight:700; font-size:14px; cursor:pointer; }
 <body>
 <div class="wrap">
 <div class="head">
-<div class="logo">T</div>
-<h1>Coach TreMayne</h1>
+<div class="logo" id="coachLogo">T</div>
+<h1 id="coachName">Coach TreMayne</h1>
 <p class="sub">Your coaching command center</p>
 </div>
 
@@ -191,8 +191,24 @@ if (badge) { badge.textContent = "Custom plan"; badge.classList.remove("standard
 }
 }
 
-document.getElementById("load").addEventListener("click", loadClients);
-if (tokenEl.value) loadClients(); // auto-load if a token is already remembered
+// ---- Multi-coach: coach name/logo from /coach/me (P3; no Add-client form) ----
+let COACH = null;
+async function loadMe(token) {
+  try {
+    const r = await fetch(`${API_BASE}/coach/me`, { headers: authH(token) });
+    if (!r.ok) return;
+    COACH = (await r.json()).coach || null;
+    if (!COACH) return;
+    document.getElementById("coachName").textContent = COACH.display_name || "Coach TreMayne";
+    document.getElementById("coachLogo").textContent = String(COACH.logo_text || "").slice(0, 2);
+    // Neutral (pilot) coaches don't get TreMayne's branded calculators.
+    if (COACH.skin !== "tracks") document.querySelectorAll(".section-label").forEach((l) => {
+      if (/calculator/i.test(l.textContent)) { l.style.display = "none"; if (l.nextElementSibling) l.nextElementSibling.style.display = "none"; }
+    });
+  } catch (_) {}
+}
+document.getElementById("load").addEventListener("click", () => { loadMe(tokenEl.value.trim()); loadClients(); });
+if (tokenEl.value) { loadMe(tokenEl.value.trim()); loadClients(); } // auto-load if a key is already remembered
 </script>
 </body>
 </html>
