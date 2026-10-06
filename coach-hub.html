@@ -69,6 +69,18 @@ font-weight:700; font-size:14px; cursor:pointer; }
 .cli-actions a.photos { background:rgba(139,124,246,.14); border-color:#8b7cf6; color:#c9c1ff; }
 .cli-actions a.review { background:rgba(59,130,246,.14); border-color:var(--blue); color:#93b8fb; }
 .cli-actions a.meals { background:rgba(240,160,32,.14); border-color:var(--dd); color:#f7c266; }
+
+/* ---- Add a client (TreMayne; adapted from the tested pilot form) ---- */
+.ac-btn { width:100%; padding:13px; border:1px dashed var(--line); border-radius:14px; background:transparent; color:#93b8fb; font-weight:700; font-size:15px; cursor:pointer; }
+#addForm { display:none; gap:8px; }
+#addForm input, #addForm select { width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:#fff; font-size:16px; }
+#addForm label { font-size:12px; color:var(--muted); margin:6px 2px -4px; }
+.ac-row { display:flex; gap:8px; } .ac-row > div { flex:1; display:grid; gap:8px; }
+.ac-submit { padding:12px; border:0; border-radius:12px; background:var(--blue); color:#fff; font-weight:700; font-size:15px; cursor:pointer; }
+.ac-result { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-top:10px; display:none; }
+.ac-result b { display:block; margin-bottom:6px; }
+.ac-result input { width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:#fff; font-size:16px; }
+.ac-result button { margin-top:8px; width:100%; padding:11px; border:0; border-radius:12px; background:var(--blue); color:#fff; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -111,6 +123,38 @@ font-weight:700; font-size:14px; cursor:pointer; }
 <button id="load">Load</button>
 </div>
 <div id="cliList"><div class="cli-note">Enter your coach token and tap Load to see your clients.</div></div>
+
+<!-- ===== Add a client (TreMayne) — uses POST /coach/clients/create; no new auth ===== -->
+<div class="section-label">Add a client</div>
+<button type="button" class="ac-btn" id="acOpen">+ Add client</button>
+<form id="addForm" autocomplete="off">
+<label for="acName">Name</label>
+<input id="acName" maxlength="100" required>
+<label for="acEmail">Email (optional)</label>
+<input id="acEmail" type="email" inputmode="email">
+<label for="acTrack">Program</label>
+<select id="acTrack"><option value="">No program</option><option value="dd">Diesel &amp; Discipline</option><option value="reset">The Reset</option><option value="travel">Travel</option></select>
+<div class="ac-row">
+<div><label for="acGoal">Goal</label>
+<select id="acGoal"><option value="fat_loss">Fat loss</option><option value="muscle_gain">Muscle gain</option><option value="maintenance">Maintenance</option></select></div>
+<div><label for="acWpw">Workouts per week</label>
+<input id="acWpw" type="number" inputmode="numeric" min="1" max="14" step="1" value="3" required></div>
+</div>
+<div class="ac-row">
+<div><label for="acWeight">Starting weight (optional)</label>
+<input id="acWeight" type="number" inputmode="decimal" min="50" max="1000" step="0.1"></div>
+<div><label for="acDay">Check-in day</label>
+<select id="acDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="7">Sunday</option></select></div>
+</div>
+<button type="submit" class="ac-submit" id="acSubmit">Create client</button>
+<div id="acOut" class="cli-note"></div>
+</form>
+<div class="ac-result" id="acResult">
+<b id="acDone">Client added.</b>
+<div class="cli-note" style="padding:0 0 8px">Send this private link to your client. Save it now — it is only shown once.</div>
+<input id="acLink" readonly>
+<button type="button" id="acCopy">Copy Client Link</button>
+</div>
 
 <div class="foot">Add to Home Screen to use like an app</div>
 </div>
@@ -207,6 +251,68 @@ async function loadMe(token) {
     });
   } catch (_) {}
 }
+// ---- Add a client (TreMayne). Same key + Bearer scheme as above; the coach is identified ONLY by the key. ----
+// Uses the Worker's own absolute hub_link (keeps &track=…), after checking host, token and track.
+const AC_TRACKS = ["dd", "reset", "travel"];
+const acForm = document.getElementById("addForm"), acOut = document.getElementById("acOut");
+const acErr = (t) => { acOut.className = "cli-note err"; acOut.textContent = t; };
+document.getElementById("acOpen").addEventListener("click", () => {
+  acForm.style.display = acForm.style.display === "grid" ? "none" : "grid";
+  if (acForm.style.display === "grid") document.getElementById("acName").focus();
+});
+const AC_ERR = {
+  missing_name: "Enter the client's name.", bad_email: "That email doesn't look right (or leave it blank).",
+  bad_goal_type: "Pick a goal.", bad_workouts_per_week: "Workouts per week must be a whole number from 1 to 14.",
+  bad_start_weight: "Starting weight must be between 50 and 1000 (or leave it blank).", bad_checkin_day: "Pick a check-in day.",
+  bad_track: "Pick a program (or No program).",
+};
+// Returns the link only if it is a coachtremayne.com client link carrying a 32-hex token and an allowed (or no) track.
+function acCheckLink(link) {
+  let u; try { u = new URL(link); } catch (_) { return null; }
+  if (u.protocol !== "https:" || !/^(www\.)?coachtremayne\.com$/i.test(u.hostname)) return null;
+  const tok = u.searchParams.get("c"), tr = u.searchParams.get("track");
+  if (!tok || !/^[0-9a-f]{32}$/.test(tok)) return null;
+  if (tr !== null && !AC_TRACKS.includes(tr)) return null;
+  return u.href;
+}
+acForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const token = tokenEl.value.trim();
+  if (!token) return acErr("Enter your coach token and tap Load first.");
+  const v = (id) => document.getElementById(id).value.trim();
+  const body = { name: v("acName"), goal_type: v("acGoal"), workouts_per_week: Number(v("acWpw")), checkin_day: Number(v("acDay")) };
+  if (v("acEmail")) body.email = v("acEmail");
+  if (v("acWeight")) body.start_weight = Number(v("acWeight"));
+  const track = v("acTrack");
+  if (track) { if (!AC_TRACKS.includes(track)) return acErr("Pick a program (or No program)."); body.track = track; }
+  const btn = document.getElementById("acSubmit");
+  btn.disabled = true; acOut.className = "cli-note"; acOut.textContent = "Adding…";
+  try {
+    const r = await fetch(`${API_BASE}/coach/clients/create`, { method: "POST", headers: { ...authH(token), "content-type": "application/json" }, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 401) return acErr("Token rejected. Check it and try again.");
+    if (!r.ok || !d.ok) return acErr(AC_ERR[d.error] || ("Couldn't add the client (" + (d.error || r.status) + ")."));
+    const link = acCheckLink(d.hub_link);
+    const gotTrack = link ? new URL(link).searchParams.get("track") : null;
+    if (!link || (track || null) !== gotTrack) { acErr("Client added, but the link couldn't be verified. Don't add them again — tell Claude/ChatGPT."); loadClients(); return; }
+    document.getElementById("acDone").textContent = (d.client && d.client.name ? d.client.name : "Client") + " added.";
+    document.getElementById("acLink").value = link;
+    document.getElementById("acResult").style.display = "block";
+    acOut.textContent = "";
+    acForm.reset(); acForm.style.display = "none";
+    loadClients();
+  } catch (_) { acErr("Couldn't reach the API. Check your connection."); }
+  finally { btn.disabled = false; }
+});
+document.getElementById("acCopy").addEventListener("click", async () => {
+  const el = document.getElementById("acLink"), btn = document.getElementById("acCopy");
+  let ok = false;
+  try { await navigator.clipboard.writeText(el.value); ok = true; } catch (_) {
+    try { el.focus(); el.select(); el.setSelectionRange(0, el.value.length); ok = document.execCommand("copy"); } catch (_) {}
+  }
+  btn.textContent = ok ? "Copied ✓" : "Press and hold the link to copy";
+  setTimeout(() => { btn.textContent = "Copy Client Link"; }, 2500);
+});
 document.getElementById("load").addEventListener("click", () => { loadMe(tokenEl.value.trim()); loadClients(); });
 if (tokenEl.value) { loadMe(tokenEl.value.trim()); loadClients(); } // auto-load if a key is already remembered
 </script>
