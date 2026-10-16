@@ -103,6 +103,12 @@ font-weight:700; font-size:14px; cursor:pointer; }
 <div class="arrow">&#8250;</div>
 </a>
 
+<a class="tile" href="programs.html">
+<div class="ic plans">&#128203;</div>
+<div><div class="t">Programs</div><div class="d">One program, many clients</div></div>
+<div class="arrow">&#8250;</div>
+</a>
+
 <a class="tile" href="food-tracker.html">
 <div class="ic tracker">&#127869;</div>
 <div><div class="t">Food Tracker</div><div class="d">Log &amp; review nutrition</div></div>
@@ -161,7 +167,9 @@ font-weight:700; font-size:14px; cursor:pointer; }
 
 <script>
 // Reuse review.html's exact storage keys + Bearer scheme. No new auth.
-const API_BASE = localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev";
+// S3: fixed, trusted API address. A previously saved address (ci_apibase) is ignored and removed, so the coach key is only ever sent here.
+const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+try { localStorage.removeItem("ci_apibase"); } catch (_) {}
 const tokenEl = document.getElementById("token");
 const listEl = document.getElementById("cliList");
 tokenEl.value = localStorage.getItem("ci_token") || "";
@@ -174,7 +182,6 @@ async function loadClients() {
 const token = tokenEl.value.trim();
 if (!token) return note("Enter your coach token first.", true);
 localStorage.setItem("ci_token", token);
-localStorage.setItem("ci_apibase", API_BASE);
 note("Loading…");
 
 // 1) client list (required). If this fails, stop with a clean message.

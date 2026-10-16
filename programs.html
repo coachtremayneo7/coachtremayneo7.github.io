@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Programs — Coach TreMayne</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --brand-d:#0f9488; --bg:#f8fafc;
+          --danger:#dc2626; --soft:#f1f5f9; --warn:#b45309; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:var(--bg); color:var(--ink); line-height:1.5; }
+  .wrap { max-width:760px; margin:0 auto; padding:22px 16px 80px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  h2 { font-size:1.1rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .bar input { flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; font-size:.95rem; }
+  button, a.btn { font:inherit; cursor:pointer; }
+  .btn { display:inline-block; text-decoration:none; padding:9px 14px; border-radius:10px; font-weight:700; border:1px solid var(--line); background:#fff; color:var(--ink); font-size:.92rem; }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .btn.danger { color:var(--danger); border-color:#fecaca; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .between { justify-content:space-between; }
+  .meta { color:var(--muted); font-size:.88rem; }
+  .warn { color:var(--warn); font-weight:600; }
+  .note { text-align:center; color:var(--muted); padding:24px 0; }
+  .note.err, .err { color:#991b1b; }
+  .ok { color:#065f46; font-weight:600; }
+  .actions { margin-top:12px; }
+  .panel { border-top:1px solid var(--line); margin-top:12px; padding-top:12px; }
+  .cl { display:flex; gap:10px; align-items:flex-start; padding:9px 4px; border-bottom:1px solid var(--soft); }
+  .cl:last-child { border-bottom:0; }
+  .cl input { width:18px; height:18px; margin-top:3px; flex-shrink:0; }
+  .cl .nm { font-weight:600; }
+  .cl .tag { font-size:.75rem; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--soft); color:var(--muted); margin-left:6px; }
+  .cl .tag.has { background:#fef3c7; color:var(--warn); }
+  .cl .tag.this { background:#ccfbf1; color:var(--brand-d); }
+  .rep { display:none; margin-top:4px; font-size:.86rem; color:var(--warn); }
+  .rep input { width:16px; height:16px; vertical-align:-3px; margin-right:6px; }
+  .result { margin-top:10px; font-size:.95rem; }
+  /* CP1.4: connected bar + where a replaced plan starts */
+  .conn { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; font-weight:700; color:#065f46; }
+  .bar[hidden], .conn[hidden] { display:none !important; }
+  .conn button { margin-left:auto; background:transparent; border:0; color:var(--muted); font:inherit; font-weight:600; text-decoration:underline; cursor:pointer; }
+  .startopt { display:none; margin-top:10px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--soft); }
+  .startopt label { display:flex; gap:8px; align-items:flex-start; margin:4px 0; font-size:.92rem; }
+  .startopt input { width:16px; height:16px; margin-top:3px; flex-shrink:0; }
+</style>
+<style id="u1-phone-comfort">
+/* U1 (staging): comfortable on iPhone — 16px fields stop Safari's zoom; 44px tap targets; visible keyboard focus. */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]), select, textarea { font-size:16px !important; }
+button, select, summary, [role="button"], input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]) { min-height:44px; }
+button { min-width:44px; }
+a.att-act, .cli-more a, .cli-main a, a.watch, a.back, a.today-link, a.btn, a.build, a.logs, a.photos, a.meals, a.review { min-height:44px; display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; }
+:focus-visible { outline:3px solid #60a5fa !important; outline-offset:2px; }
+</style>
+<script id="u3-friendly">
+/* U3 (staging): plain, accurate error messages. kind: "load" (reading) · "save"/"delete" (writing) · "create" (adds
+   something new). When the server's answer is missing (no connection, server error), a write's outcome is UNKNOWN:
+   we say so and ask to check first — never "not saved", never "try again". Raw codes never reach the screen. */
+window.u3Friendly = function (e, kind, suffix) {
+  var m = String((e && (e.message || e.msg)) || (typeof e === "string" ? e : "") || "").trim();
+  var st = (e && typeof e.status === "number") ? e.status : 0;
+  var h = m.match(/HTTP\s*(\d{3})/i), code = st || (h ? +h[1] : 0);
+  var write = !!kind && kind !== "load";
+  var net = !code && ((e && e.name === "TypeError") || /failed to fetch|load failed|networkerror|network connection|internet connection|offline|network request failed|timed out/i.test(m));
+  if (net || code >= 500) {
+    if (!write) return net ? "No connection right now — check your signal and try again." : "The server had a problem — try again in a minute.";
+    return (net ? "Connection problem" : "The server had a problem") + " — we couldn't confirm it went through. " +
+      (kind === "create" ? "Check your list to see if it was added before adding it again." : "Reload to check before trying again.");
+  }
+  if (code === 401 || code === 403) return "Your key wasn't accepted — enter it again and tap Load.";
+  if (code && m && !/HTTP|Request failed/i.test(m)) return m + (suffix || "");          // the page's own plain refusal
+  if (code === 429) return "Too many tries in a row — wait a minute." + (write ? " Nothing was changed." : "");
+  if (code === 404) return "That couldn't be found — it may have been removed. Reload the page." + (suffix || "");
+  if (code || /^Request failed \(/i.test(m) || !m) return (write ? "That wasn't accepted." : "Something went wrong — try again in a minute.") + (suffix || "");
+  return m + (suffix || "");
+};
+</script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Programs</h1>
+  <p class="sub">Build one program, give it to many clients. Each client gets their own copy you can still adjust.</p>
+
+  <div class="bar" id="connBar">
+    <input id="token" type="text" placeholder="Coach key" aria-label="Coach key" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" style="-webkit-text-security:disc">
+    <button class="btn primary" id="load">Load</button>
+  </div>
+  <div class="conn" id="conn" hidden><span>Connected ✓</span><button type="button" id="connChange">change</button></div>
+
+  <div id="main"><p class="note">Enter your coach token, then Load.</p></div>
+</div>
+
+<script>
+/* Staging Programs page. The coach is identified ONLY by the coach key (Authorization header). No coach_id is ever sent. */
+// S3 (B1): fixed, trusted API address. A previously saved address (ci_apibase) is never used, so the coach key is only ever sent here.
+const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+// ---- F1: the coach key the server ACCEPTED is kept in page memory (KEY) and used for every request. ----
+// The key box is read ONLY when you tap Load (Safari autofill changing the box later has no effect).
+// "change" forgets the accepted key (here and in this browser) before another key is accepted; a rejected key is
+// forgotten too, so a previous key is never reused. The key is never shown or put in a URL or message.
+let KEY = "";
+try { KEY = localStorage.getItem("ci_token") || ""; } catch (_) {}
+function f1Take() { const el = document.getElementById("token"); const v = el.value.trim(); el.value = ""; if (v) KEY = v; return KEY; }
+function f1Forget() { KEY = ""; try { localStorage.removeItem("ci_token"); } catch (_) {} document.getElementById("token").value = ""; }
+function f1Accepted() { try { if (KEY) localStorage.setItem("ci_token", KEY); } catch (_) {} }
+function f1Rejected() { KEY = ""; try { localStorage.removeItem("ci_token"); } catch (_) {} }
+(function () { const el = document.getElementById("token"); if (el && !(window.CSS && CSS.supports && CSS.supports("-webkit-text-security", "disc"))) el.type = "password"; })();
+const ERR = {
+  not_found: "That program or one of those clients wasn't found. Nothing was changed.",
+  count_changed: "The number of clients to update changed. Nothing was changed — check again.",
+  no_clients: "Tick at least one client.",
+  bad_start: "Choose where the replaced plan starts.",
+};
+// CP1.4: once the key works, the key box collapses to "Connected ✓ · change" (the key is never shown).
+function setConnected(on) { $("connBar").hidden = on; $("conn").hidden = !on; }
+$("connChange").addEventListener("click", () => { f1Forget(); setConnected(false); $("main").innerHTML = `<p class="note">Enter your coach key, then Load.</p>`; $("token").focus(); });
+async function api(path, body) {
+  const token = KEY;
+  if (!token) throw new Error("Enter your coach key, then Load.");
+  const r = await fetch(API_BASE + path, body === undefined
+    ? { headers: { authorization: `Bearer ${token}` } }
+    : { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(body) });
+  if (r.status === 401) { f1Rejected(); setConnected(false); throw new Error("Key not accepted. Paste your coach key and tap Load."); }
+  f1Accepted();
+  const d = await r.json().catch(() => null) || { ok: false, error: "unreadable" };
+  if (!r.ok || d.ok === false) { const e = new Error(ERR[d.error] || `Request failed (${d.error || "HTTP " + r.status}).`); e.data = d; e.status = r.ok ? 500 : r.status; throw e; }
+  return d;
+}
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+let templates = [];
+async function loadList() {
+  const token = f1Take();
+  if (!token) { $("main").innerHTML = `<p class="note">Enter your coach key, then Load.</p>`; return; }
+  $("main").innerHTML = `<p class="note">Loading programs…</p>`;
+  try {
+    templates = (await api("/coach/templates")).templates || [];
+    setConnected(true);
+  } catch (e) { $("main").innerHTML = `<p class="note err">${esc(u3Friendly(e, "load"))}</p>`; return; }
+  const cards = templates.map(t => `
+    <div class="card" data-card="${esc(t.id)}">
+      <div class="row between">
+        <div><h2>${esc(t.name)}</h2>
+          <div class="meta">Version ${esc(t.version)} · ${plural(t.assigned, "client has it", "clients have it")}${t.adjusted ? ` · ${t.adjusted} adjusted` : ""}${t.behind ? ` · <span class="warn">${t.behind} on an older version</span>` : ""}</div></div>
+      </div>
+      <div class="row actions">
+        <a class="btn" href="plans.html?template=${encodeURIComponent(t.id)}">Edit program</a>
+        <button class="btn primary" data-act="assign" data-id="${esc(t.id)}">Assign to clients</button>
+        <button class="btn" data-act="push" data-id="${esc(t.id)}">Update clients</button>
+        <button class="btn danger" data-act="archive" data-id="${esc(t.id)}">Archive</button>
+      </div>
+      <div class="panel" data-panel="${esc(t.id)}" hidden></div>
+    </div>`).join("");
+  $("main").innerHTML = `
+    <div class="row" style="margin-bottom:12px"><a class="btn primary" href="plans.html?template=new">+ New program</a>
+      <a class="btn" href="coach-hub.html">Back to Coach Hub</a></div>
+    ${cards || `<div class="card"><b>No programs yet.</b><p class="sub" style="margin:4px 0 0">Tap “New program” to build one in the plan editor.</p></div>`}`;
+}
+
+// ---- Assign: who already has a plan; replacing needs its own tick ----
+async function openAssign(id) {
+  const panel = document.querySelector(`[data-panel="${CSS.escape(id)}"]`);
+  panel.hidden = false; panel.innerHTML = `<p class="meta">Loading clients…</p>`;
+  let d;
+  try { d = await api("/coach/template?id=" + encodeURIComponent(id)); }
+  catch (e) { panel.innerHTML = `<p class="err">${esc(u3Friendly(e, "load"))}</p>`; return; }
+  const rows = (d.clients || []).map(c => {
+    const tag = c.plan === "this" ? `<span class="tag this">Has this program${c.adjusted ? " · adjusted" : ""}</span>`
+      : c.plan === "other" ? `<span class="tag has">Has a plan</span>` : "";
+    return `<div class="cl"><input type="checkbox" id="c_${esc(id)}_${esc(c.id)}" data-c="${esc(c.id)}" data-has="${c.plan !== "none" ? 1 : 0}">
+      <div><label for="c_${esc(id)}_${esc(c.id)}"><span class="nm">${esc(c.name || "Client")}</span>${c.status !== "active" ? ` <span class="meta">(${esc(c.status)})</span>` : ""}</label>${tag}
+      ${c.plan !== "none" ? `<div class="rep" data-rep="${esc(c.id)}"><label><input type="checkbox" data-r="${esc(c.id)}">Replace current plan? Their current plan will be overwritten.</label></div>` : ""}</div></div>`;
+  }).join("");
+  panel.innerHTML = `<b>Assign “${esc(d.template.name)}”</b>
+    <p class="meta" style="margin:2px 0 8px">Clients who already have a plan are <b>skipped</b> unless you also tick “Replace current plan?”.</p>
+    <button class="btn" data-act="selFree" data-id="${esc(id)}" style="margin-bottom:6px">Tick everyone without a plan</button>
+    ${rows || `<p class="meta">No clients yet.</p>`}
+    <div class="startopt" data-start="${esc(id)}">
+      <b>Replaced plans start at:</b>
+      <label><input type="radio" name="st_${esc(id)}" value="week1" checked><span><b>Week 1</b> (recommended) — the new program starts fresh this week.</span></label>
+      <label><input type="radio" name="st_${esc(id)}" value="keep"><span><b>Keep current week</b> — the client stays on the week they're on now.</span></label>
+    </div>
+    <div class="row actions"><button class="btn primary" data-act="doAssign" data-id="${esc(id)}">Assign</button>
+      <button class="btn" data-act="close" data-id="${esc(id)}">Close</button></div>
+    <div class="result" data-result="${esc(id)}"></div>`;
+  panel.onchange = (e) => {
+    const c = e.target.dataset.c;
+    if (c && e.target.dataset.has === "1") {
+      const rep = panel.querySelector(`[data-rep="${CSS.escape(c)}"]`);
+      rep.style.display = e.target.checked ? "block" : "none";
+      if (!e.target.checked) rep.querySelector("input").checked = false;
+    }
+    // CP1.4: the start choice only matters (and only shows) when at least one plan will be replaced
+    panel.querySelector("[data-start]").style.display = panel.querySelector("[data-r]:checked") ? "block" : "none";
+  };
+}
+async function doAssign(id) {
+  const panel = document.querySelector(`[data-panel="${CSS.escape(id)}"]`), out = panel.querySelector("[data-result]");
+  const ids = [...panel.querySelectorAll("[data-c]:checked")].map(x => x.dataset.c);
+  const rep = [...panel.querySelectorAll("[data-r]:checked")].map(x => x.dataset.r).filter(x => ids.includes(x));
+  if (!ids.length) { out.innerHTML = `<span class="err">Tick at least one client.</span>`; return; }
+  const start = (panel.querySelector(`input[name="st_${CSS.escape(id)}"]:checked`) || {}).value === "keep" ? "keep" : "week1";
+  if (rep.length && !confirm(`Replace the current plan for ${plural(rep.length, "client", "clients")}? Their current plan will be overwritten.\n\nStarts at: ${start === "keep" ? "their current week" : "Week 1"}.`)) return;
+  out.textContent = "Assigning…";
+  try {
+    const d = await api("/coach/template/assign", { id, client_ids: ids, replace_ids: rep, start });
+    out.innerHTML = `<span class="ok">Assigned to ${d.assigned}${d.replaced ? `, replaced ${d.replaced} (${d.start === "keep" ? "kept their current week" : "starting at Week 1"})` : ""}, skipped ${d.skipped}.</span>`;
+    setTimeout(() => loadList(), 1800);
+  } catch (e) { out.innerHTML = `<span class="err">${esc(u3Friendly(e, "save"))}</span>`; }
+}
+
+// ---- Update clients: always a dry run first, then the coach confirms the exact number ----
+async function doPush(id) {
+  const panel = document.querySelector(`[data-panel="${CSS.escape(id)}"]`);
+  panel.hidden = false; panel.innerHTML = `<p class="meta">Checking which clients would be updated…</p>`;
+  let d;
+  try { d = await api("/coach/template/push", { id, dry_run: true }); }
+  catch (e) { panel.innerHTML = `<p class="err">${esc(u3Friendly(e, "load"))}</p>`; return; }
+  if (!d.count) {
+    panel.innerHTML = `<p><b>0 clients to update.</b> Everyone who has this program is on version ${esc(d.version)} or has an adjusted copy (adjusted copies are never changed).</p>
+      <button class="btn" data-act="close" data-id="${esc(id)}">Close</button>`;
+    return;
+  }
+  panel.innerHTML = `<p><b>Will update ${plural(d.count, "client", "clients")} to version ${esc(d.version)}:</b> ${esc(d.clients.map(c => c.name).join(", "))}.</p>
+    <p class="meta">Only copies you haven't adjusted are updated. Adjusted copies are never changed.</p>
+    <div class="row"><button class="btn primary" data-act="doPush" data-id="${esc(id)}" data-n="${d.count}">Update ${plural(d.count, "client", "clients")}</button>
+      <button class="btn" data-act="close" data-id="${esc(id)}">Cancel</button></div><div class="result"></div>`;
+}
+async function confirmPush(id, n) {
+  const panel = document.querySelector(`[data-panel="${CSS.escape(id)}"]`), out = panel.querySelector(".result");
+  out.textContent = "Updating…";
+  try {
+    const d = await api("/coach/template/push", { id, confirm_count: n });
+    out.innerHTML = `<span class="ok">Updated ${plural(d.updated, "client", "clients")}.</span>`;
+    setTimeout(() => loadList(), 1800);
+  } catch (e) { out.innerHTML = `<span class="err">${esc(u3Friendly(e, "save"))}</span>`; }
+}
+
+async function doArchive(id) {
+  const t = templates.find(x => x.id === id);
+  if (!confirm(`Archive “${t ? t.name : "this program"}”? It disappears from this list. Clients keep their current plans.`)) return;
+  try { await api("/coach/template/archive", { id }); loadList(); }
+  catch (e) { alert(u3Friendly(e, "save")); }
+}
+
+$("main").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const id = b.dataset.id;
+  if (b.dataset.act === "assign") openAssign(id);
+  else if (b.dataset.act === "doAssign") doAssign(id);
+  else if (b.dataset.act === "push") doPush(id);
+  else if (b.dataset.act === "doPush") confirmPush(id, Number(b.dataset.n));
+  else if (b.dataset.act === "archive") doArchive(id);
+  else if (b.dataset.act === "selFree") document.querySelector(`[data-panel="${CSS.escape(id)}"]`).querySelectorAll('[data-c][data-has="0"]').forEach(x => { x.checked = true; });
+  else if (b.dataset.act === "close") { const p = document.querySelector(`[data-panel="${CSS.escape(id)}"]`); p.hidden = true; p.innerHTML = ""; }
+});
+$("load").addEventListener("click", loadList);
+if (KEY) loadList();
+</script>
+<script id="u1-a11y">
+/* U1 (staging): adds names to unlabeled fields and symbol-only buttons, makes tap-only rows keyboard-reachable and lets
+   screen readers announce status messages. It only adds attributes — no request, data or behaviour changes. */
+(function () {
+  var SYM = { "\u2191": "Move up", "\u2193": "Move down", "\u00d7": "Remove", "\u2715": "Close", "\u25be": "Show options", "\uff0b": "Add", "+": "Add",
+              "\u2212": "Remove one", "-": "Remove one", "\u2713": "Done", "\u2039": "Back", "\u203a": "Next", "\u2190": "Back", "\u2192": "Next" };
+  var STATUS = "#acOut,#savemsg,#copyNote,.msg,.cardmsg,#msg,.lp-status,#phmsg,#msgText,#copyStatus,#gStatus,#gateStatus,#noteStatus,#saveStatus,.cli-note,#mgErr,#mgMsg,#tNote,.result";
+  function nearLabel(e) {
+    var p = e.previousElementSibling; if (p && p.tagName === "LABEL") return p.textContent;
+    var c = e.parentElement; if (c) { var l = c.querySelector(":scope > label"); if (l && !l.contains(e)) return l.textContent; }
+    return "";
+  }
+  function fix(root) {
+    root.querySelectorAll("input:not([type=hidden]),textarea,select").forEach(function (e) {
+      if (e.getAttribute("aria-label") || (e.labels && e.labels.length) || e.closest("label")) return;
+      var n = (nearLabel(e) || e.placeholder || e.title || "").replace(/\s+/g, " ").trim();
+      if (n) e.setAttribute("aria-label", n.slice(0, 80));
+    });
+    root.querySelectorAll("button,[role=button]").forEach(function (e) {
+      if (e.getAttribute("aria-label")) return;
+      var t = (e.textContent || "").trim();
+      if (SYM[t]) e.setAttribute("aria-label", SYM[t]); else if (!t && e.title) e.setAttribute("aria-label", e.title);
+    });
+    root.querySelectorAll(".ex[data-item]").forEach(function (e) { if (!e.hasAttribute("tabindex")) { e.tabIndex = 0; e.setAttribute("role", "button"); } });
+    root.querySelectorAll(STATUS).forEach(function (e) { if (!e.hasAttribute("aria-live")) { e.setAttribute("role", "status"); e.setAttribute("aria-live", "polite"); } });
+  }
+  document.addEventListener("keydown", function (ev) {
+    var t = ev.target; if (!t || !t.getAttribute || t.getAttribute("role") !== "button" || t.tagName === "BUTTON") return;
+    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); t.click(); }
+  });
+  var queued = false;
+  function run() { queued = false; try { fix(document); } catch (_) {} }
+  function soon() { if (!queued) { queued = true; setTimeout(run, 50); } }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run); else run();
+  try { new MutationObserver(soon).observe(document.documentElement, { childList: true, subtree: true }); } catch (_) {}
+})();
+</script>
+</body>
+</html>

@@ -62,6 +62,12 @@
   .savebar .msg.ok { color:#065f46; font-weight:600; }
   .savebar .msg.err { color:#991b1b; font-weight:600; }
   @media (max-width:520px) { .dayhead, .exgrid, .exgrid2 { grid-template-columns:1fr; } }
+  /* CP1.4: connected bar + program-copy notice */
+  .conn { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; font-weight:700; color:#065f46; }
+  .bar[hidden], .conn[hidden] { display:none !important; }
+  .conn button { margin-left:auto; background:transparent; border:0; color:var(--muted); font:inherit; font-weight:600; text-decoration:underline; cursor:pointer; }
+  .copynote { background:#fffbeb; border:1px solid #fde68a; color:#78350f; border-radius:12px; padding:12px 14px; margin:0 0 12px; font-size:.92rem; }
+  .copynote.adj { background:var(--soft); border-color:var(--line); color:var(--muted); }
 </style>
 </head>
 <body>
@@ -69,17 +75,18 @@
   <h1>Plan editor</h1>
   <p class="sub">Build a custom workout plan for one client. Saving replaces the default template on their My Training page.</p>
 
-  <div class="bar">
-    <input id="apibase" placeholder="API base">
+  <div class="bar" id="connBar">
     <input id="token" type="password" placeholder="Coach review token">
     <button class="btn primary" id="load">Load</button>
   </div>
+  <div class="conn" id="conn" hidden><span>Connected ✓</span><button type="button" id="connChange">change</button></div>
 
   <div id="clientBox" hidden>
     <label for="client">Client</label>
     <select id="client"></select>
   </div>
 
+  <div class="copynote" id="copyNote" hidden></div>
   <div id="main"><p class="note">Enter your review token, then Load.</p></div>
 </div>
 
@@ -192,12 +199,29 @@ const newEx = () => ({ id:newId("x"), key:newId("k"), baseline:"", name:"", pres
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
 // Same saved settings as review.html (same site = shared on this device).
-$("apibase").value = localStorage.getItem("ci_apibase") || "https://checkin-api.quantumflexpt.workers.dev";
+// S3: fixed, trusted API address. A previously saved address (ci_apibase) is ignored and removed, so the coach key is only ever sent here.
+const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+try { localStorage.removeItem("ci_apibase"); } catch (_) {}
 $("token").value   = localStorage.getItem("ci_token")   || "";
-const cfg = () => ({ base: $("apibase").value.trim().replace(/\/+$/, ""), token: $("token").value.trim() });
+const cfg = () => ({ base: API_BASE, token: $("token").value.trim() });
+
+/* ===== Program (template) mode — staging: plans.html?template=<id> or ?template=new =====
+   Edits the coach's MASTER program with this same editor. Saving the master never changes any client's plan;
+   clients only change through "Update clients" on the Programs page. */
+const TPL = new URLSearchParams(location.search).get("template");
+let tpl = null; // { id, version } once loaded/saved
+if (TPL) {
+  document.title = "Program Editor — Coach tools";
+  document.querySelector("h1").textContent = "Program editor";
+  document.querySelector(".sub").innerHTML = 'Edit the master program. Saving does <b>not</b> change any client\'s plan — use <b>Update clients</b> on the <a href="programs.html">Programs page</a>.';
+}
 
 const ERR = {
   invalid_plan: "The plan isn't in a shape the server accepts.",
+  missing_name: "Give the program a name.",
+  not_found: "That program wasn't found (it may be archived).",
+  changed_elsewhere: "This program was changed somewhere else. Reload and try again.",
+  plan_too_large: "This program is too large to save.",
   unknown_client: "That client isn't in the database.",
   missing_client_id: "No client selected.",
   bad_json: "The plan couldn't be sent.",
@@ -206,10 +230,25 @@ const ERR = {
 async function api(path, opts = {}) {
   const { base, token } = cfg();
   const r = await fetch(base + path, { ...opts, headers: { authorization: `Bearer ${token}`, "content-type": "application/json" } });
-  if (r.status === 401) throw new Error("Token rejected. Check it and try again.");
+  if (r.status === 401) { setConnected(false); throw new Error("Token rejected. Check it and try again."); }
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(ERR[d.error] || `Request failed (HTTP ${r.status})`);
   return d;
+}
+// CP1.4: once the key works, the API address + key boxes collapse to "Connected ✓ · change" (the key is never shown).
+function setConnected(on) { $("connBar").hidden = on; $("conn").hidden = !on; }
+$("connChange").addEventListener("click", () => { setConnected(false); $("token").focus(); });
+// CP1.4: is this client's plan a copy of one of your programs? (from the server; never guessed)
+let copyInfo = null;
+function showCopyNote() {
+  const n = $("copyNote");
+  if (TPL || !client || !copyInfo) { n.hidden = true; n.textContent = ""; return; }
+  const prog = copyInfo.name ? "“" + copyInfo.name + "”" : "one of your programs";
+  n.className = "copynote" + (copyInfo.adjusted ? " adj" : "");
+  n.textContent = copyInfo.adjusted
+    ? "Adjusted copy of " + prog + " — changes here apply only to " + firstName() + ". Program updates no longer change this plan."
+    : "This plan is a copy of " + prog + ". Changes you save apply only to " + firstName() + " and stop future program updates for this copy.";
+  n.hidden = false;
 }
 
 /* ===== state ===== */
@@ -222,13 +261,14 @@ function firstName() { return String(client?.name || "this client").trim().split
 /* ===== load clients ===== */
 async function loadClients() {
   const { base, token } = cfg();
-  localStorage.setItem("ci_apibase", base);
   localStorage.setItem("ci_token", token);
   if (!token) { $("main").innerHTML = `<p class="note">Enter your review token, then Load.</p>`; return; }
+  if (TPL) return loadTemplate();
   $("main").innerHTML = `<p class="note">Loading clients…</p>`;
   try {
     const d = await api("/coach/clients");
     clients = d.clients || [];
+    setConnected(true);
     const sel = $("client");
     sel.innerHTML = `<option value="">Choose a client…</option>` + clients.map(c =>
       `<option value="${esc(c.id)}">${esc(c.name || c.id)}${c.status && c.status !== "active" ? " (" + esc(c.status) + ")" : ""}</option>`).join("");
@@ -244,19 +284,47 @@ async function loadClients() {
   }
 }
 
+/* ===== program mode: load the master ===== */
+async function loadTemplate() {
+  if (dirty && !confirm("You have unsaved changes. Reload and lose them?")) return;
+  dirty = false; week = 0; plan = null;
+  $("clientBox").hidden = true; $("savebar").hidden = true;
+  if (TPL === "new" && !tpl) {
+    plan = normalize({ weeks:[{ days:[{ title:"Day 1", focus:"", exercises:[{ name:"" }] }] }] });
+    plan.name = ""; hasSaved = false; savedAt = null;
+    render(); markDirty(); return;
+  }
+  const id = tpl ? tpl.id : TPL;
+  $("main").innerHTML = `<p class="note">Loading program…</p>`;
+  try {
+    const d = await api("/coach/template?id=" + encodeURIComponent(id));
+    setConnected(true);
+    tpl = { id: d.template.id, version: d.template.version };
+    plan = normalize(d.template.plan); plan.name = d.template.name || "";
+    hasSaved = true; savedAt = d.template.updated_at || null;
+    const added = idsJustAdded;
+    render();
+    if (added) { dirty = true; setMsg("Exercise IDs added for workout logging. Save to keep them.", "dirty"); }
+  } catch (e) {
+    $("main").innerHTML = `<p class="note err">${esc(e.message)}</p><p class="note"><a href="programs.html">Back to Programs</a></p>`;
+  }
+}
+
 /* ===== pick a client ===== */
 async function pickClient(id) {
   if (dirty && !confirm("You have unsaved changes. Switch clients and lose them?")) {
     $("client").value = client ? client.id : ""; return;
   }
-  dirty = false; plan = null; week = 0; hasSaved = false; savedAt = null;
+  dirty = false; plan = null; week = 0; hasSaved = false; savedAt = null; copyInfo = null;
   client = clients.find(c => c.id === id) || null;
+  showCopyNote();
   $("savebar").hidden = true;
   if (!client) { $("main").innerHTML = `<p class="note">Pick a client above.</p>`; return; }
   $("main").innerHTML = `<p class="note">Loading ${esc(client.name || client.id)}'s plan…</p>`;
   try {
     const d = await api("/coach/workout-plan?client_id=" + encodeURIComponent(client.id));
     if (d.has_plan) {
+      copyInfo = d.template || null; showCopyNote();
       plan = normalize(d.plan); plan.name = d.name || "";
       hasSaved = true; savedAt = d.updated_at || null;
       const added = idsJustAdded;
@@ -343,7 +411,11 @@ function render() {
     </div>`).join("");
 
   $("main").innerHTML = `
-    <div class="status">${hasSaved
+    <div class="status">${TPL
+      ? (hasSaved
+        ? `Program · version ${esc(tpl.version)}${savedAt ? " · last saved " + esc(savedAt) + " UTC" : ""}. Clients only change when you use Update clients. <a href="programs.html">Back to Programs</a>`
+        : `New program — not saved yet. <a href="programs.html">Back to Programs</a>`)
+      : hasSaved
       ? `${esc(firstName())} has a custom plan${savedAt ? " · last saved " + esc(savedAt) + " UTC" : ""}.`
       : `Not saved yet — ${esc(firstName())} still sees the default template until you save.`}</div>
     <div class="card">
@@ -379,7 +451,7 @@ function render() {
       <button class="btn" data-act="restAdd">+ Rest day</button>
     </div>`;
   $("savebar").hidden = false;
-  $("del").hidden = !hasSaved;
+  $("del").hidden = !hasSaved || !!TPL;
   if (!dirty) setMsg(hasSaved ? "All changes saved" : "", hasSaved ? "ok" : "");
 }
 
@@ -474,10 +546,13 @@ function buildPayload() {
 }
 
 $("save").addEventListener("click", async () => {
+  if (TPL) return saveTemplate();
   if (!client || !plan) return;
   let payload;
   try { payload = buildPayload(); }
   catch (e) { if (e.week !== undefined && e.week !== week) { week = e.week; render(); } setMsg(e.msg || String(e), "err"); return; }
+  // CP1.4: first change to a program copy → say clearly what saving does, before anything is sent.
+  if (copyInfo && !copyInfo.adjusted && !confirm(`This plan is a copy of ${copyInfo.name ? "the program “" + copyInfo.name + "”" : "one of your programs"}.\n\nSaving changes it for ${firstName()} ONLY — the program itself stays the same.\nThis copy will also stop getting future program updates.\n\nSave anyway?`)) { setMsg("Not saved.", "dirty"); return; }
   $("save").disabled = true; setMsg("Saving…");
   try {
     await api("/coach/workout-plan/save", { method: "POST",
@@ -485,9 +560,31 @@ $("save").addEventListener("click", async () => {
     dirty = false; hasSaved = true; savedAt = null;
     render();
     setMsg(`Saved. ${firstName()} sees it next time they open My Training.`, "ok");
+    // the "adjusted" label only ever comes from the server, after a successful save
+    try { const r = await api("/coach/workout-plan?client_id=" + encodeURIComponent(client.id)); copyInfo = r.template || null; showCopyNote(); } catch (_) {}
   } catch (e) { setMsg(e.message + " Not saved.", "err"); }
   finally { $("save").disabled = false; }
 });
+
+async function saveTemplate() {
+  if (!plan) return;
+  const name = String(plan.name || "").trim();
+  if (!name) { setMsg("Give the program a name (Plan name, at the top).", "err"); return; }
+  let payload;
+  try { payload = buildPayload(); }
+  catch (e) { if (e.week !== undefined && e.week !== week) { week = e.week; render(); } setMsg(e.msg || String(e), "err"); return; }
+  $("save").disabled = true; setMsg("Saving…");
+  try {
+    const d = await api("/coach/template/save", { method: "POST",
+      body: JSON.stringify({ id: tpl ? tpl.id : null, name, plan: payload }) });
+    tpl = { id: d.id, version: d.version };
+    if (TPL === "new") history.replaceState(null, "", "?template=" + encodeURIComponent(d.id));
+    dirty = false; hasSaved = true; savedAt = null;
+    render();
+    setMsg(d.changed === false ? "No changes to save." : `Saved as version ${d.version}. Clients are not changed until you use Update clients.`, "ok");
+  } catch (e) { setMsg(e.message + " Not saved.", "err"); }
+  finally { $("save").disabled = false; }
+}
 
 $("del").addEventListener("click", async () => {
   if (!client || !hasSaved) return;
@@ -495,7 +592,7 @@ $("del").addEventListener("click", async () => {
   $("del").disabled = true; setMsg("Deleting…");
   try {
     await api("/coach/workout-plan/delete", { method: "POST", body: JSON.stringify({ client_id: client.id }) });
-    dirty = false; hasSaved = false; plan = null;
+    dirty = false; hasSaved = false; plan = null; copyInfo = null; showCopyNote();
     $("savebar").hidden = true;
     renderStart();
   } catch (e) { setMsg(e.message + " Not deleted.", "err"); }
