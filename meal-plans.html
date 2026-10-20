@@ -122,6 +122,22 @@
   .rs.err { color: var(--err); }
   .rs.ok { color: var(--ok); }
 
+  /* bulk import (added 10/2026) */
+  .imp-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .imp-text { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; min-height: 96px; }
+  .imp-errs { margin: 8px 0 0; padding-left: 18px; color: var(--err); font-size: 13px; max-height: 220px; overflow: auto; }
+  .imp-errs li { margin-bottom: 2px; overflow-wrap: anywhere; }
+  .preview { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; font-size: 13px; }
+  .preview h4 { font-family: var(--body); font-size: 14px; margin: 0 0 4px; }
+  .preview .pv-sum { color: var(--muted); margin: 0 0 8px; }
+  .preview details { border-left: 2px solid var(--line-strong); padding: 2px 0 2px 10px; margin: 6px 0; }
+  .preview summary { cursor: pointer; font-weight: 600; }
+  .preview .pv-opt { margin: 4px 0 4px 6px; }
+  .preview .pv-opt b { font-weight: 600; }
+  .preview ul { margin: 2px 0 2px 16px; padding: 0; }
+  .preview .pv-meta { color: var(--muted); }
+  label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+
   /* save bar */
   .savebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; gap: 14px; align-items: center; justify-content: flex-end;
              padding: 12px 24px; background: rgba(22, 28, 37, 0.97); border-top: 1px solid var(--line); }
@@ -179,6 +195,28 @@
   </main>
 
   <aside class="side">
+    <div class="panel" id="importPanel">
+      <h3>Import a plan (JSON)</h3>
+      <p class="hint">Paste or choose a plan or template file. It is checked and previewed first, then loaded into this editor. Nothing is saved until you press Save plan.</p>
+      <input type="file" id="impFile" accept=".json,application/json" aria-label="Choose a plan file">
+      <textarea id="impText" class="imp-text" maxlength="1000000" spellcheck="false" placeholder='{"format":"yight-nutrition-plan","version":1,"plan":{ ... }}' aria-label="Plan JSON"></textarea>
+      <div class="imp-row">
+        <button type="button" id="impCheck">Check &amp; preview</button>
+        <button type="button" class="primary" id="impLoad" disabled>Load into editor</button>
+      </div>
+      <p class="status" id="impStatus" role="status"></p>
+      <ul class="imp-errs" id="impErrs" hidden></ul>
+      <div class="preview" id="impPreview" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h3>Save as reusable template</h3>
+      <p class="hint">Downloads what's in this editor as a JSON file you can import for other clients. Nothing is sent anywhere.</p>
+      <label class="inline"><input type="checkbox" id="expBlank" checked> Leave calorie and protein targets blank</label>
+      <div class="imp-row"><button type="button" id="expBtn">Download JSON</button></div>
+      <p class="status" id="expStatus"></p>
+    </div>
+
     <div class="panel">
       <h3>Copy from another client</h3>
       <p class="hint">Loads their meal plan into this editor as a starting point. Nothing is saved until you press Save plan. Their grocery list is never copied.</p>
@@ -259,6 +297,8 @@
   let groceries = [];
   let saving = false;
   let skipUnloadGuard = false;
+  let importReady = null;     // validated plan (server shape) waiting to be loaded
+  let importedPending = false; // the editor holds an imported plan that hasn't been saved yet
 
   const $ = (id) => document.getElementById(id);
 
@@ -563,6 +603,9 @@
       ...clients.filter((x) => x.id !== id).map((x) => h("option", { value: x.id, text: x.name })));
     $("noteInput").value = ""; noteSaved = "";
     groceries = []; renderGroceries();
+    importedPending = false;
+    $("impLoad").disabled = !importReady;
+    setStatus($("impStatus"), importReady ? "Checked plan ready — Load into editor applies it to " + c.name + "." : "", "busy");
 
     const r = await api("GET", "/coach/meal-plan?client_id=" + encodeURIComponent(id));
     if (!current || current.id !== id) return;
@@ -590,6 +633,10 @@
     try { payload = toPayload(plan); }
     catch (err) { setStatus($("saveStatus"), err.message, "err"); return; }
     const id = current.id;
+    if (importedPending && hasSavedPlan &&
+        !confirm("Save the IMPORTED plan for " + current.name + "?\n\nThis replaces the meal plan " + current.name + " can see right now.")) {
+      setStatus($("saveStatus"), "Not saved.", "busy"); return;
+    }
     saving = true; $("saveBtn").disabled = true;
     setStatus($("saveStatus"), "Saving…", "busy");
     const r = await api("POST", "/coach/meal-plan/save", { client_id: id, plan: payload });
@@ -597,6 +644,7 @@
     if (!current || current.id !== id) return;
     if (!r.ok) { setStatus($("saveStatus"), errText(r.error), "err"); return; }
     hasSavedPlan = !!r.data.has_plan;
+    importedPending = false;
     plan = toEditor(r.data.plan);          // show exactly what the server stored
     savedSnap = JSON.stringify(plan);
     render();
@@ -622,6 +670,7 @@
       setStatus($("copyStatus"), ""); return;
     }
     plan = toEditor(JSON.parse(JSON.stringify(r.data.plan)));  // brand-new objects: fully independent copy
+    importedPending = false;
     render(); markDirty();
     setStatus($("copyStatus"), "Loaded. Grocery list not copied.", "ok");
     showBanner("This is a copy of " + src.name + "'s plan. Press Save plan to save it for " + current.name + ". " + src.name + "'s plan and grocery list are not changed.");
@@ -749,6 +798,188 @@
       box, name, qty, del,
       h("div", { class: "gmeta" }, cat, h("span", { text: item.source === "client" ? "added by client" : item.source === "plan" ? "from plan" : "added by coach" }), rs));
   }
+
+  // ---- bulk import (added 10/2026). Uses the same plan shape, limits and Save endpoint as the editor. ----
+  const TEXT_MAX = { title: 100, intro: 3000, notes: 3000, dayLabel: 60, mealName: 60, swaps: 1000, mealNote: 1000,
+                     optLabel: 60, food: 80, portion: 60, guideTitle: 80, guideText: 3000 };
+  const MAX_IMPORT_BYTES = 1000000;
+  function validateImport(raw) {
+    const errs = [];
+    const err = (path, msg) => { if (errs.length < 100) errs.push(path + ": " + msg); };
+    const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+    const keysOk = (o, allowed, path) => { for (const k of Object.keys(o)) if (!allowed.includes(k)) err(path, "unknown field \"" + k + "\" (allowed: " + allowed.join(", ") + ")"); };
+    const text = (o, k, max, path, required) => {
+      const v = o[k];
+      if (v === undefined || v === null || v === "") { if (required) err(path + "." + k, "required"); return null; }
+      if (typeof v !== "string") { err(path + "." + k, "must be text"); return null; }
+      const t = v.trim();
+      if (!t) { if (required) err(path + "." + k, "required"); return null; }
+      if (t.length > max) err(path + "." + k, "too long (" + t.length + " of " + max + " characters)");
+      return t;
+    };
+    const number = (o, k, path) => {
+      const v = o[k];
+      if (v === undefined || v === null || v === "") return null;
+      if (typeof v !== "number" || !Number.isFinite(v)) { err(path + "." + k, "must be a number (not text)"); return null; }
+      if (v < 0 || v > 20000) err(path + "." + k, "must be from 0 to 20000");
+      return v;
+    };
+    const list = (o, k, min, max, path) => {
+      const v = o[k] === undefined ? [] : o[k];
+      if (!Array.isArray(v)) { err(path + "." + k, "must be a list"); return []; }
+      if (v.length < min || v.length > max) err(path + "." + k, "needs " + (min === max ? min : min + " to " + max) + " items (has " + v.length + ")");
+      return v;
+    };
+    if (!isObj(raw)) return { errs: ["file: must be a JSON object"] };
+    let p = raw, meta = {};
+    if ("format" in raw || "plan" in raw) {
+      keysOk(raw, ["format", "version", "name", "description", "exported_at", "plan"], "file");
+      if (raw.format !== "yight-nutrition-plan") err("file.format", "must be \"yight-nutrition-plan\"");
+      if (raw.version !== 1) err("file.version", "must be 1");
+      if (!isObj(raw.plan)) return { errs: errs.concat(["file.plan: missing"]) };
+      p = raw.plan; meta = { name: typeof raw.name === "string" ? raw.name.slice(0, 120) : "", description: typeof raw.description === "string" ? raw.description.slice(0, 500) : "" };
+    }
+    keysOk(p, ["title", "calorie_target", "protein_target", "intro", "days", "guides", "notes"], "plan");
+    const out = { title: text(p, "title", TEXT_MAX.title, "plan"), calorie_target: number(p, "calorie_target", "plan"),
+      protein_target: number(p, "protein_target", "plan"), intro: text(p, "intro", TEXT_MAX.intro, "plan"), days: [], guides: [], notes: null };
+    list(p, "days", 1, LIMITS.days, "plan").forEach((d, di) => {
+      const dp = "days[" + (di + 1) + "]";
+      if (!isObj(d)) return err(dp, "must be an object");
+      keysOk(d, ["label", "meals"], dp);
+      const day = { label: text(d, "label", TEXT_MAX.dayLabel, dp), meals: [] };
+      list(d, "meals", 0, LIMITS.meals, dp).forEach((m, mi) => {
+        const mp = dp + ".meals[" + (mi + 1) + "]";
+        if (!isObj(m)) return err(mp, "must be an object");
+        keysOk(m, ["name", "options", "swaps", "note"], mp);
+        const meal = { name: text(m, "name", TEXT_MAX.mealName, mp), options: [] };
+        list(m, "options", 1, LIMITS.options, mp).forEach((o, oi) => {
+          const op = mp + ".options[" + (oi + 1) + "]";
+          if (!isObj(o)) return err(op, "must be an object");
+          keysOk(o, ["label", "foods", "approx_calories", "approx_protein"], op);
+          const opt = { label: text(o, "label", TEXT_MAX.optLabel, op), foods: [] };
+          list(o, "foods", 0, LIMITS.foods, op).forEach((f, fi) => {
+            const fp = op + ".foods[" + (fi + 1) + "]";
+            if (!isObj(f)) return err(fp, "must be an object");
+            keysOk(f, ["food", "portion"], fp);
+            opt.foods.push({ food: text(f, "food", TEXT_MAX.food, fp, true), portion: text(f, "portion", TEXT_MAX.portion, fp) });
+          });
+          opt.approx_calories = number(o, "approx_calories", op);
+          opt.approx_protein = number(o, "approx_protein", op);
+          meal.options.push(opt);
+        });
+        meal.swaps = text(m, "swaps", TEXT_MAX.swaps, mp);
+        meal.note = text(m, "note", TEXT_MAX.mealNote, mp);
+        day.meals.push(meal);
+      });
+      out.days.push(day);
+    });
+    list(p, "guides", 0, LIMITS.guides, "plan").forEach((g, gi) => {
+      const gp = "guides[" + (gi + 1) + "]";
+      if (!isObj(g)) return err(gp, "must be an object");
+      keysOk(g, ["title", "text"], gp);
+      const t = text(g, "title", TEXT_MAX.guideTitle, gp), x = text(g, "text", TEXT_MAX.guideText, gp);
+      if (!t && !x) err(gp, "needs a title or text");
+      out.guides.push({ title: t, text: x });
+    });
+    out.notes = text(p, "notes", TEXT_MAX.notes, "plan");
+    if (errs.length) return { errs };
+    // The import must survive the editor exactly: editor copy -> payload must give back the same plan.
+    // toPayload() reads the editor's `plan` for its messages, so run it on a temporary copy, then put the editor back.
+    let round; const keep = plan;
+    try { plan = toEditor(JSON.parse(JSON.stringify(out))); round = toPayload(plan); }
+    catch (e) { return { errs: ["plan: " + e.message] }; }
+    finally { plan = keep; }
+    if (JSON.stringify(round) !== JSON.stringify(out)) return { errs: ["plan: could not be represented exactly in the editor"] };
+    return { errs: [], plan: out, meta };
+  }
+
+  function stats(pl) {
+    let meals = 0, options = 0, foods = 0;
+    pl.days.forEach((d) => d.meals.forEach((m) => { meals++; m.options.forEach((o) => { options++; foods += o.foods.length; }); }));
+    return { days: pl.days.length, meals, options, foods, guides: pl.guides.length };
+  }
+  const n1 = (v) => (v === null || v === undefined ? "—" : Number(v).toLocaleString());
+  function renderPreview(pl, meta) {
+    const st = stats(pl);
+    const box = $("impPreview");
+    box.replaceChildren(
+      h("h4", { text: (meta.name ? meta.name + " — " : "") + (pl.title || "Untitled plan") }),
+      h("p", { class: "pv-sum", text: st.days + " day guide" + (st.days === 1 ? "" : "s") + " · " + st.meals + " meals · " + st.options + " options · " + st.foods + " foods · " + st.guides + " guides" }),
+      h("p", { class: "pv-meta", text: "Targets: " + (pl.calorie_target === null ? "blank (enter for each client)" : n1(pl.calorie_target) + " calories") +
+        (pl.protein_target === null ? "" : " · " + n1(pl.protein_target) + " g protein") }),
+      ...pl.days.map((d, di) => h("details", { open: di === 0 },
+        h("summary", { text: (d.label || "Day guide " + (di + 1)) + " — " + d.meals.length + " meals" }),
+        d.meals.map((m, mi) => h("details", {},
+          h("summary", { text: (m.name || "Meal " + (mi + 1)) + " — " + m.options.length + " options" }),
+          m.options.map((o, oi) => h("div", { class: "pv-opt" },
+            h("b", { text: (o.label || "Option " + (oi + 1)) }),
+            h("span", { class: "pv-meta", text: " · " + n1(o.approx_calories) + " cal · " + n1(o.approx_protein) + " g protein" }),
+            h("ul", {}, o.foods.map((f) => h("li", { text: f.food + (f.portion ? " — " + f.portion : "") }))))),
+          m.swaps ? h("p", { class: "pv-meta", text: "Swaps: " + m.swaps }) : null)))),
+      pl.guides.length ? h("p", { class: "pv-meta", text: "Guides: " + pl.guides.map((g) => g.title || "(untitled)").join(" · ") }) : null);
+    box.hidden = false;
+  }
+
+  function resetImportUi() {
+    importReady = null; $("impLoad").disabled = true;
+    $("impErrs").hidden = true; $("impErrs").replaceChildren(); $("impPreview").hidden = true; $("impPreview").replaceChildren();
+  }
+  $("impText").addEventListener("input", () => { resetImportUi(); setStatus($("impStatus"), ""); });
+  $("impFile").addEventListener("change", async () => {
+    const f = $("impFile").files && $("impFile").files[0];
+    resetImportUi();
+    if (!f) return;
+    if (f.size > MAX_IMPORT_BYTES) { setStatus($("impStatus"), "That file is too large (over 1 MB).", "err"); return; }
+    $("impText").value = await f.text();
+    setStatus($("impStatus"), "Loaded " + f.name + ". Press Check & preview.", "busy");
+  });
+  $("impCheck").addEventListener("click", () => {
+    resetImportUi();
+    const txt = $("impText").value;
+    if (!txt.trim()) { setStatus($("impStatus"), "Paste a plan or choose a file first.", "err"); return; }
+    if (txt.length > MAX_IMPORT_BYTES) { setStatus($("impStatus"), "Too large (over 1 MB).", "err"); return; }
+    let raw;
+    try { raw = JSON.parse(txt); } catch (e) { setStatus($("impStatus"), "This isn't valid JSON: " + e.message, "err"); return; }
+    const r = validateImport(raw);
+    if (r.errs.length) {
+      setStatus($("impStatus"), r.errs.length + (r.errs.length >= 100 ? "+" : "") + " problem" + (r.errs.length === 1 ? "" : "s") + " found. Nothing was loaded.", "err");
+      $("impErrs").replaceChildren(...r.errs.map((e) => h("li", { text: e }))); $("impErrs").hidden = false;
+      return;
+    }
+    importReady = r.plan;
+    renderPreview(r.plan, r.meta);
+    $("impLoad").disabled = !current;
+    setStatus($("impStatus"), current ? "Plan checked. Review the preview, then Load into editor for " + current.name + "." : "Plan checked. Choose a client, then Load into editor.", "ok");
+  });
+  $("impLoad").addEventListener("click", () => {
+    if (!importReady || !current) return;
+    const who = current.name;
+    if (hasSavedPlan || hasContent(plan)) {
+      const what = hasSavedPlan ? who + " already has a SAVED meal plan." : "The editor already has content for " + who + ".";
+      if (!confirm(what + "\n\nReplace what's in the editor with the imported plan?\nNothing is saved until you press Save plan" + (hasSavedPlan ? ", and you'll be asked again before it replaces the saved plan." : "."))) {
+        setStatus($("impStatus"), "Not loaded. The editor was not changed.", "busy"); return;
+      }
+    }
+    plan = toEditor(JSON.parse(JSON.stringify(importReady)));    // independent copy
+    importedPending = true;
+    render(); markDirty();
+    showBanner("Imported plan loaded for " + who + ". It is NOT saved yet — review it, set this client's targets, then press Save plan.");
+    setStatus($("impStatus"), "Loaded into the editor (not saved).", "ok");
+    window.scrollTo(0, 0);
+  });
+
+  // ---- reusable template export (download only; nothing is sent) ----
+  $("expBtn").addEventListener("click", () => {
+    if (!plan) { setStatus($("expStatus"), "Choose a client with a plan first.", "err"); return; }
+    let payload;
+    try { payload = toPayload(plan); } catch (e) { setStatus($("expStatus"), e.message, "err"); return; }
+    if ($("expBlank").checked) { payload.calorie_target = null; payload.protein_target = null; }
+    const file = { format: "yight-nutrition-plan", version: 1, name: payload.title || "Meal plan", exported_at: new Date().toISOString(), plan: payload };
+    const blob = new Blob([JSON.stringify(file, null, 2)], { type: "application/json" });
+    const a = h("a", { href: URL.createObjectURL(blob), download: (payload.title || "meal-plan").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".json" });
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    setStatus($("expStatus"), "Downloaded" + ($("expBlank").checked ? " (targets left blank)." : "."), "ok");
+  });
 
   // ---- start ----
   const remembered = sessionStorage.getItem(KEY_STORE);
