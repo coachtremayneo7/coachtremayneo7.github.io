@@ -356,13 +356,13 @@ wrap.innerHTML = "";
 LOG.week = i; LOG.items = {}; LOG.days = {};
 const week = prog.weeks[i] || { days: [] };
 const logOn = LOG.ready && !!cid;
-// Gym | Hotel toggle: only when logging is on AND this plan has hotel lines.
+// Gym | Home / Hotel toggle (label renamed 10/2026; stored value is still "hotel"): only when logging is on AND this plan has hotel lines.
 const hasHotel = (prog.weeks || []).some(w => (w.days || []).some(d => (d.exercises || []).some(x => x.hotel)));
 wrap.classList.toggle("hotelmode", logOn && hasHotel && version() === "hotel");
 if (logOn && hasHotel) {
 const t = document.createElement("div");
 t.className = "where";
-t.innerHTML = `<span>Training at</span><button data-where="gym" class="${version() === "gym" ? "on" : ""}">Gym</button><button data-where="hotel" class="${version() === "hotel" ? "on" : ""}">Hotel</button>`;
+t.innerHTML = `<span>Training at</span><button data-where="gym" class="${version() === "gym" ? "on" : ""}">Gym</button><button data-where="hotel" class="${version() === "hotel" ? "on" : ""}">Home / Hotel</button>`;
 wrap.appendChild(t);
 }
 // Optional weekly focus banner above the first day (plans without it look exactly as before).
@@ -382,7 +382,7 @@ const watch = ex.video ? `<a class="watch" href="${esc(ex.video)}" target="_blan
 const note = ex.note ? `<span class="note">${esc(ex.note)}</span>` : "";
 const rest = ex.rest ? `<span class="note">Rest ${esc(ex.rest)}</span>` : "";
 // Optional hotel substitution (added for hotel/Planet Fitness plans). Plans without it look exactly as before.
-const hotel = ex.hotel ? `<span class="note hotelline">Hotel: ${esc(ex.hotel)}</span>` : "";
+const hotel = ex.hotel ? `<span class="note hotelline">Home / Hotel: ${esc(ex.hotel)}</span>` : "";
 const loggable = logOn && ex.id;
 if (loggable) LOG.items[ex.id] = { ex, day, week: i };
 const logline = loggable ? `<span class="logline" data-badge="${esc(ex.id)}"></span>` : "";
