@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Challenge Onboarding — Coach TreMayne</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#14B8A6; --brand-d:#0f9488; --bg:#f8fafc;
+          --danger:#dc2626; --soft:#f1f5f9; --warn:#b45309; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; }
+  .wrap { max-width:760px; margin:0 auto; padding:22px 16px 80px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; } h2 { font-size:1.05rem; margin:22px 0 8px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .bar input { flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; padding:9px 14px; border-radius:10px; font-weight:700; border:1px solid var(--line); background:#fff; color:var(--ink); font:inherit; font-weight:700; font-size:.92rem; cursor:pointer; }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; } .between { justify-content:space-between; }
+  .meta { color:var(--muted); font-size:.88rem; } .nm { font-weight:700; }
+  .badge { font-size:.75rem; font-weight:800; padding:3px 9px; border-radius:999px; background:var(--soft); color:var(--muted); white-space:nowrap; }
+  .b-action { background:#fef3c7; color:var(--warn); } .b-done { background:#dcfce7; color:#166534; } .b-bad { background:#fee2e2; color:#991b1b; }
+  .panel { border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
+  .panel dl { margin:0; } .panel dt { font-weight:700; font-size:.86rem; margin-top:8px; } .panel dd { margin:0; white-space:pre-wrap; }
+  .panel label { display:block; font-size:.88rem; margin:6px 0 2px; }
+  .panel select { width:100%; padding:9px; border:1px solid var(--line); border-radius:10px; font:inherit; background:#fff; }
+  .note { text-align:center; color:var(--muted); padding:20px 0; } .err { color:#991b1b; } .ok { color:#065f46; font-weight:700; }
+  .urgent { text-align:left; padding:10px 12px; margin-top:8px; background:#fef2f2; border:2px solid #dc2626; border-radius:10px; color:#7f1d1d; }
+  .conn { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; font-weight:700; color:#065f46; }
+  .bar[hidden], .conn[hidden] { display:none !important; }
+  .conn button { margin-left:auto; background:transparent; border:0; color:var(--muted); font:inherit; font-weight:600; text-decoration:underline; cursor:pointer; }
+  input, select { font-size:16px !important; } button, select, input { min-height:44px; }
+  :focus-visible { outline:3px solid #60a5fa !important; outline-offset:2px; }
+  .back { color:var(--muted); text-decoration:none; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="coach-hub.html">‹ Coach Hub</a>
+  <h1>Challenge onboarding</h1>
+  <p class="sub">Paid participants wait here until you review their intake. Nobody gets access until you tap <b>Approve &amp; send link</b>. Approving never assigns or replaces a workout plan — use Programs and Meals for that.</p>
+  <div class="bar" id="connBar">
+    <input id="token" type="text" placeholder="Coach key" aria-label="Coach key" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="-webkit-text-security:disc">
+    <button class="btn primary" id="load">Load</button>
+  </div>
+  <div class="conn" id="conn" hidden><span>Connected ✓</span><button type="button" id="connChange">change</button></div>
+  <div id="main"><p class="note">Enter your coach key, then Load.</p></div>
+</div>
+<script>
+// Fixed, trusted API address (S3). The coach key is only ever sent here.
+const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+let KEY = ""; try { KEY = localStorage.getItem("ci_token") || ""; } catch (_) {}
+function setConnected(on) { $("connBar").hidden = on; $("conn").hidden = !on; }
+$("connChange").addEventListener("click", () => { KEY = ""; try { localStorage.removeItem("ci_token"); } catch (_) {} setConnected(false); $("main").innerHTML = `<p class="note">Enter your coach key, then Load.</p>`; });
+$("load").addEventListener("click", () => { const v = $("token").value.trim(); $("token").value = ""; if (v) KEY = v; load(); });
+const ERR = { not_approvable: "This person can't be approved yet (not paid, refunded, or already approved).", not_deliverable: "Approve first.",
+  sender_not_configured: "Your email sender isn't set up, so the link couldn't be emailed.", no_email: "No email address on file.",
+  registration_not_matchable: "That registration already has a payment.", amount_mismatch: "That payment's amount doesn't match this person's option.",
+  payment_not_usable: "Square says that payment isn't completed (or is for another location).", not_found: "Not found (refresh the page).", changed_elsewhere: "Something changed — refresh the page.",
+  on_hold: "This person is on hold — tap Release first.", refund_pending: "A refund is pending — wait until Square finishes it.", refund_full: "This payment was refunded.",
+  not_holdable: "This person can't be put on hold now.", not_releasable: "Nothing to release.", not_archivable: "Only refunded people can be archived here.", client_not_active: "The client isn't active.",
+  refunded: "This payment was refunded (or a refund is pending) — nothing more can be sent.", refund_pending_or_done: "A refund is pending or done — this person can't be approved.",
+  delivery_in_flight: "An email to this person is being sent right now — wait a minute, then refresh.", send_network_error: "The email service didn't answer — it MAY have been sent. Check before resending." };
+async function api(path, body) {
+  const r = await fetch(API_BASE + path, { method: body ? "POST" : "GET", headers: { authorization: "Bearer " + KEY, ...(body ? { "content-type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+  if (r.status === 401) { KEY = ""; try { localStorage.removeItem("ci_token"); } catch (_) {} setConnected(false); throw new Error("Key not accepted. Paste your coach key and tap Load."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || d.ok === false) throw new Error(ERR[d.error] || (r.status === 404 ? "Onboarding isn't switched on yet." : `Request failed (HTTP ${r.status})`));
+  return d;
+}
+const LABEL = { REGISTERED: ["Registered — not paid", ""], AWAITING_PAYMENT: ["Checkout opened — not paid", ""],
+  QUEUED: ["Paid — review intake", "b-action"], APPROVED: ["Approved — sending link", "b-action"], LINK_SENT: ["Link sent", "b-done"],
+  DELIVERY_FAILED: ["Link NOT delivered", "b-bad"], NEEDS_REVIEW: ["Needs review", "b-bad"], REFUNDED: ["Refunded — no access", "b-bad"],
+  REFUNDED_ACTIVE: ["Refunded — ACCESS STILL ON", "b-bad"], REFUNDED_ARCHIVED: ["Refunded — access removed", ""] };
+const REASON = { waiver_missing: "waiver not signed", unknown_offer: "unknown option on the form", bad_email: "email looks wrong", missing_name: "name missing",
+  amount_mismatch: "paid a different amount", over_capacity: "paid after the challenge was full" };
+const money = (c, cur) => c == null ? "" : `$${(c / 100).toFixed(2)}${cur && cur !== "USD" ? " " + cur : ""}`;
+let DATA = { registrations: [], payments: [] };
+async function load() {
+  if (!KEY) { $("main").innerHTML = `<p class="note">Enter your coach key, then Load.</p>`; return; }
+  $("main").innerHTML = `<p class="note">Loading…</p>`;
+  try { DATA = await api("/coach/onboarding"); try { localStorage.setItem("ci_token", KEY); } catch (_) {} setConnected(true); render(); }
+  catch (e) { $("main").innerHTML = `<p class="note err">${esc(e.message)}</p>`; }
+}
+function card(r) {
+  const [lab, cls] = LABEL[r.status] || [r.status, ""];
+  const why = r.review_reason ? ` · ${esc(REASON[r.review_reason] || r.review_reason)}` : "";
+  const fail = r.status === "DELIVERY_FAILED" && r.last_delivery_error ? ` · ${esc(ERR[r.last_delivery_error] || r.last_delivery_error)}` : "";
+  const hold = r.on_hold ? ` · <b>ON HOLD</b>${r.hold_note ? ": " + esc(r.hold_note) : ""}` : "";
+  const refund = r.refund_state === "PARTIAL" ? ` · partial refund ${money(r.refunded_cents, r.currency)}` : r.refund_state === "PENDING" ? " · refund pending" : "";
+  const unknown = r.delivery_outcome_unknown ? " · <b>email outcome unknown</b> (the send didn't finish — check with the client before resending)" : r.delivery_state === "SENDING" ? " · sending email now…" : "";
+  const urgent = r.status === "REFUNDED_ACTIVE" && r.link_possibly_delivered
+    ? `<div class="note err urgent"><b>URGENT — archive now.</b> This person was refunded, but their private link may already have been emailed. An email can't be recalled; archiving stops the link from working.</div>` : "";
+  const plan = r.client_id && ["QUEUED", "APPROVED", "LINK_SENT", "DELIVERY_FAILED"].includes(r.status) && !r.has_plan ? " · no program assigned yet" : "";
+  const acts = [], ok = !r.on_hold && ["NONE", "PARTIAL"].includes(r.refund_state || "NONE");
+  if (["QUEUED", "NEEDS_REVIEW", "REGISTERED", "AWAITING_PAYMENT"].includes(r.status)) acts.push(`<button class="btn" data-act="intake" data-id="${r.id}">View intake</button>`);
+  if (r.status === "QUEUED" && ok) acts.push(`<button class="btn primary" data-act="approveForm" data-id="${r.id}">Approve &amp; send link</button>`);
+  if (["DELIVERY_FAILED", "LINK_SENT", "APPROVED"].includes(r.status) && ok && (r.delivery_state !== "SENDING" || r.delivery_outcome_unknown)) acts.push(`<button class="btn${r.status === "DELIVERY_FAILED" ? " primary" : ""}" data-act="resend" data-id="${r.id}">${r.status === "DELIVERY_FAILED" ? "Try sending again" : "Resend link"}</button>`);
+  if (!r.on_hold && ["QUEUED", "REGISTERED", "AWAITING_PAYMENT", "DELIVERY_FAILED", "NEEDS_REVIEW", "APPROVED", "LINK_SENT"].includes(r.status)) acts.push(`<button class="btn" data-act="hold" data-id="${r.id}">Hold</button>`);
+  if (r.on_hold || (r.status === "NEEDS_REVIEW" && r.review_reason === "over_capacity" && r.client_id)) acts.push(`<button class="btn" data-act="release" data-id="${r.id}">${r.on_hold ? "Release hold" : "Back to queue"}</button>`);
+  if (["REFUNDED_ACTIVE", "REFUNDED"].includes(r.status) && r.client_id) acts.push(`<button class="btn${r.status === "REFUNDED_ACTIVE" ? " primary" : ""}" data-act="archive" data-id="${r.id}">Archive access</button>`);
+  if (["REGISTERED", "AWAITING_PAYMENT"].includes(r.status) && DATA.payments.some((p) => p.state === "UNMATCHED")) acts.push(`<button class="btn" data-act="matchForm" data-id="${r.id}">Match a payment</button>`);
+  return `<div class="card" id="c-${r.id}"><div class="row between"><div><span class="nm">${esc(r.name)}</span> <span class="meta">${esc({ inperson: "In-person", online: "Online" }[r.offer] || r.offer || "")} ${money(r.amount_cents, r.currency)}</span></div><span class="badge ${cls}">${esc(lab)}</span></div>
+    <div class="meta">${esc(r.email || "no email")}${r.phone ? " · " + esc(r.phone) : ""}${r.paid_at ? " · paid " + esc(r.paid_at.slice(0, 16)) : ""}${r.match_source === "manual" ? " (matched by you)" : ""}${why}${fail}${hold}${refund}${unknown}${plan}</div>${urgent}
+    <div class="row" style="margin-top:8px">${acts.join("")}</div><div class="panel" id="p-${r.id}" hidden></div></div>`;
+}
+function render() {
+  const R = DATA.registrations, P = DATA.payments.filter((p) => p.state === "UNMATCHED" || p.state === "AMOUNT_MISMATCH" || p.state === "WRONG_LOCATION" || p.state === "DUPLICATE_PAYMENT");
+  const g = (sts) => R.filter((r) => sts.includes(r.status));
+  const urg = (r) => (r.status === "REFUNDED_ACTIVE" ? (r.link_possibly_delivered ? 0 : 1) : 2);
+  const act = g(["REFUNDED_ACTIVE", "QUEUED", "DELIVERY_FAILED", "NEEDS_REVIEW", "APPROVED"]).sort((a, z) => urg(a) - urg(z)), wait = g(["REGISTERED", "AWAITING_PAYMENT"]), done = g(["LINK_SENT"]), ref = g(["REFUNDED", "REFUNDED_ARCHIVED"]);
+  const en = DATA.enrollment || {}, WIN = { open: "enrollment open", not_open: "enrollment not open yet", closed: "enrollment closed", not_configured: "enrollment dates not set" };
+  let h = `<div class="row between"><div class="meta">${act.length} need action · ${done.length} onboarded · ${wait.length} not paid yet<br>${esc(en.taken ?? "?")}/${esc(en.capacity ?? "?")} spots taken · ${esc(WIN[en.window] || en.window || "")}</div><div class="row"><button class="btn" data-act="check">Check Square</button><button class="btn" id="reload">Refresh</button></div></div>`;
+  h += `<h2>Needs your action (${act.length})</h2>` + (act.map(card).join("") || `<p class="meta">Nothing waiting.</p>`);
+  if (P.length) h += `<h2>Payments to check (${P.length})</h2>` + P.map((p) => `<div class="card"><div class="row between"><span class="nm">${money(p.amount_cents, p.currency)}</span><span class="badge b-bad">${esc({ UNMATCHED: "Not linked to a registration", AMOUNT_MISMATCH: "Wrong amount", WRONG_LOCATION: "Other Square location", DUPLICATE_PAYMENT: "Second payment" }[p.state] || p.state)}</span></div><div class="meta">Square payment …${esc(String(p.payment_id).slice(-6))} · ${esc((p.created_at || "").slice(0, 16))}</div></div>`).join("");
+  h += `<h2>Registered, not paid (${wait.length})</h2>` + (wait.map(card).join("") || `<p class="meta">None.</p>`);
+  h += `<h2>Onboarded (${done.length})</h2>` + (done.map(card).join("") || `<p class="meta">None yet.</p>`);
+  if (ref.length) h += `<h2>Refunded (${ref.length})</h2>` + ref.map(card).join("");
+  $("main").innerHTML = h;
+}
+$("main").addEventListener("click", async (ev) => {
+  const b = ev.target.closest("[data-act]"); if (!b) return;
+  if (b.id === "reload") return load();
+  const id = b.dataset.id, act = b.dataset.act, panel = id ? $("p-" + id) : null;
+  if (act === "reload") return load();
+  try {
+    if (act === "intake") {
+      panel.hidden = false; panel.innerHTML = `<p class="meta">Loading intake…</p>`;
+      const d = await api("/coach/onboarding/intake?id=" + encodeURIComponent(id));
+      panel.innerHTML = `<dl>${d.answers.map((a) => `<dt>${esc(a.q)}</dt><dd>${esc(a.a)}</dd>`).join("") || "<dd>No answers.</dd>"}</dl>`;
+    } else if (act === "approveForm") {
+      panel.hidden = false;
+      const rr = DATA.registrations.find((x) => x.id === id) || {};
+      panel.innerHTML = `<p class="meta">The link will be emailed to <b>${esc(rr.email || "?")}</b> — check it's correct.${rr.has_plan ? "" : " <b>No program is assigned yet</b> — they'll see the default plan until you assign one."}</p><label>Goal</label><select id="g-${id}"><option value="fat_loss">Lose fat</option><option value="muscle_gain">Build muscle</option><option value="maintenance">Maintain / recomposition</option></select>
+        <label>Workouts per week</label><select id="w-${id}">${[2,3,4,5].map((n) => `<option ${n === 3 ? "selected" : ""}>${n}</option>`).join("")}</select>
+        <p class="meta">This switches the client on and emails their private link. Assign their program in <a href="programs.html">Programs</a> and meals in Meals.</p>
+        <button class="btn primary" data-act="approve" data-id="${id}">Approve &amp; email link</button> <span id="m-${id}"></span>`;
+    } else if (act === "approve") {
+      b.disabled = true;
+      const d = await api("/coach/onboarding/approve", { id, goal_type: $("g-" + id).value, workouts_per_week: Number($("w-" + id).value) });
+      alert(d.archive_now ? "URGENT: a refund arrived while the link was being emailed. The email can't be recalled — tap 'Archive access' on this person now."
+        : d.on_hold_now ? (d.delivered ? "Approved and emailed. Your hold was placed while the email was already going out, so it was delivered; no further emails will be sent while on hold." : "Approved, on hold — no email will be sent until you release the hold.")
+        : d.delivered ? "Approved — link emailed." : "Approved, but the email did NOT go out: " + (ERR[d.delivery_error] || d.delivery_error) + ". Use 'Try sending again' or copy the link from the client's page.");
+      load();
+    } else if (act === "resend") {
+      b.disabled = true; const d = await api("/coach/onboarding/resend", { id });
+      alert(d.archive_now ? "URGENT: a refund arrived while the link was being emailed. The email can't be recalled — tap 'Archive access' now." : d.delivered ? "Link emailed." : "Not delivered: " + (ERR[d.delivery_error] || d.delivery_error)); load();
+    } else if (act === "hold") {
+      const reason = prompt("Why hold this person? (only you see this)", "");
+      if (reason === null) return; const d = await api("/coach/onboarding/hold", { id, reason: reason || "coach_hold" });
+      if (d.delivery_in_flight) alert("On hold. An email with the private link was already being sent and can't be stopped — no further emails will go out while on hold. Archive the client if they must not have access.");
+      else if (d.link_already_sent) alert("On hold. Note: the private link was already emailed earlier — a hold doesn't switch it off. Archive the client if they must not have access.");
+      load();
+    } else if (act === "release") { await api("/coach/onboarding/release", { id }); load(); }
+    else if (act === "archive") { if (!confirm("Archive this client? Their private link stops working. Nothing is deleted and you can restore them from the client list.")) return; await api("/coach/onboarding/archive", { id }); load(); }
+    else if (act === "check") { b.disabled = true; const d = await api("/coach/onboarding/check-payments", {}); alert(`Checked ${d.checked} open checkout(s); found ${d.found} payment(s)${d.errors ? `; ${d.errors} couldn't be checked` : ""}.`); load(); }
+    else if (act === "matchForm") {
+      panel.hidden = false;
+      const opts = DATA.payments.filter((p) => p.state === "UNMATCHED").map((p) => `<option value="${esc(p.payment_id)}">${money(p.amount_cents, p.currency)} · …${esc(String(p.payment_id).slice(-6))} · ${esc((p.created_at || "").slice(0, 16))}</option>`).join("");
+      panel.innerHTML = `<label>Square payment</label><select id="pm-${id}">${opts}</select><p class="meta">Only match if you've confirmed in Square that this payment is from this person. The amount must match their option.</p><button class="btn primary" data-act="match" data-id="${id}">Match payment</button>`;
+    } else if (act === "match") {
+      if (!confirm("Link this Square payment to this registration?")) return;
+      await api("/coach/onboarding/match", { id, payment_id: $("pm-" + id).value }); load();
+    }
+  } catch (e) { if (panel) { panel.hidden = false; panel.innerHTML = `<p class="err">${esc(e.message)}</p>`; } else alert(e.message); b.disabled = false; }
+});
+document.addEventListener("click", (e) => { if (e.target && e.target.id === "reload") load(); });
+if (KEY) load();
+</script>
+</body>
+</html>
