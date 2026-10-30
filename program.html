@@ -109,7 +109,7 @@ padding:15px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px -10px
 </div>
 <script>
 /* ===== EDIT PROGRAMS BELOW. Each track: brand (dd|reset|travel), label, lede, weeks[].
-exercise: name, pres, note?, rest?, hotel?, video? · rest day: { rest:"..." }
+exercise: name, pres, note?, rest?, hotel?, video?, hotel_video? · rest day: { rest:"..." }
 optional: plan.details (text shown below the workouts) · week.title / week.note (focus banner above the week) ===== */
 const BRANDS = {
 reset: { wordmark:"The Reset", bg:"#0e1613", surface:"#16211d", line:"#2a3b34", muted:"#8fa89d",
@@ -403,7 +403,8 @@ const week = prog.weeks[i] || { days: [] };
 const logOn = LOG.ready && !!cid;
 // Gym | Home / Hotel toggle (label renamed 10/2026; stored value is still "hotel"): only when logging is on AND this plan has hotel lines.
 const hasHotel = (prog.weeks || []).some(w => (w.days || []).some(d => (d.exercises || []).some(x => x.hotel)));
-wrap.classList.toggle("hotelmode", logOn && hasHotel && version() === "hotel");
+const homeMode = logOn && hasHotel && version() === "hotel";
+wrap.classList.toggle("hotelmode", homeMode);
 if (logOn && hasHotel) {
 const t = document.createElement("div");
 t.className = "where";
@@ -423,7 +424,9 @@ if (day.rest) { el.className = "day"; el.innerHTML = `<div class="rest">${esc(da
 el.className = "day";
 let rows = "";
 for (const ex of (day.exercises || [])) {
-const vurl = safeVideo(ex.video);
+// Home/Hotel video (11/2026): in Home / Hotel mode an exercise WITH a hotel line shows its optional hotel_video;
+// no hotel_video → no Watch button (never the gym demo for a different movement). Gym mode and exercises without a hotel line: unchanged.
+const vurl = safeVideo(homeMode && ex.hotel ? ex.hotel_video : ex.video);
 // Inline player for YouTube / Vimeo; any other safe https link keeps opening in a new tab.
 const emb = videoEmbed(vurl);
 const watch = vurl ? `<a class="watch" href="${esc(vurl)}"${emb ? ` data-embed="${esc(emb)}" rel="noopener noreferrer"` : ` target="_blank" rel="noopener"`}>${emb ? "▶ Watch" : "Watch"}</a>` : "";
