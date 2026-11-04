@@ -33,6 +33,10 @@ border-radius:16px; padding:18px 18px; margin-bottom:14px; text-decoration:none;
 .ic.checkins { background:rgba(59,130,246,.16); }
 .ic.plans { background:rgba(240,160,32,.16); }
 .ic.tracker { background:rgba(47,178,106,.16); }
+.ic.schedule { background:rgba(14,165,233,.16); }
+/* Scheduling tile: hidden unless the coach's skin is "tracks" (set by loadMe) */
+#schedTile { display:none; }
+body.tracks #schedTile { display:flex; }
 .tile .t { font-size:17px; font-weight:700; }
 .tile .d { font-size:13px; color:var(--muted); margin-top:2px; }
 .arrow { margin-left:auto; color:var(--muted); font-size:20px; }
@@ -69,6 +73,11 @@ font-weight:700; font-size:14px; cursor:pointer; }
 .cli-actions a.photos { background:rgba(139,124,246,.14); border-color:#8b7cf6; color:#c9c1ff; }
 .cli-actions a.review { background:rgba(59,130,246,.14); border-color:var(--blue); color:#93b8fb; }
 .cli-actions a.meals { background:rgba(240,160,32,.14); border-color:var(--dd); color:#f7c266; }
+/* Copy booking link: hidden unless the coach's skin is "tracks" */
+.cli-actions button.bklink { display:none; flex:1; padding:11px; border-radius:11px; font-weight:700; font-size:14px; cursor:pointer;
+background:rgba(14,165,233,.14); border:1px solid #0ea5e9; color:#7dd3fc; }
+body.tracks .cli-actions button.bklink { display:block; }
+.cli-actions button.bklink:disabled { opacity:.6; cursor:default; }
 
 /* ---- Add a client (TreMayne; adapted from the tested pilot form) ---- */
 .ac-btn { width:100%; padding:13px; border:1px dashed var(--line); border-radius:14px; background:transparent; color:#93b8fb; font-weight:700; font-size:15px; cursor:pointer; }
@@ -106,6 +115,12 @@ font-weight:700; font-size:14px; cursor:pointer; }
 <a class="tile" href="programs.html">
 <div class="ic plans">&#128203;</div>
 <div><div class="t">Programs</div><div class="d">One program, many clients</div></div>
+<div class="arrow">&#8250;</div>
+</a>
+
+<a class="tile" id="schedTile" href="challenge-schedule.html">
+<div class="ic schedule">&#128197;</div>
+<div><div class="t">Scheduling</div><div class="d">Challenge sessions &amp; rosters</div></div>
 <div class="arrow">&#8250;</div>
 </a>
 
@@ -223,6 +238,7 @@ ${waiting.has(c.id) ? `<span class="badge waiting">Check-in waiting</span>` : ``
 <a class="logs" href="coach-logs.html?client=${encodeURIComponent(c.id)}">Workouts</a>
 <a class="photos" href="coach-photos.html?client=${encodeURIComponent(c.id)}">Photos</a>
 <a class="meals" href="meal-plans.html">Meals</a>
+<button type="button" class="bklink" data-client="${esc(c.id)}">Copy booking link</button>
 ${waiting.has(c.id) ? `<a class="review" href="review.html">Review check-in</a>` : ``}
 </div>`;
 listEl.appendChild(row);
@@ -256,6 +272,8 @@ async function loadMe(token) {
     if (COACH.skin !== "tracks") document.querySelectorAll(".section-label").forEach((l) => {
       if (/calculator/i.test(l.textContent)) { l.style.display = "none"; if (l.nextElementSibling) l.nextElementSibling.style.display = "none"; }
     });
+    // Scheduling tile and "Copy booking link" buttons: TreMayne's (tracks) coaches only.
+    document.body.classList.toggle("tracks", COACH.skin === "tracks");
   } catch (_) {}
 }
 // ---- Add a client (TreMayne). Same key + Bearer scheme as above; the coach is identified ONLY by the key. ----
@@ -319,6 +337,36 @@ document.getElementById("acCopy").addEventListener("click", async () => {
   }
   btn.textContent = ok ? "Copied ✓" : "Press and hold the link to copy";
   setTimeout(() => { btn.textContent = "Copy Client Link"; }, 2500);
+});
+// ---- Scheduling: copy an existing client's booking link. Uses GET /coach/client/link (read-only; no rotation, no new endpoint).
+// The URL goes straight to the clipboard. It is never displayed, stored, or logged.
+const BK_LABEL = "Copy booking link";
+const BK_MSG = { 401: "Key rejected", 403: "Not allowed", 404: "Not found", 409: "No link yet", 500: "Not set up" };
+listEl.addEventListener("click", (e) => {
+  const b = e.target.closest && e.target.closest("button.bklink");
+  if (!b) return;
+  const token = tokenEl.value.trim();
+  if (!token) return;
+  const flash = (t) => { b.textContent = t; setTimeout(() => { b.textContent = BK_LABEL; b.disabled = false; }, 2500); };
+  b.disabled = true; b.textContent = "Copying…";
+  const bookingUrl = (async () => {
+    const r = await fetch(`${API_BASE}/coach/client/link?client_id=${encodeURIComponent(b.dataset.client)}`, { headers: authH(token) });
+    if (!r.ok) throw Object.assign(new Error("status"), { status: r.status });
+    const d = await r.json().catch(() => null);
+    const tok = d && typeof d.hub_link === "string" ? new URL(d.hub_link, location.origin).searchParams.get("c") : null;
+    if (!tok || !/^[0-9a-f]{32}$/.test(tok)) throw Object.assign(new Error("badlink"), { status: 0 });
+    const u = new URL("challenge-book.html", location.href);
+    u.searchParams.set("c", tok);
+    return u.href;
+  })();
+  const done = () => flash("Copied ✓");
+  const fail = (err) => flash(BK_MSG[err && err.status] || "Try again");
+  if (typeof ClipboardItem !== "undefined" && navigator.clipboard && navigator.clipboard.write) {
+    // Passing a promise keeps the tap's permission on iPhone Safari while the link is fetched.
+    navigator.clipboard.write([new ClipboardItem({ "text/plain": bookingUrl.then((u) => new Blob([u], { type: "text/plain" })) })]).then(done, fail);
+  } else {
+    bookingUrl.then((u) => navigator.clipboard.writeText(u)).then(done, fail);
+  }
 });
 document.getElementById("load").addEventListener("click", () => { loadMe(tokenEl.value.trim()); loadClients(); });
 if (tokenEl.value) { loadMe(tokenEl.value.trim()); loadClients(); } // auto-load if a key is already remembered
