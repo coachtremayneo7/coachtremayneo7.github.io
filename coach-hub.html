@@ -341,7 +341,7 @@ document.getElementById("acCopy").addEventListener("click", async () => {
 // ---- Scheduling: copy an existing client's booking link. Uses GET /coach/client/link (read-only; no rotation, no new endpoint).
 // The URL goes straight to the clipboard. It is never displayed, stored, or logged.
 const BK_LABEL = "Copy booking link";
-const BK_MSG = { 401: "Key rejected", 403: "Not allowed", 404: "Not found", 409: "No link yet", 500: "Not set up" };
+const BK_MSG = { 401: "Key rejected", 403: "Not allowed", 404: "Not found", 409: "No link yet", 500: "Not set up", archived: "Archived client" };
 listEl.addEventListener("click", (e) => {
   const b = e.target.closest && e.target.closest("button.bklink");
   if (!b) return;
@@ -353,14 +353,17 @@ listEl.addEventListener("click", (e) => {
     const r = await fetch(`${API_BASE}/coach/client/link?client_id=${encodeURIComponent(b.dataset.client)}`, { headers: authH(token) });
     if (!r.ok) throw Object.assign(new Error("status"), { status: r.status });
     const d = await r.json().catch(() => null);
-    const tok = d && typeof d.hub_link === "string" ? new URL(d.hub_link, location.origin).searchParams.get("c") : null;
+    if (!d) throw Object.assign(new Error("badlink"), { status: 0 });
+    // Fail closed: copy only when the server explicitly says the client is not archived.
+    if (d.archived !== false) throw Object.assign(new Error("archived"), { status: 0, code: "archived" });
+    const tok = typeof d.hub_link === "string" ? new URL(d.hub_link, location.origin).searchParams.get("c") : null;
     if (!tok || !/^[0-9a-f]{32}$/.test(tok)) throw Object.assign(new Error("badlink"), { status: 0 });
     const u = new URL("challenge-book.html", location.href);
     u.searchParams.set("c", tok);
     return u.href;
   })();
   const done = () => flash("Copied ✓");
-  const fail = (err) => flash(BK_MSG[err && err.status] || "Try again");
+  const fail = (err) => flash((err && err.code && BK_MSG[err.code]) || BK_MSG[err && err.status] || "Try again");
   if (typeof ClipboardItem !== "undefined" && navigator.clipboard && navigator.clipboard.write) {
     // Passing a promise keeps the tap's permission on iPhone Safari while the link is fetched.
     navigator.clipboard.write([new ClipboardItem({ "text/plain": bookingUrl.then((u) => new Blob([u], { type: "text/plain" })) })]).then(done, fail);
