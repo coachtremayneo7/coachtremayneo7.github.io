@@ -60,8 +60,8 @@
     state = { sessions: s.data.sessions || [], mine: m.data.reservations || [], eligible: !!s.data.eligible };
     render();
   }
-  function weekCount(key) { return state.mine.filter((r) => weekKey(r.starts_at) === key).length; }
-  function overlapsMine(s) { return state.mine.some((r) => overlaps(r, s)); }
+  function weekCount(key) { return state.mine.filter((r) => r.reservation_status === "booked" && r.session_status !== "closed" && weekKey(r.starts_at) === key).length; }
+  function overlapsMine(s) { return state.mine.some((r) => r.reservation_status === "booked" && overlaps(r, s)); }
   function render() {
     if (!state.eligible) { showGate("Booking isn't open for your account yet. Contact Coach TreMayne."); return; }
     gate.classList.add("hidden"); app.classList.remove("hidden");
@@ -73,6 +73,20 @@
     if (!state.mine.length) mineBox.innerHTML = '<p class="meta">No sessions booked yet.</p>';
     for (const r of state.mine) {
       const c = document.createElement("div"); c.className = "card";
+      if (r.reservation_status === "cancelled" || r.session_status === "closed") {
+        const why = r.reservation_status === "cancelled"
+          ? (r.cancel_reason === "timeoff" ? "Your booking was cancelled because Coach TreMayne is unavailable at this time. Please book another session." : "This booking was cancelled.")
+          : "This session was closed by your coach.";
+        const isCancelled = r.reservation_status === "cancelled";
+        const info = document.createElement("div");
+        const when = document.createElement("strong"); when.textContent = fmtTime(r.starts_at); info.appendChild(when);
+        const dur = document.createElement("div"); dur.className = "meta"; dur.textContent = "45 minutes"; info.appendChild(dur);
+        const note = document.createElement("div"); note.className = "meta"; note.textContent = why; info.appendChild(note);
+        const pill = document.createElement("span"); pill.className = "pill bad"; pill.textContent = isCancelled ? "Cancelled" : "Session closed";
+        c.appendChild(info); c.appendChild(pill);
+        mineBox.appendChild(c);
+        continue;
+      }
       c.innerHTML = '<div><strong>' + fmtTime(r.starts_at) + '</strong><div class="meta">45 minutes</div></div>';
       const b = document.createElement("button"); b.className = "secondary"; b.textContent = "Cancel";
       b.setAttribute("aria-label", "Cancel " + fmtTime(r.starts_at));
