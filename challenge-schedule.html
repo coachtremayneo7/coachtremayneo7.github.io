@@ -88,6 +88,7 @@
       </div>
       <p class="note">Leave both times empty for whole days.</p>
       <div class="actions"><button id="bpreview" class="secondary">Preview</button></div>
+      <p id="bmsg" class="sum" role="alert" aria-live="assertive"></p>
       <div id="bprev" class="hidden">
         <p id="bwarn" role="alert" style="font-weight:700;color:#b42318"></p>
         <p class="sum" id="bsum" role="status"></p>
@@ -223,6 +224,7 @@
   }
 
   // ---- Time off ----
+  const tsay = (t, bad) => setMsg($("bmsg"), t, bad);
   let pendingBlock = null;   // the last preview; cleared whenever the window changes, so Confirm can only apply what was previewed
   const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
   const nextDay = (ds) => { const [y, m, d] = ds.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10); };
@@ -240,15 +242,18 @@
     return { start, end };
   }
   $("bpreview").onclick = async () => {
+    try { await previewTimeoff(); } catch (e) { tsay("Preview failed. Check your connection and try again.", true); }
+  };
+  async function previewTimeoff() {
     clearPreview();
     const w = timeoffWindow();
-    if (w.error) { say(w.error, true); return; }
-    say("Checking sessions...", false);
+    if (w.error) { tsay(w.error, true); return; }
+    tsay("Checking sessions...", false);
     const r = await apiCall("POST", "/coach/schedule/timeoff/preview", { key, body: { start_at: w.start.toISOString(), end_at: w.end.toISOString() } });
-    if (!r.ok) { say(msgFor(r.error || "network"), true); return; }
+    if (!r.ok) { tsay(msgFor(r.error || "network"), true); return; }
     const d = r.data;
     const range = fmtTime(d.start_at) + " to " + fmtTime(d.end_at);
-    say("", false);
+    tsay("", false);
     pendingBlock = { start: d.start_at, end: d.end_at, count: d.to_close, booked: d.booked_seats || 0 };
     let text;
     if (d.to_close === 0) {
@@ -259,6 +264,7 @@
       if (d.already_closed) text += plural(d.already_closed, "session") + " already closed " + (d.already_closed === 1 ? "is" : "are") + " not changed. ";
       if (d.started) text += plural(d.started, "session") + " already started " + (d.started === 1 ? "is" : "are") + " skipped. ";
     }
+    text += " Sessions to close: " + d.to_close + ". Booked reservations to cancel: " + (d.booked_seats || 0) + ".";
     $("bsum").textContent = text.trim();
     const box = $("blist"); box.innerHTML = "";
     for (const s of d.sessions) {
@@ -267,26 +273,42 @@
       box.appendChild(row);
     }
     $("bprev").classList.remove("hidden");
-  };
+  }
   $("bconfirm").onclick = async () => {
     if (!pendingBlock) return;
     const p = pendingBlock;
     if (p.booked > 0 && !confirm("This will CANCEL " + plural(p.booked, "booking") + ". Clients are not notified automatically. Confirm time off?")) return;
-    $("bconfirm").disabled = true;
-    const r = await apiCall("POST", "/coach/schedule/timeoff/apply", { key, body: { start_at: p.start, end_at: p.end, expected_sessions: p.count } });
-    $("bconfirm").disabled = false;
-    if (r.ok) {
-      say(r.data.closed ? "Time off saved. Closed " + plural(r.data.closed, "session") + ". " + (r.data.cancelled ? plural(r.data.cancelled, "booking") + " cancelled. Contact those clients yourself." : "No bookings were cancelled.") : "Time off saved. No sessions were affected.", false);
-      clearPreview(); await loadSessions(); await loadBlocks();
-    } else {
-      say(msgFor(r.error || "network"), true);
-      if (r.error === "preview_changed" || r.error === "overlaps_block") { clearPreview(); await loadBlocks(); }
+    const btnEl = $("bconfirm");
+    let r = null;
+    btnEl.disabled = true;
+    try {
+      // One attempt only. The request is never retried automatically.
+      r = await apiCall("POST", "/coach/schedule/timeoff/apply", { key, body: { start_at: p.start, end_at: p.end, expected_sessions: p.count } });
+    } catch (e) {
+      r = null;
+    } finally {
+      btnEl.disabled = false;
     }
+    if (!r || r.status === 0 || r.status >= 500 || (r.ok && !r.data)) {
+      // Outcome unknown: the server may have saved it. Drop the preview so Confirm cannot run again without a fresh preview.
+      clearPreview();
+      tsay("Result unknown: the connection failed or the server had an error, so Time Off may or may not have been saved. Refresh this page and check the Time Off list and sessions before trying again. Do not retry until you have checked.", true);
+      return;
+    }
+    if (r.ok) {
+      const msg = r.data.closed ? "Time off saved. Closed " + plural(r.data.closed, "session") + ". " + (r.data.cancelled ? plural(r.data.cancelled, "booking") + " cancelled. Contact those clients yourself." : "No bookings were cancelled.") : "Time off saved. No sessions were affected.";
+      clearPreview();
+      try { await loadSessions(); await loadBlocks(); } catch (e) { /* read-only refresh; the save already succeeded */ }
+      tsay(msg, false);
+      return;
+    }
+    tsay(msgFor(r.error || "network"), true);
+    if (r.error === "preview_changed" || r.error === "overlaps_block") { clearPreview(); try { await loadBlocks(); } catch (e) {} }
   };
   async function loadBlocks() {
     const box = $("blocks"); box.innerHTML = "";
     const r = await apiCall("GET", "/coach/schedule/timeoff", { key });
-    if (!r.ok) { say(msgFor(r.error || "network"), true); return; }
+    if (!r.ok) { tsay(msgFor(r.error || "network"), true); return; }
     const list = r.data.blocks || [];
     if (!list.length) { box.innerHTML = '<p class="meta">No time off saved.</p>'; return; }
     for (const b of list) {
@@ -301,17 +323,36 @@
       const pl = document.createElement("span"); pl.className = "pill"; pl.textContent = active ? "Active" : "Released"; d.appendChild(pl);
       if (active) {
         const a = document.createElement("div"); a.className = "actions";
-        a.appendChild(btn("Release time off", "secondary", () => releaseBlock(b, label)));
+        a.appendChild(btn("Release time off", "secondary", (ev) => releaseBlock(b, label, ev.currentTarget)));
         d.appendChild(a);
       }
       box.appendChild(d);
     }
   }
-  async function releaseBlock(b, label) {
+  async function releaseBlock(b, label, btnEl) {
     if (!confirm("Remove this time off for " + label + "? Only sessions it closed reopen. Cancelled bookings are NOT restored; clients must rebook. Sessions you closed by hand stay closed.")) return;
-    const r = await apiCall("POST", "/coach/schedule/timeoff/release", { key, body: { block_id: b.id } });
-    if (r.ok) { say("Time off removed. Reopened " + plural(r.data.reopened, "session") + ". Cancelled bookings were not restored; clients must rebook.", false); await loadSessions(); await loadBlocks(); }
-    else { say(msgFor(r.error || "network"), true); await loadBlocks(); }
+    let r = null;
+    if (btnEl) btnEl.disabled = true;
+    try {
+      // One attempt only. The request is never retried automatically.
+      r = await apiCall("POST", "/coach/schedule/timeoff/release", { key, body: { block_id: b.id } });
+    } catch (e) {
+      r = null;
+    } finally {
+      if (btnEl) btnEl.disabled = false;
+    }
+    if (!r || r.status === 0 || r.status >= 500 || (r.ok && !r.data)) {
+      tsay("Result unknown: the connection failed or the server had an error, so Time Off may or may not have been removed. Refresh this page and check the Time Off list and sessions before trying again. Do not retry until you have checked.", true);
+      return;
+    }
+    if (r.ok) {
+      const msg = "Time off removed. Reopened " + plural(r.data.reopened, "session") + ". Cancelled bookings were not restored; clients must rebook.";
+      try { await loadSessions(); await loadBlocks(); } catch (e) { /* read-only refresh; the release already succeeded */ }
+      tsay(msg, false);
+      return;
+    }
+    tsay(msgFor(r.error || "network"), true);
+    try { await loadBlocks(); } catch (e) { /* read-only refresh */ }
   }
 
   async function loadPeople() {
