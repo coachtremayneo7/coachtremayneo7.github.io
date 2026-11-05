@@ -33,6 +33,8 @@
   .sess-msg[data-state="bad"] { color:var(--bad); font-weight:600; }
   .sess-msg[data-state="ok"] { color:var(--ok); font-weight:600; }
   #rosterpanel { scroll-margin-top:12px; }
+  .sum { font-weight:600; margin:8px 0; }
+  .note { color:var(--muted); font-size:.92rem; margin:4px 0 8px; }
   .person { display:flex; justify-content:space-between; gap:8px; align-items:center; border-top:1px solid var(--line); padding:8px 0; flex-wrap:wrap; }
   @media (max-width:380px) { main { padding:12px; } }
 </style>
@@ -73,6 +75,32 @@
       <div id="sessions"></div>
     </section>
 
+    <section class="panel" aria-labelledby="b">
+      <h2 id="b">Time off</h2>
+      <p class="note">Block hours, a full day, or several days. Any open session that overlaps the time is closed, so no one can book it. Any booking in a session this closes is cancelled. Clients are not notified automatically, so contact each affected client yourself. Sessions you closed by hand are not changed.</p>
+      <div class="row">
+        <label>From date <input id="bfrom" type="date"></label>
+        <label>Start time <input id="bftime" type="time" step="900"></label>
+      </div>
+      <div class="row">
+        <label>To date <input id="bto" type="date"></label>
+        <label>End time <input id="btime" type="time" step="900"></label>
+      </div>
+      <p class="note">Leave both times empty for whole days.</p>
+      <div class="actions"><button id="bpreview" class="secondary">Preview</button></div>
+      <div id="bprev" class="hidden">
+        <p id="bwarn" role="alert" style="font-weight:700;color:#b42318"></p>
+        <p class="sum" id="bsum" role="status"></p>
+        <div id="blist"></div>
+        <div class="actions">
+          <button id="bconfirm">Confirm time off</button>
+          <button id="bcancel" class="secondary">Cancel</button>
+        </div>
+      </div>
+      <h2>Time off on record</h2>
+      <div id="blocks"></div>
+    </section>
+
     <section class="panel hidden" id="rosterpanel" aria-labelledby="r">
       <h2 id="r">Roster</h2>
       <div id="roster"></div>
@@ -109,7 +137,7 @@
     key = $("key").value.trim();
     if (key) localStorage.setItem("ci_token", key);
     say("", false);
-    if (await validate()) { await loadSessions(); await loadPeople(); }
+    if (await validate()) { await loadSessions(); await loadPeople(); await loadBlocks(); }
   };
 
   async function loadSessions() {
@@ -122,7 +150,7 @@
       const d = document.createElement("div"); d.className = "session";
       const closed = s.status === "closed";
       d.innerHTML = '<div><strong>' + fmtTime(s.starts_at) + '</strong><div class="meta">' + fmtHour(s.starts_at) + " to " + fmtHour(s.ends_at) + " | " + s.booked + " of " + s.capacity + " booked</div></div>" +
-        '<span class="pill ' + (closed ? "bad" : "") + '">' + (closed ? "Closed" : "Open") + "</span>";
+        '<span class="pill ' + (closed ? "bad" : "") + '">' + (s.blocked ? "Blocked" : closed ? "Closed" : "Open") + "</span>";
       const a = document.createElement("div"); a.className = "actions";
       a.appendChild(btn("Roster", "secondary", () => roster(s, true)));
       a.appendChild(btn("Capacity", "secondary", () => capacity(s)));
@@ -194,6 +222,98 @@
     else sessFb(s, msgFor(r.error || "network"), "bad");
   }
 
+  // ---- Time off ----
+  let pendingBlock = null;   // the last preview; cleared whenever the window changes, so Confirm can only apply what was previewed
+  const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
+  const nextDay = (ds) => { const [y, m, d] = ds.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10); };
+  function clearPreview() { pendingBlock = null; $("bprev").classList.add("hidden"); $("bsum").textContent = ""; $("bwarn").textContent = ""; $("blist").innerHTML = ""; }
+  ["bfrom", "bto", "bftime", "btime"].forEach((id) => { $(id).onchange = clearPreview; });
+  $("bcancel").onclick = clearPreview;
+  // Chicago wall-clock window from the form. Empty times mean whole days. The end must be after the start.
+  function timeoffWindow() {
+    const fd = $("bfrom").value;
+    if (!fd) return { error: "Pick a start date." };
+    const td = $("bto").value || fd;
+    const start = chToUtc(fd, $("bftime").value || "00:00");
+    const end = $("btime").value ? chToUtc(td, $("btime").value) : chToUtc(nextDay(td), "00:00");
+    if (end.getTime() <= start.getTime()) return { error: "The end must be after the start." };
+    return { start, end };
+  }
+  $("bpreview").onclick = async () => {
+    clearPreview();
+    const w = timeoffWindow();
+    if (w.error) { say(w.error, true); return; }
+    say("Checking sessions...", false);
+    const r = await apiCall("POST", "/coach/schedule/timeoff/preview", { key, body: { start_at: w.start.toISOString(), end_at: w.end.toISOString() } });
+    if (!r.ok) { say(msgFor(r.error || "network"), true); return; }
+    const d = r.data;
+    const range = fmtTime(d.start_at) + " to " + fmtTime(d.end_at);
+    say("", false);
+    pendingBlock = { start: d.start_at, end: d.end_at, count: d.to_close, booked: d.booked_seats || 0 };
+    let text;
+    if (d.to_close === 0) {
+      text = "No open sessions overlap " + range + ". The time off will still apply to sessions created later.";
+    } else {
+      text = plural(d.to_close, "open session") + " would close (" + range + "). ";
+      $("bwarn").textContent = d.booked_seats > 0 ? "WARNING: " + plural(d.booked_seats, "booked booking") + " in these sessions will be CANCELLED. Clients are not notified automatically; contact each affected client yourself." : "No booked bookings are affected.";
+      if (d.already_closed) text += plural(d.already_closed, "session") + " already closed " + (d.already_closed === 1 ? "is" : "are") + " not changed. ";
+      if (d.started) text += plural(d.started, "session") + " already started " + (d.started === 1 ? "is" : "are") + " skipped. ";
+    }
+    $("bsum").textContent = text.trim();
+    const box = $("blist"); box.innerHTML = "";
+    for (const s of d.sessions) {
+      const row = document.createElement("div"); row.className = "person";
+      row.innerHTML = "<span>" + escapeHtml(fmtTime(s.starts_at)) + "</span><span class=\"meta\">" + (Number(s.booked) || 0) + " of " + (Number(s.capacity) || 0) + " booked</span>";
+      box.appendChild(row);
+    }
+    $("bprev").classList.remove("hidden");
+  };
+  $("bconfirm").onclick = async () => {
+    if (!pendingBlock) return;
+    const p = pendingBlock;
+    if (p.booked > 0 && !confirm("This will CANCEL " + plural(p.booked, "booking") + ". Clients are not notified automatically. Confirm time off?")) return;
+    $("bconfirm").disabled = true;
+    const r = await apiCall("POST", "/coach/schedule/timeoff/apply", { key, body: { start_at: p.start, end_at: p.end, expected_sessions: p.count } });
+    $("bconfirm").disabled = false;
+    if (r.ok) {
+      say(r.data.closed ? "Time off saved. Closed " + plural(r.data.closed, "session") + ". " + (r.data.cancelled ? plural(r.data.cancelled, "booking") + " cancelled. Contact those clients yourself." : "No bookings were cancelled.") : "Time off saved. No sessions were affected.", false);
+      clearPreview(); await loadSessions(); await loadBlocks();
+    } else {
+      say(msgFor(r.error || "network"), true);
+      if (r.error === "preview_changed" || r.error === "overlaps_block") { clearPreview(); await loadBlocks(); }
+    }
+  };
+  async function loadBlocks() {
+    const box = $("blocks"); box.innerHTML = "";
+    const r = await apiCall("GET", "/coach/schedule/timeoff", { key });
+    if (!r.ok) { say(msgFor(r.error || "network"), true); return; }
+    const list = r.data.blocks || [];
+    if (!list.length) { box.innerHTML = '<p class="meta">No time off saved.</p>'; return; }
+    for (const b of list) {
+      const active = b.status === "active";
+      const label = fmtTime(b.start_at) + " to " + fmtTime(b.end_at);
+      const d = document.createElement("div"); d.className = "session";
+      const info = document.createElement("div");
+      const lbl = document.createElement("strong"); lbl.textContent = label; info.appendChild(lbl);
+      const det = document.createElement("div"); det.className = "meta";
+      det.textContent = active ? plural(Number(b.closed_sessions) || 0, "session") + " closed, " + (Number(b.booked) || 0) + " booked" : "Released";
+      info.appendChild(det); d.appendChild(info);
+      const pl = document.createElement("span"); pl.className = "pill"; pl.textContent = active ? "Active" : "Released"; d.appendChild(pl);
+      if (active) {
+        const a = document.createElement("div"); a.className = "actions";
+        a.appendChild(btn("Release time off", "secondary", () => releaseBlock(b, label)));
+        d.appendChild(a);
+      }
+      box.appendChild(d);
+    }
+  }
+  async function releaseBlock(b, label) {
+    if (!confirm("Remove this time off for " + label + "? Only sessions it closed reopen. Cancelled bookings are NOT restored; clients must rebook. Sessions you closed by hand stay closed.")) return;
+    const r = await apiCall("POST", "/coach/schedule/timeoff/release", { key, body: { block_id: b.id } });
+    if (r.ok) { say("Time off removed. Reopened " + plural(r.data.reopened, "session") + ". Cancelled bookings were not restored; clients must rebook.", false); await loadSessions(); await loadBlocks(); }
+    else { say(msgFor(r.error || "network"), true); await loadBlocks(); }
+  }
+
   async function loadPeople() {
     const r = await apiCall("GET", "/coach/clients", { key });
     if (!r.ok) { say(msgFor(r.error || "network"), true); return; }
@@ -213,7 +333,7 @@
   }
   function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch])); }
 
-  (async () => { if (await validate()) { await loadSessions(); await loadPeople(); } })().catch(() => say(msgFor("network"), true));
+  (async () => { if (await validate()) { await loadSessions(); await loadPeople(); await loadBlocks(); } })().catch(() => say(msgFor("network"), true));
 })();
 </script>
 </body>
