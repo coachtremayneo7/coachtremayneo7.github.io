@@ -40,6 +40,7 @@
     <h2>My sessions</h2>
     <div id="mine"></div>
     <h2>Open sessions</h2>
+    <div id="weekPickBox" class="row"></div>
     <div id="open"></div>
   </div>
 </main>
@@ -52,6 +53,7 @@
   function showGate(text) { gate.textContent = text; gate.classList.remove("hidden"); app.classList.add("hidden"); }
   if (!token) { showGate("Open the training link Coach TreMayne sent you to book sessions."); return; }
   let state = { sessions: [], mine: [], eligible: false };
+  let weekSel = "";   // selected week (Monday key); kept across refreshes, falls back to this week or the first week with sessions
   async function load() {
     const q = "c=" + encodeURIComponent(token);
     const [s, m] = await Promise.all([apiCall("GET", "/schedule/sessions", { query: q }), apiCall("GET", "/schedule/mine", { query: q })]);
@@ -98,12 +100,23 @@
       c.appendChild(b); mineBox.appendChild(c);
     }
     const openBox = document.getElementById("open");
+    const pickBox = document.getElementById("weekPickBox");
     openBox.innerHTML = "";
+    pickBox.innerHTML = "";
     const weeks = {};
     for (const s of state.sessions) (weeks[weekKey(s.starts_at)] = weeks[weekKey(s.starts_at)] || []).push(s);
     const keys = Object.keys(weeks).sort();
     if (!keys.length) openBox.innerHTML = '<p class="meta">No open sessions right now.</p>';
-    for (const k of keys) {
+    else {
+      weekSel = keys.includes(weekSel) ? weekSel : (keys.includes(now) ? now : keys[0]);
+      const label = document.createElement("label"); label.textContent = "Week ";
+      const sel = document.createElement("select"); sel.id = "weekPick"; sel.style.cssText = "font-size:16px;padding:8px";
+      for (const k of keys) { const o = document.createElement("option"); o.value = k; o.textContent = fmtWeek(k); sel.appendChild(o); }
+      sel.value = weekSel;
+      sel.onchange = () => { weekSel = sel.value; render(); };
+      label.appendChild(sel); pickBox.appendChild(label);
+    }
+    for (const k of keys.filter((x) => x === weekSel)) {
       const h = document.createElement("p"); h.className = "meta"; h.style.marginTop = "14px"; h.textContent = fmtWeek(k) + " (" + weekCount(k) + " of 3 booked)";
       openBox.appendChild(h);
       for (const s of weeks[k]) {

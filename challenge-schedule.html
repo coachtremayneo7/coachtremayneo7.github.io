@@ -72,6 +72,9 @@
         <label>To <input id="to" type="date" value="2026-12-20"></label>
         <button id="load" class="secondary">Load</button>
       </div>
+      <div class="row hidden" id="dayRow">
+        <label>Day <select id="dayPick" style="font-size:16px;padding:8px"></select></label>
+      </div>
       <div id="sessions"></div>
     </section>
 
@@ -121,6 +124,8 @@
   const msg = $("msg"), app = $("app");
   let key = localStorage.getItem("ci_token") || "";
   let rows = [];
+  let daySel = "";   // selected day (Chicago YYYY-MM-DD); kept across refreshes, falls back to the first day with sessions
+  const dayKey = (iso) => { const c = chParts(new Date(iso)); return c.y + "-" + String(c.mo).padStart(2, "0") + "-" + String(c.d).padStart(2, "0"); };
   function show(ok) { app.classList.toggle("hidden", !ok); }
   function say(t, bad) { setMsg(msg, t, bad); }
   $("cdate").value = "2026-11-09";
@@ -142,12 +147,30 @@
   };
 
   async function loadSessions() {
+    const box = $("sessions");
+    if (!$("from").value || !$("to").value) { rows = []; $("dayRow").classList.add("hidden"); box.innerHTML = '<p class="meta">Pick both a From and a To date, then tap Load.</p>'; return; }
     const r = await apiCall("GET", "/coach/schedule/sessions", { key, query: "from=" + $("from").value + "&to=" + $("to").value });
-    if (!r.ok) { say(msgFor(r.error || "network"), true); return; }
+    if (!r.ok) { rows = []; $("dayRow").classList.add("hidden"); box.innerHTML = ""; const e = document.createElement("p"); e.className = "meta"; e.setAttribute("role", "alert"); e.style.color = "#b42318"; e.textContent = msgFor(r.error || "network"); box.appendChild(e); return; }
     rows = r.data.sessions || [];
+    const dayKeys = [...new Set(rows.map((s) => dayKey(s.starts_at)))].sort();
+    const sel = $("dayPick");
+    sel.innerHTML = "";
+    if (!dayKeys.length) { daySel = ""; $("dayRow").classList.add("hidden"); box.innerHTML = '<p class="meta">No sessions in this range.</p>'; return; }
+    daySel = dayKeys.includes(daySel) ? daySel : dayKeys[0];
+    for (const k of dayKeys) {
+      const o = document.createElement("option"); o.value = k;
+      o.textContent = fmtDay(rows.find((s) => dayKey(s.starts_at) === k).starts_at);
+      sel.appendChild(o);
+    }
+    sel.value = daySel;
+    $("dayRow").classList.remove("hidden");
+    renderRows();
+  }
+  function renderRows() {
     const box = $("sessions"); box.innerHTML = "";
-    if (!rows.length) { box.innerHTML = '<p class="meta">No sessions in this range.</p>'; return; }
-    for (const s of rows) {
+    const shown = rows.filter((s) => dayKey(s.starts_at) === daySel);
+    if (!shown.length) { box.innerHTML = '<p class="meta">No sessions on this day.</p>'; return; }
+    for (const s of shown) {
       const d = document.createElement("div"); d.className = "session";
       const closed = s.status === "closed";
       d.innerHTML = '<div><strong>' + fmtTime(s.starts_at) + '</strong><div class="meta">' + fmtHour(s.starts_at) + " to " + fmtHour(s.ends_at) + " | " + s.booked + " of " + s.capacity + " booked</div></div>" +
@@ -163,6 +186,7 @@
       box.appendChild(d);
     }
   }
+  $("dayPick").onchange = () => { daySel = $("dayPick").value; renderRows(); };
   function sessFb(s, text, state) {
     const el = document.querySelector('.session[data-sid="' + s.id + '"] .sess-msg');
     if (el) { el.textContent = text; el.dataset.state = state || ""; }
