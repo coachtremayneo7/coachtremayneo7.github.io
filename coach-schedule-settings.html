@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="api-base" content="https://checkin-api.quantumflexpt.workers.dev">
+<title>Scheduling settings</title>
+<style>
+  :root { --bg:#0d0f12; --card:#161a20; --line:#2a313b; --text:#eef1f5; --muted:#9aa4b2; --brand:#f5a524; --ok:#34c77b; --bad:#ff6b6b; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:16px; }
+  h1 { font-size:1.5rem; margin:8px 0 4px; }
+  h2 { font-size:1.05rem; margin:22px 0 8px; color:var(--brand); }
+  .lede { color:var(--muted); margin:0 0 12px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin:10px 0; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  label { display:flex; flex-direction:column; gap:4px; font-size:.9rem; color:var(--muted); min-width:0; }
+  input, select { min-height:44px; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:#0f1318; color:var(--text); font-size:1rem; max-width:100%; }
+  button { min-height:44px; min-width:44px; padding:10px 14px; border-radius:10px; border:0; background:var(--brand); color:#111; font-weight:700; font-size:1rem; cursor:pointer; }
+  button.secondary { background:transparent; color:var(--text); border:1px solid var(--line); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .meta { color:var(--muted); font-size:.92rem; }
+  .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:2px 10px; font-size:.85rem; color:var(--muted); }
+  .pill.ok { color:var(--ok); border-color:var(--ok); }
+  .day { border-top:1px solid var(--line); padding:12px 0; }
+  .day:first-child { border-top:0; }
+  .blocks { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+  .block { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .block input { width:132px; }
+  .person { display:flex; justify-content:space-between; gap:8px; align-items:center; border-top:1px solid var(--line); padding:10px 0; flex-wrap:wrap; }
+  #msg { min-height:1.4em; margin:12px 0; font-weight:600; }
+  #msg[data-state="bad"] { color:var(--bad); }
+  #msg[data-state="ok"] { color:var(--ok); }
+  #warn { color:var(--brand); font-weight:600; margin:6px 0; min-height:0; }
+  .hidden { display:none !important; }
+  @media (max-width:380px) { main { padding:12px; } .block input { width:120px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Scheduling settings</h1>
+  <p class="lede">Weekly hours, regular-client booking access, and the weekly limit for regular clients. All times are Central Time.</p>
+  <div id="msg" role="status" aria-live="polite"></div>
+
+  <section class="panel" aria-labelledby="k">
+    <h2 id="k">Coach key</h2>
+    <div class="row">
+      <label>Key <input id="key" type="password" autocomplete="off" placeholder="ck_..."></label>
+      <button id="savekey">Save key</button>
+    </div>
+    <p id="keystate" class="meta"></p>
+  </section>
+
+  <div id="app" class="hidden">
+    <section class="panel" aria-labelledby="hours">
+      <h2 id="hours">Weekly hours</h2>
+      <p class="meta">Each day can have up to two blocks here. Blocks start on the quarter hour and must be at least 45 minutes long. Empty days are closed.</p>
+      <p class="meta"><strong>Changing hours does not cancel or change sessions that already exist.</strong> New sessions must fit the hours you save.</p>
+      <div id="days"></div>
+      <div class="row" style="margin-top:12px"><button id="saveHours">Save hours</button></div>
+      <p id="warn" class="hidden" role="alert"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="limit">
+      <h2 id="limit">Regular-client weekly limit</h2>
+      <p class="meta">How many sessions a regular client may book in one Monday-to-Sunday week. Challenge clients keep their limit of 3.</p>
+      <div class="row">
+        <label>Limit (1 to 7) <input id="limitIn" type="number" min="1" max="7" step="1" inputmode="numeric"></label>
+        <button id="saveLimit">Save limit</button>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="access">
+      <h2 id="access">Client booking access</h2>
+      <p class="meta">A client can book only after you turn their access on. Turning access off stops new bookings; existing bookings stay in place and can still be cancelled by the client. Clients must also be active.</p>
+      <div id="clients"></div>
+    </section>
+  </div>
+</main>
+<script src="challenge-common.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  let key = "";
+  try { key = localStorage.getItem("ci_token") || ""; } catch (_) {}
+  $("key").value = key;
+  const setMsg = (text, bad) => { const m = $("msg"); m.textContent = text || ""; m.setAttribute("data-state", text ? (bad ? "bad" : "ok") : ""); };
+
+  // Builds the seven-day editor. Two block rows per day; each row is two time inputs.
+  function buildDays(hours) {
+    const box = $("days"); box.innerHTML = "";
+    for (let d = 0; d < 7; d++) {
+      const wrap = document.createElement("div"); wrap.className = "day"; wrap.dataset.dow = String(d);
+      const title = document.createElement("div"); title.innerHTML = "<strong></strong>"; title.firstChild.textContent = DAYS[d];
+      wrap.appendChild(title);
+      const blocks = document.createElement("div"); blocks.className = "blocks";
+      const saved = (hours && hours[String(d)]) || [];
+      for (let i = 0; i < 2; i++) {
+        const pair = saved[i] || ["", ""];
+        const row = document.createElement("div"); row.className = "block";
+        const a = document.createElement("input"); a.type = "time"; a.step = "900"; a.value = pair[0] || ""; a.setAttribute("aria-label", DAYS[d] + " block " + (i + 1) + " start");
+        const sep = document.createElement("span"); sep.className = "meta"; sep.textContent = "to";
+        const z = document.createElement("input"); z.type = "time"; z.step = "900"; z.value = pair[1] || ""; z.setAttribute("aria-label", DAYS[d] + " block " + (i + 1) + " end");
+        row.appendChild(a); row.appendChild(sep); row.appendChild(z);
+        blocks.appendChild(row);
+      }
+      wrap.appendChild(blocks);
+      box.appendChild(wrap);
+    }
+  }
+  // Reads the editor and checks it before sending. Returns { hours } or { error } with a plain message.
+  function readHours() {
+    const hours = {};
+    for (const day of document.querySelectorAll(".day")) {
+      const dow = day.dataset.dow; const list = [];
+      const rows = day.querySelectorAll(".block");
+      rows.forEach((row, i) => {
+        const [a, z] = row.querySelectorAll("input");
+        if (!a.value && !z.value) return;
+        if (!a.value || !z.value) return err(DAYS[+dow] + ": fill in both the start and the end of block " + (i + 1) + ", or clear both.");
+        const am = toMin(a.value), zm = toMin(z.value);
+        if (am % 15 || zm % 15) return err(DAYS[+dow] + ": times must be on the quarter hour (:00, :15, :30 or :45).");
+        if (zm - am < 45) return err(DAYS[+dow] + ": a block must be at least 45 minutes long (block " + (i + 1) + ").");
+        list.push([a.value, z.value, am, zm]);
+      });
+      list.sort((x, y) => x[2] - y[2]);
+      for (let i = 1; i < list.length; i++) if (list[i][2] < list[i - 1][3]) return err(DAYS[+dow] + ": the two blocks overlap.");
+      hours[dow] = list.map((x) => [x[0], x[1]]);
+    }
+    return { hours };
+    function err(text) { throw new Error(text); }
+  }
+  function toMin(hm) { const [h, m] = hm.split(":").map(Number); return h * 60 + m; }
+
+  async function load() {
+    const [h, s, a] = await Promise.all([
+      apiCall("GET", "/coach/schedule/hours", { key }),
+      apiCall("GET", "/coach/schedule/settings", { key }),
+      apiCall("GET", "/coach/schedule/access", { key }),
+    ]);
+    if (h.status === 401 || s.status === 401) { $("keystate").textContent = "That key wasn't accepted."; $("app").classList.add("hidden"); return; }
+    if (!h.ok || !s.ok || !a.ok) { setMsg(msgFor(h.error || s.error || a.error || "network"), true); return; }
+    $("keystate").textContent = "Key accepted.";
+    $("app").classList.remove("hidden");
+    buildDays(h.data.hours);
+    $("limitIn").value = String(s.data.regular_weekly_limit);
+    renderClients(a.data.clients || []);
+  }
+  function renderClients(list) {
+    const box = $("clients"); box.innerHTML = "";
+    if (!list.length) { box.innerHTML = '<p class="meta">No clients yet.</p>'; return; }
+    for (const c of list) {
+      const row = document.createElement("div"); row.className = "person";
+      const info = document.createElement("div");
+      const name = document.createElement("strong"); name.textContent = c.name || "Client";
+      info.appendChild(name);
+      const note = document.createElement("div"); note.className = "meta";
+      note.textContent = c.enabled ? (c.status === "active" ? "Booking on" : "Booking on, but the client is not active, so booking stays off") : "Booking off";
+      info.appendChild(note);
+      row.appendChild(info);
+      const b = document.createElement("button");
+      b.className = c.enabled ? "secondary" : "";
+      b.textContent = c.enabled ? "Turn off" : "Turn on";
+      b.setAttribute("aria-label", (c.enabled ? "Turn off" : "Turn on") + " booking for " + (c.name || "client"));
+      b.onclick = async () => {
+        b.disabled = true;
+        const r = await apiCall("POST", "/coach/schedule/access", { key, body: { client_id: c.id, enabled: !c.enabled } });
+        if (r.ok) { setMsg("Saved.", false); await load(); } else { setMsg(msgFor(r.error), true); b.disabled = false; }
+      };
+      row.appendChild(b);
+      box.appendChild(row);
+    }
+  }
+
+  $("savekey").onclick = async () => {
+    key = $("key").value.trim();
+    try { if (key) localStorage.setItem("ci_token", key); } catch (_) {}
+    setMsg("", false);
+    await load();
+  };
+  $("saveHours").onclick = async () => {
+    $("warn").classList.add("hidden");
+    let payload;
+    try { payload = readHours(); } catch (e) { setMsg(e.message, true); return; }
+    const r = await apiCall("POST", "/coach/schedule/hours", { key, body: payload });
+    if (!r.ok) { setMsg(msgFor(r.error), true); return; }
+    setMsg("Hours saved.", false);
+    if (r.data && r.data.future_sessions_outside_hours > 0) {
+      const w = $("warn");
+      w.textContent = r.data.future_sessions_outside_hours + " upcoming session(s) fall outside these hours. They were NOT changed or cancelled. Close or cancel them yourself if needed.";
+      w.classList.remove("hidden");
+    }
+    await load();
+  };
+  $("saveLimit").onclick = async () => {
+    const n = Number($("limitIn").value);
+    if (!Number.isInteger(n) || n < 1 || n > 7) { setMsg("Enter a whole number from 1 to 7.", true); return; }
+    const r = await apiCall("POST", "/coach/schedule/settings", { key, body: { regular_weekly_limit: n } });
+    if (r.ok) setMsg("Limit saved.", false); else setMsg(msgFor(r.error), true);
+  };
+  if (key) load(); else $("keystate").textContent = "Enter your coach key to start.";
+})();
+</script>
+</body>
+</html>
