@@ -53,7 +53,10 @@
   function showGate(text) { gate.textContent = text; gate.classList.remove("hidden"); app.classList.add("hidden"); }
   if (!token) { showGate("Open the training link Coach TreMayne sent you to book sessions."); return; }
   let state = { sessions: [], mine: [], eligible: false };
-  let weekSel = "";   // selected week (Monday key); kept across refreshes, falls back to this week or the first week with sessions
+  const WEEK_STORE = "ci_week_sel";
+  function readWeek() { try { return sessionStorage.getItem(WEEK_STORE) || ""; } catch (_) { return ""; } }
+  function writeWeek(k) { try { if (k) sessionStorage.setItem(WEEK_STORE, k); } catch (_) { /* storage unavailable: selection only lasts this page view */ } }
+  let weekSel = readWeek();   // selected week (Monday key); kept across refreshes in this tab, falls back to this week or the first week with sessions
   async function load() {
     const q = "c=" + encodeURIComponent(token);
     const [s, m] = await Promise.all([apiCall("GET", "/schedule/sessions", { query: q }), apiCall("GET", "/schedule/mine", { query: q })]);
@@ -109,11 +112,12 @@
     if (!keys.length) openBox.innerHTML = '<p class="meta">No open sessions right now.</p>';
     else {
       weekSel = keys.includes(weekSel) ? weekSel : (keys.includes(now) ? now : keys[0]);
+      writeWeek(weekSel);
       const label = document.createElement("label"); label.textContent = "Week ";
       const sel = document.createElement("select"); sel.id = "weekPick"; sel.style.cssText = "font-size:16px;padding:8px";
       for (const k of keys) { const o = document.createElement("option"); o.value = k; o.textContent = fmtWeek(k); sel.appendChild(o); }
       sel.value = weekSel;
-      sel.onchange = () => { weekSel = sel.value; render(); };
+      sel.onchange = () => { weekSel = sel.value; writeWeek(weekSel); render(); };
       label.appendChild(sel); pickBox.appendChild(label);
     }
     for (const k of keys.filter((x) => x === weekSel)) {

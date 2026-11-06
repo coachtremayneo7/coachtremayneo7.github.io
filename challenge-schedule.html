@@ -124,7 +124,10 @@
   const msg = $("msg"), app = $("app");
   let key = localStorage.getItem("ci_token") || "";
   let rows = [];
-  let daySel = "";   // selected day (Chicago YYYY-MM-DD); kept across refreshes, falls back to the first day with sessions
+  const DAY_STORE = "ci_day_sel";
+  function readDay() { try { return sessionStorage.getItem(DAY_STORE) || ""; } catch (_) { return ""; } }
+  function writeDay(k) { try { if (k) sessionStorage.setItem(DAY_STORE, k); else sessionStorage.removeItem(DAY_STORE); } catch (_) { /* storage unavailable: selection only lasts this page view */ } }
+  let daySel = readDay();   // selected day (Chicago YYYY-MM-DD); kept across refreshes in this tab, falls back to the first day with sessions
   const dayKey = (iso) => { const c = chParts(new Date(iso)); return c.y + "-" + String(c.mo).padStart(2, "0") + "-" + String(c.d).padStart(2, "0"); };
   function show(ok) { app.classList.toggle("hidden", !ok); }
   function say(t, bad) { setMsg(msg, t, bad); }
@@ -155,8 +158,9 @@
     const dayKeys = [...new Set(rows.map((s) => dayKey(s.starts_at)))].sort();
     const sel = $("dayPick");
     sel.innerHTML = "";
-    if (!dayKeys.length) { daySel = ""; $("dayRow").classList.add("hidden"); box.innerHTML = '<p class="meta">No sessions in this range.</p>'; return; }
+    if (!dayKeys.length) { daySel = ""; writeDay(""); $("dayRow").classList.add("hidden"); box.innerHTML = '<p class="meta">No sessions in this range.</p>'; return; }
     daySel = dayKeys.includes(daySel) ? daySel : dayKeys[0];
+    writeDay(daySel);
     for (const k of dayKeys) {
       const o = document.createElement("option"); o.value = k;
       o.textContent = fmtDay(rows.find((s) => dayKey(s.starts_at) === k).starts_at);
@@ -186,7 +190,7 @@
       box.appendChild(d);
     }
   }
-  $("dayPick").onchange = () => { daySel = $("dayPick").value; renderRows(); };
+  $("dayPick").onchange = () => { daySel = $("dayPick").value; writeDay(daySel); renderRows(); };
   function sessFb(s, text, state) {
     const el = document.querySelector('.session[data-sid="' + s.id + '"] .sess-msg');
     if (el) { el.textContent = text; el.dataset.state = state || ""; }
