@@ -264,7 +264,7 @@ fetch("https://checkin-api.quantumflexpt.workers.dev/contact?c=" + encodeURIComp
 .then(function (r) { return r.ok ? r.json() : null; })
 .then(function (data) {
 if (!data || !data.ok) return; // not a verified client -> page stays public
-addBookingCard(); // verified client -> show Square booking card
+resolveBooking(token); // verified client -> server decides which booking cards show
 if (!data.text) return; // no text number set -> keep Schedule a Call card
 var digits = String(data.text).replace(/\D/g, "");
 if (digits.length === 10) digits = "1" + digits; // US number without country code
@@ -284,7 +284,47 @@ digits.slice(1, 4) + "-" + digits.slice(4, 7) + "-" + digits.slice(7);
 .catch(function () { /* keep the public booking card */ });
 }
 
-// Client-only Square booking card. Called ONLY from upgradeContact() after checkin-api
+// Which booking cards a verified client sees. Eligibility comes only from checkin-api
+// (never from client-side flags). Challenge-only: challenge card, no Square card.
+// Regular-only or dual: Square card (dual also gets the challenge card). Lookup failure
+// or an unrecognised response: Square card, exactly as before.
+function bookingPlan(s) {
+  if (!s || typeof s.challenge_eligible !== "boolean") return { challenge: false, square: true };
+  var challenge = s.challenge_eligible === true;
+  var regular = s.regular_enabled === true;
+  return { challenge: challenge, square: !(challenge && !regular) };
+}
+function resolveBooking(token) {
+  if (!window.fetch) { addBookingCard(); return; }
+  fetch("https://checkin-api.quantumflexpt.workers.dev/schedule/sessions?c=" + encodeURIComponent(token))
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (s) {
+      var plan = bookingPlan(s);
+      if (plan.challenge) addChallengeCard(token);
+      if (plan.square) addBookingCard();
+    })
+    .catch(function () { addBookingCard(); });
+}
+// Challenge card: links to the existing challenge booking page with the client's own token.
+function addChallengeCard(token) {
+  if (document.getElementById("card-challenge")) return; // never add twice
+  var contact = document.getElementById("card-contact");
+  if (!contact) return;
+  var a = document.createElement("a");
+  a.className = "card wide";
+  a.id = "card-challenge";
+  a.setAttribute("href", "/challenge-book.html?c=" + encodeURIComponent(token));
+  a.setAttribute("aria-label", "Challenge Sessions, book your training");
+  a.innerHTML =
+    '<div class="ic checkins">&#128197;</div>' +
+    '<div class="txt">' +
+    '<div class="t">Challenge Sessions &mdash; Book Your Training</div>' +
+    '<div class="d">Book your included challenge sessions.</div>' +
+    '</div>';
+  contact.parentNode.insertBefore(a, contact);
+}
+
+// Client-only Square booking card. Called ONLY from resolveBooking() after checkin-api
 // confirms the token (data.ok). Plain external link — no backend route.
 // Inserted just above the contact card; public visitors never get it.
 function addBookingCard() {
