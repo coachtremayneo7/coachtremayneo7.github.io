@@ -288,22 +288,35 @@ digits.slice(1, 4) + "-" + digits.slice(4, 7) + "-" + digits.slice(7);
 // (never from client-side flags). Challenge-only: challenge card, no Square card.
 // Regular-only or dual: Square card (dual also gets the challenge card). Lookup failure
 // or an unrecognised response: Square card, exactly as before.
+// Fail closed: returns null unless the server response has both boolean eligibility fields.
 function bookingPlan(s) {
-  if (!s || typeof s.challenge_eligible !== "boolean") return { challenge: false, square: true };
+  if (!s || typeof s.challenge_eligible !== "boolean" || typeof s.regular_enabled !== "boolean") return null;
   var challenge = s.challenge_eligible === true;
   var regular = s.regular_enabled === true;
   return { challenge: challenge, square: !(challenge && !regular) };
 }
+// Shown instead of any booking card when eligibility cannot be confirmed.
+function addBookingUnavailable() {
+  if (document.getElementById("booking-unavailable")) return;
+  var contact = document.getElementById("card-contact");
+  if (!contact) return;
+  var p = document.createElement("p");
+  p.id = "booking-unavailable";
+  p.setAttribute("role", "status");
+  p.textContent = "Booking is temporarily unavailable. Please refresh the page.";
+  contact.parentNode.insertBefore(p, contact);
+}
 function resolveBooking(token) {
-  if (!window.fetch) { addBookingCard(); return; }
+  if (!window.fetch) { addBookingUnavailable(); return; }
   fetch("https://checkin-api.quantumflexpt.workers.dev/schedule/sessions?c=" + encodeURIComponent(token))
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (s) {
       var plan = bookingPlan(s);
+      if (!plan) { addBookingUnavailable(); return; }
       if (plan.challenge) addChallengeCard(token);
       if (plan.square) addBookingCard();
     })
-    .catch(function () { addBookingCard(); });
+    .catch(function () { addBookingUnavailable(); });
 }
 // Challenge card: links to the existing challenge booking page with the client's own token.
 function addChallengeCard(token) {
