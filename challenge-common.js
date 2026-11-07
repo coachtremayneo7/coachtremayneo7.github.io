@@ -77,4 +77,9 @@ function fmtHour(iso) { return new Intl.DateTimeFormat("en-US", { timeZone: CH_T
 function fmtDay(iso) { return new Intl.DateTimeFormat("en-US", { timeZone: CH_TZ, weekday: "long", month: "long", day: "numeric" }).format(new Date(iso)); }
 function fmtWeek(key) { return "Week of " + new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric" }).format(new Date(key + "T00:00:00Z")); }
 function overlaps(a, b) { return a.starts_at < b.ends_at && b.starts_at < a.ends_at; }
+// Release 2 client rules (display only; the server enforces every rule).
+// Regular sessions are shown only to clients with regular booking on, or to anyone who already holds one of them.
+function visibleSessions(all, st) { return (all || []).filter((x) => st.regular_enabled || x.category !== "regular" || x.mine); }
+// Each session's weekly limit depends on its own category.
+function sessionLimit(category, st) { return category === "challenge" ? st.challenge_limit : st.regular_limit; }
 function setMsg(el, text, bad) { el.textContent = text || ""; el.dataset.state = bad ? "bad" : (text ? "ok" : ""); }

@@ -63,21 +63,27 @@
     if (s.status === 401 || m.status === 401) { showGate("This link isn't valid. Ask Coach TreMayne for a new one."); return; }
     if (!s.ok || !m.ok) { showGate(msgFor(s.error || m.error)); return; }
     state = {
-      sessions: s.data.sessions || [], mine: m.data.reservations || [], eligible: !!s.data.eligible,
+      sessions: [], mine: m.data.reservations || [], eligible: !!s.data.eligible,
       challenge_limit: s.data.challenge_limit || 3, regular_limit: s.data.regular_limit || 3, regular_enabled: !!s.data.regular_enabled,
     };
+    state.sessions = visibleSessions(s.data.sessions, state);
     render();
   }
+  // Counts every booked session in the week, across categories, as the server does.
   function weekCount(key) { return state.mine.filter((r) => r.reservation_status === "booked" && r.session_status !== "closed" && weekKey(r.starts_at) === key).length; }
-  // Limit shown for a week. The server enforces the real rule; this only mirrors it for display and button state.
-  function weekLimitFor() { return state.regular_enabled ? state.regular_limit : state.challenge_limit; }
+  // Display text for a week's count. Challenge-only clients see the unchanged wording.
+  function weekText(count) {
+    return state.regular_enabled
+      ? count + " booked (challenge sessions up to " + state.challenge_limit + ", regular sessions up to " + state.regular_limit + ")"
+      : count + " of " + state.challenge_limit + " booked";
+  }
   function overlapsMine(s) { return state.mine.some((r) => r.reservation_status === "booked" && overlaps(r, s)); }
   function render() {
     if (!state.eligible) { showGate("Booking isn't open for your account yet. Contact Coach TreMayne."); return; }
     gate.classList.add("hidden"); app.classList.remove("hidden");
     const now = weekKey(new Date().toISOString());
     const thisWeek = weekCount(now);
-    document.getElementById("weekline").textContent = "This week: " + thisWeek + " of " + weekLimitFor() + " booked.";
+    document.getElementById("weekline").textContent = "This week: " + weekText(thisWeek) + ".";
     const mineBox = document.getElementById("mine");
     mineBox.innerHTML = "";
     if (!state.mine.length) mineBox.innerHTML = '<p class="meta">No sessions booked yet.</p>';
@@ -126,11 +132,11 @@
       label.appendChild(sel); pickBox.appendChild(label);
     }
     for (const k of keys.filter((x) => x === weekSel)) {
-      const h = document.createElement("p"); h.className = "meta"; h.style.marginTop = "14px"; h.textContent = fmtWeek(k) + " (" + weekCount(k) + " of " + weekLimitFor() + " booked)";
+      const h = document.createElement("p"); h.className = "meta"; h.style.marginTop = "14px"; h.textContent = fmtWeek(k) + " (" + weekText(weekCount(k)) + ")";
       openBox.appendChild(h);
       for (const s of weeks[k]) {
         const c = document.createElement("div"); c.className = "card";
-        const full = s.remaining <= 0, wk = weekCount(k) >= weekLimitFor(), ovl = overlapsMine(s);
+        const full = s.remaining <= 0, wk = weekCount(k) >= sessionLimit(s.category, state), ovl = overlapsMine(s);
         const notOpen = s.bookable === false && !s.mine;
         const status = s.mine ? '<span class="pill ok">Booked</span>' : notOpen ? '<span class="pill bad">Not available to your account</span>' : full ? '<span class="pill bad">Full</span>' : '<span class="pill">' + s.remaining + " of " + s.capacity + " left</span>";
         c.innerHTML = '<div><strong>' + fmtTime(s.starts_at) + '</strong><div class="meta">' + fmtHour(s.starts_at) + " to " + fmtHour(s.ends_at) + "</div></div>" + status;
