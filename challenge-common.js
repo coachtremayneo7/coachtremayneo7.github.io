@@ -6,7 +6,13 @@ const ERRORS = {
   not_eligible: "Booking isn't open for your account yet. Contact Coach TreMayne.",
   already_booked: "You're already booked into this session.",
   session_full: "This session just filled up. Pick another time.",
-  weekly_limit: "You've reached 3 sessions this week.",
+  weekly_limit: "You've reached your booking limit for this week.",
+  outside_window: "Sessions can only be booked up to 90 days ahead, and not in the past.",
+  not_enabled: "Booking isn't turned on for your account yet. Contact Coach TreMayne.",
+  nonexistent_local_time: "That time doesn't exist on this date because of the daylight saving change. Pick another time.",
+  ambiguous_local_time: "That time happens twice on this date because of the daylight saving change. Pick another time.",
+  bad_hours: "Check the hours. Each block needs a start and end on the quarter hour, at least 45 minutes long, and blocks can't overlap.",
+  bad_limit: "The weekly limit must be a whole number from 1 to 7.",
   session_unavailable: "This session is closed or has already started.",
   client_overlap: "This overlaps a session you already booked.",
   overlap: "This overlaps an existing session.",
@@ -71,4 +77,9 @@ function fmtHour(iso) { return new Intl.DateTimeFormat("en-US", { timeZone: CH_T
 function fmtDay(iso) { return new Intl.DateTimeFormat("en-US", { timeZone: CH_TZ, weekday: "long", month: "long", day: "numeric" }).format(new Date(iso)); }
 function fmtWeek(key) { return "Week of " + new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric" }).format(new Date(key + "T00:00:00Z")); }
 function overlaps(a, b) { return a.starts_at < b.ends_at && b.starts_at < a.ends_at; }
+// Release 2 client rules (display only; the server enforces every rule).
+// Regular sessions are shown only to clients with regular booking on, or to anyone who already holds one of them.
+function visibleSessions(all, st) { return (all || []).filter((x) => st.regular_enabled || x.category !== "regular" || x.mine); }
+// Each session's weekly limit depends on its own category.
+function sessionLimit(category, st) { return category === "challenge" ? st.challenge_limit : st.regular_limit; }
 function setMsg(el, text, bad) { el.textContent = text || ""; el.dataset.state = bad ? "bad" : (text ? "ok" : ""); }
