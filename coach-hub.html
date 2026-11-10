@@ -77,6 +77,10 @@ font-weight:700; font-size:14px; cursor:pointer; }
 .cli-actions button.bklink { display:none; flex:1; padding:11px; border-radius:11px; font-weight:700; font-size:14px; cursor:pointer;
 background:rgba(14,165,233,.14); border:1px solid #0ea5e9; color:#7dd3fc; }
 body.tracks .cli-actions button.bklink { display:block; }
+/* Send message: every client card, every coach */
+.cli-actions button.sendmsg { flex:1; padding:11px; border-radius:11px; font-weight:700; font-size:14px; cursor:pointer;
+background:rgba(139,124,246,.14); border:1px solid #8b7cf6; color:#c9c1ff; }
+.cli-actions button.sendmsg:disabled { opacity:.6; cursor:default; }
 .cli-actions button.bklink:disabled { opacity:.6; cursor:default; }
 
 /* ---- Add a client (TreMayne; adapted from the tested pilot form) ---- */
@@ -192,10 +196,21 @@ body.tracks .cli-actions button.bklink { display:block; }
 <div class="foot">Add to Home Screen to use like an app</div>
 </div>
 
+<div id="msgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:50;padding:16px">
+<div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;max-width:440px;width:100%;box-sizing:border-box">
+<div style="display:flex;justify-content:space-between;align-items:center"><strong>Message client</strong><button type="button" id="msgX" style="background:none;border:1px solid var(--line);color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer">Close</button></div>
+<div style="margin:12px 0"><div id="msgTo" style="font-weight:700"></div><div id="msgEmail" class="cli-note" style="padding:2px 0"></div></div>
+<input id="msgSubject" maxlength="120" placeholder="Subject" style="width:100%;box-sizing:border-box;margin-bottom:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b0f14;color:#fff">
+<textarea id="msgBody" maxlength="5000" rows="6" placeholder="Plain-text message (no HTML)" style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b0f14;color:#fff"></textarea>
+<label style="display:flex;gap:8px;align-items:center;margin:12px 0;font-size:14px"><input type="checkbox" id="msgConfirm"> I confirm I want to email this message to this client.</label>
+<button type="button" id="msgGo" disabled style="width:100%;padding:12px;border-radius:11px;font-weight:700;font-size:15px;cursor:pointer;background:rgba(139,124,246,.2);border:1px solid #8b7cf6;color:#fff">Send message</button>
+<div id="msgNote" class="cli-note"></div>
+</div></div>
 <script>
 // Reuse review.html's exact storage keys + Bearer scheme. No new auth.
 // S3: fixed, trusted API address. A previously saved address (ci_apibase) is ignored and removed, so the coach key is only ever sent here.
 const API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+const API_READY = true;
 try { localStorage.removeItem("ci_apibase"); } catch (_) {}
 const tokenEl = document.getElementById("token");
 const listEl = document.getElementById("cliList");
@@ -206,6 +221,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&l
 const note = (t, err) => { listEl.innerHTML = `<div class="cli-note${err ? " err" : ""}">${esc(t)}</div>`; };
 
 async function loadClients() {
+if (!API_READY) return note("API host is not configured.", true);
 const token = tokenEl.value.trim();
 if (!token) return note("Enter your coach token first.", true);
 localStorage.setItem("ci_token", token);
@@ -250,6 +266,7 @@ ${waiting.has(c.id) ? `<span class="badge waiting">Check-in waiting</span>` : ``
 <a class="logs" href="coach-logs.html?client=${encodeURIComponent(c.id)}">Workouts</a>
 <a class="photos" href="coach-photos.html?client=${encodeURIComponent(c.id)}">Photos</a>
 <a class="meals" href="meal-plans.html">Meals</a>
+<button type="button" class="sendmsg" data-client="${esc(c.id)}">Send message</button>
 <button type="button" class="bklink" data-client="${esc(c.id)}">Copy booking link</button>
 ${waiting.has(c.id) ? `<a class="review" href="review.html">Review check-in</a>` : ``}
 </div>`;
@@ -273,6 +290,7 @@ if (badge) { badge.textContent = "Custom plan"; badge.classList.remove("standard
 // ---- Multi-coach: coach name/logo from /coach/me (P3; no Add-client form) ----
 let COACH = null;
 async function loadMe(token) {
+  if (!API_READY) return;
   try {
     const r = await fetch(`${API_BASE}/coach/me`, { headers: authH(token) });
     if (!r.ok) return;
@@ -381,6 +399,128 @@ listEl.addEventListener("click", (e) => {
     navigator.clipboard.write([new ClipboardItem({ "text/plain": bookingUrl.then((u) => new Blob([u], { type: "text/plain" })) })]).then(done, fail);
   } else {
     bookingUrl.then((u) => navigator.clipboard.writeText(u)).then(done, fail);
+  }
+});
+// ---- Send message: one client, recipient chosen by the server, explicit confirmation ----
+// Results are remembered per client (msgRecords), so closing or switching composers never loses an outcome
+// or the UNKNOWN warning. Each async callback only touches the composer that is still open for its client.
+const msgModal = document.getElementById("msgModal");
+const msgEl = (id) => document.getElementById(id);
+let msgCtx = null;             // the composer currently open: { seq, clientId, canSend }
+let msgSeq = 0;
+const msgRecords = new Map();  // clientId -> { key, status: ACCEPTED|FAILED|UNKNOWN|undefined, inFlight }
+const MSG_UNKNOWN_WARNING_UI = "We couldn't confirm whether the last message was sent. If you send again, the client may receive a duplicate. Send again only if you're sure.";
+const MSG_ERR = {
+  rate_limited_coach: "You've reached the limit of 20 messages per hour.",
+  rate_limited_client: "You've already sent 3 messages to this client in the last hour.",
+  sender_not_configured: "Your sender email isn't verified yet, so messages can't be sent.",
+  no_email: "This client has no registered email, so you can't send a message.",
+  client_archived: "This client is archived. Restore them before sending a message.",
+  idempotency_conflict: "This message was already submitted with different text. Close and reopen to start a new message.",
+  in_progress: "This message is still being sent. Please wait.",
+  html_not_allowed: "Plain text only: remove any HTML tags.",
+  invalid_subject: "Enter a subject (up to 120 characters, no line breaks).",
+  invalid_body_text: "Enter a message (up to 5,000 characters).",
+  not_found: "Client not found.",
+  unauthorized: "Token rejected. Check it and try again.",
+  provider_rejected: "The email provider didn't accept this message. You can edit it and try again.",
+  provider_rate_limited: "The email provider is busy. Try again in a few minutes.",
+  server_error: "Something went wrong. Try again."
+};
+function msgNote(t, err) { const el = msgEl("msgNote"); el.className = "cli-note" + (err ? " err" : ""); el.textContent = t; }
+function msgNewKey() { const a = new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a, (x) => x.toString(16).padStart(2, "0")).join(""); }
+function msgShowOutcome(rec) {
+  if (rec.inFlight) return msgNote("A message to this client is still being sent. Please wait.");
+  if (rec.status === "ACCEPTED") return msgNote("Accepted by email provider.");
+  if (rec.status === "UNKNOWN") return msgNote(MSG_UNKNOWN_WARNING_UI, true);
+  if (rec.status === "FAILED") return msgNote(MSG_ERR.provider_rejected, true);
+  msgNote("");
+}
+// Draws the open composer from its client's record. Only the open composer is touched.
+function msgRender() {
+  const ctx = msgCtx;
+  if (!ctx) return;
+  const rec = msgRecords.get(ctx.clientId) || {};
+  const ready = ctx.canSend && !rec.inFlight && msgEl("msgSubject").value.trim() && msgEl("msgBody").value.trim() && msgEl("msgConfirm").checked;
+  msgEl("msgGo").disabled = !ready;
+  msgEl("msgGo").textContent = rec.status === "UNKNOWN" ? "Send again (may duplicate)" : "Send message";
+}
+function msgClose() { msgModal.style.display = "none"; msgCtx = null; }
+msgEl("msgX").addEventListener("click", msgClose);
+msgModal.addEventListener("click", (e) => { if (e.target === msgModal) msgClose(); });
+["msgSubject", "msgBody"].forEach((id) => msgEl(id).addEventListener("input", msgRender));
+msgEl("msgConfirm").addEventListener("change", msgRender);
+
+listEl.addEventListener("click", async (e) => {
+  const b = e.target.closest && e.target.closest("button.sendmsg");
+  if (!b) return;
+  const token = tokenEl.value.trim();
+  if (!token || !API_READY) return;
+  const ctx = { seq: ++msgSeq, clientId: b.dataset.client, canSend: false };
+  msgCtx = ctx;
+  msgEl("msgTo").textContent = "Loading…";
+  msgEl("msgEmail").textContent = "";
+  msgEl("msgSubject").value = ""; msgEl("msgBody").value = ""; msgEl("msgConfirm").checked = false;
+  msgModal.style.display = "flex";
+  msgShowOutcome(msgRecords.get(ctx.clientId) || {});
+  msgRender();
+  try {
+    const r = await fetch(`${API_BASE}/coach/client-contact?client_id=${encodeURIComponent(ctx.clientId)}`, { headers: authH(token) });
+    const d = r.ok ? await r.json() : null;
+    if (msgCtx !== ctx) return; // closed or switched while loading: ignore
+    if (!d || !d.client) return msgNote(MSG_ERR[r.status === 404 ? "not_found" : r.status === 401 ? "unauthorized" : ""] || "Couldn't load this client.", true);
+    msgEl("msgTo").textContent = d.client.name || "Client";
+    msgEl("msgEmail").textContent = d.client.email || "No registered email";
+    if (!d.client.can_send) { msgNote(d.client.archived ? MSG_ERR.client_archived : MSG_ERR.no_email, true); return; }
+    ctx.canSend = true;
+    msgRender();
+  } catch (_) {
+    if (msgCtx === ctx) msgNote("Couldn't reach the API. Check your connection.", true);
+  }
+});
+
+msgEl("msgGo").addEventListener("click", async () => {
+  const token = tokenEl.value.trim();
+  const ctx = msgCtx;
+  if (!ctx || !token || !ctx.canSend) return;
+  const clientId = ctx.clientId;
+  const rec = msgRecords.get(clientId) || {};
+  if (rec.inFlight) return; // one send per client at a time
+  const subject = msgEl("msgSubject").value.trim();
+  const body = msgEl("msgBody").value.trim();
+  // Reuse a key only while its outcome is unresolved (in progress). After ACCEPTED, FAILED, UNKNOWN, or a first send, use a new key.
+  // UNKNOWN is never resent automatically; this runs only on an explicit click.
+  const key = rec.key && !rec.status ? rec.key : msgNewKey();
+  rec.key = key; rec.inFlight = true;
+  msgRecords.set(clientId, rec);
+  msgRender();
+  msgNote("Sending…");
+  let outcome = {};
+  try {
+    const r = await fetch(`${API_BASE}/coach/message/send`, {
+      method: "POST",
+      headers: { ...authH(token), "content-type": "application/json" },
+      body: JSON.stringify({ client_id: clientId, subject, body, idempotency_key: key })
+    });
+    const d = await r.json().catch(() => ({}));
+    outcome = { status: d.status, error: d.error, warning: d.warning };
+    if (d.status === "ACCEPTED" || d.status === "FAILED" || d.status === "UNKNOWN") rec.status = d.status;
+  } catch (_) {
+    // Network failure after the request may have reached the server: outcome unknown.
+    outcome = { status: "UNKNOWN" };
+    rec.status = "UNKNOWN";
+  } finally {
+    rec.inFlight = false;
+    msgRecords.set(clientId, rec);
+    // Show the result only if the composer is still open for this same client.
+    if (msgCtx && msgCtx.clientId === clientId) {
+      if (outcome.status === "ACCEPTED") msgNote("Accepted by email provider.");
+      else if (outcome.status === "UNKNOWN") msgNote(MSG_UNKNOWN_WARNING_UI, true);
+      else if (outcome.status === "FAILED") msgNote(MSG_ERR.provider_rejected, true);
+      else if (outcome.status === "PENDING" || outcome.error === "in_progress") msgNote(MSG_ERR.in_progress, true);
+      else msgNote(MSG_ERR[outcome.error] || MSG_ERR.server_error, true);
+      msgRender();
+    }
   }
 });
 document.getElementById("load").addEventListener("click", () => { loadMe(tokenEl.value.trim()); loadClients(); });
