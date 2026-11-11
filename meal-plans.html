@@ -171,7 +171,7 @@
 
 <div class="gate" id="gate">
   <h2>Enter your coach key</h2>
-  <p>The same key you use for Coach Hub. It stays in this browser tab only and is cleared when you close the tab or press Lock.</p>
+  <p>The same key you use for Coach Hub. This page reuses the key saved on this device by Coach Hub. Press Lock to require the key again here.</p>
   <form id="keyForm" autocomplete="off">
     <input type="password" id="keyInput" placeholder="Coach key" aria-label="Coach key" autocomplete="current-password">
     <button type="submit" class="primary" id="unlockBtn">Unlock</button>
@@ -559,6 +559,7 @@
       return;
     }
     sessionStorage.setItem(KEY_STORE, key);
+    sessionStorage.removeItem("ct_meals_locked");
     $("keyInput").value = "";
     setStatus($("gateStatus"), "");
     clients = r.data.clients;
@@ -573,6 +574,7 @@
   $("lockBtn").addEventListener("click", () => {
     if ((planDirty() || noteDirty()) && !confirm("You have unsaved changes. Lock anyway and lose them?")) return;
     sessionStorage.removeItem(KEY_STORE);
+    sessionStorage.setItem("ct_meals_locked", "1");
     skipUnloadGuard = true;
     location.reload();
   });
@@ -982,7 +984,12 @@
   });
 
   // ---- start ----
-  const remembered = sessionStorage.getItem(KEY_STORE);
+  // Reuse the key Coach Hub already holds on this device (ci_token), as the Plan Editor and Workouts pages do.
+  // Lock sets a per-tab flag, so the next load asks for the key again.
+  const locked = sessionStorage.getItem("ct_meals_locked") === "1";
+  let shared = ""; try { shared = localStorage.getItem("ci_token") || ""; } catch (_) {}
+  // Prefer the key Coach Hub holds now. The older per-tab session key is used only when Coach Hub has none. Lock wins over both.
+  const remembered = locked ? "" : (shared || sessionStorage.getItem(KEY_STORE) || "");
   if (remembered) unlock(remembered);
 })();
 </script>
