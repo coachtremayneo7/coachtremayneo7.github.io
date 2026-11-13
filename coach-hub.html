@@ -87,6 +87,14 @@ background:rgba(139,124,246,.14); border:1px solid #8b7cf6; color:#c9c1ff; }
 .cli-actions button.sendmsg:disabled { opacity:.6; cursor:default; }
 .cli-actions button.bklink:disabled { opacity:.6; cursor:default; }
 
+/* Client finder: local-only filtering of already-loaded client cards. */
+.client-finder { margin:12px 0 14px; }
+.client-finder input { width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--card); color:#fff; font-size:16px; }
+.client-letters { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+.client-letters button { min-width:34px; min-height:36px; border-radius:9px; border:1px solid var(--line); background:var(--card); color:#fff; cursor:pointer; font-size:13px; font-weight:700; }
+.client-letters button.active { background:var(--blue); border-color:var(--blue); }
+.client-letters button:disabled { opacity:.3; cursor:default; }
+.client-count { color:var(--muted); font-size:12px; margin-top:8px; }
 /* ---- Add a client (TreMayne; adapted from the tested pilot form) ---- */
 .ac-btn { width:100%; padding:13px; border:1px dashed var(--line); border-radius:14px; background:transparent; color:#93b8fb; font-weight:700; font-size:15px; cursor:pointer; }
 #addForm { display:none; gap:8px; }
@@ -163,6 +171,11 @@ background:rgba(139,124,246,.14); border:1px solid #8b7cf6; color:#c9c1ff; }
 <input id="token" type="password" placeholder="Coach token" autocomplete="off">
 <button id="load">Load</button>
 </div>
+<div id="clientFinder" class="client-finder" hidden>
+<input id="clientSearch" type="search" placeholder="Search client by name…" aria-label="Search clients by name" autocomplete="off">
+<div id="clientLetters" class="client-letters" aria-label="Filter clients by first letter"></div>
+<div id="clientCount" class="client-count" aria-live="polite"></div>
+</div>
 <div id="cliList"><div class="cli-note">Enter your coach token and tap Load to see your clients.</div></div>
 
 <!-- ===== Add a client (TreMayne) — uses POST /coach/clients/create; no new auth ===== -->
@@ -218,6 +231,43 @@ const API_READY = true;
 try { localStorage.removeItem("ci_apibase"); } catch (_) {}
 const tokenEl = document.getElementById("token");
 const listEl = document.getElementById("cliList");
+const finderEl = document.getElementById("clientFinder");
+const searchEl = document.getElementById("clientSearch");
+const lettersEl = document.getElementById("clientLetters");
+const countEl = document.getElementById("clientCount");
+let activeLetter = "All";
+let clientRows = [];
+function applyClientFilter() {
+  const q = searchEl.value.trim().toLocaleLowerCase();
+  let shown = 0;
+  for (const item of clientRows) {
+    const matchesLetter = activeLetter === "All" || item.name.charAt(0).toUpperCase() === activeLetter;
+    const matchesSearch = item.name.toLocaleLowerCase().includes(q);
+    item.row.hidden = !(matchesLetter && matchesSearch);
+    if (!item.row.hidden) shown++;
+  }
+  countEl.textContent = `${shown} of ${clientRows.length} clients shown`;
+  for (const b of lettersEl.querySelectorAll("button")) {
+    const on = b.dataset.letter === activeLetter;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  }
+}
+function setupClientFinder() {
+  const available = new Set(clientRows.map(x => x.name.charAt(0).toUpperCase()));
+  lettersEl.replaceChildren();
+  for (const letter of ["All", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"]) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = letter; b.dataset.letter = letter;
+    b.disabled = letter !== "All" && !available.has(letter);
+    b.addEventListener("click", () => { activeLetter = letter; applyClientFilter(); });
+    lettersEl.appendChild(b);
+  }
+  finderEl.hidden = false;
+  applyClientFilter();
+}
+searchEl.addEventListener("input", applyClientFilter);
+
 tokenEl.value = localStorage.getItem("ci_token") || "";
 
 const authH = (t) => ({ authorization: `Bearer ${t}` });
@@ -230,6 +280,7 @@ const token = tokenEl.value.trim();
 if (!token) return note("Enter your coach token first.", true);
 localStorage.setItem("ci_token", token);
 note("Loading…");
+finderEl.hidden = true; clientRows = [];
 
 // 1) client list (required). If this fails, stop with a clean message.
 let clients = [];
@@ -243,6 +294,7 @@ clients = d.clients || [];
 return note("Couldn't reach the API (" + e.message + "). Check your connection.", true);
 }
 if (!clients.length) return note("No clients yet.");
+clients.sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)));
 
 // 2) pending flags (optional enrichment). If it fails, we still show clients — just no 'waiting' badge.
 let waiting = new Set();
@@ -276,7 +328,9 @@ ${waiting.has(c.id) ? `<span class="badge waiting">Check-in waiting</span>` : ``
 ${waiting.has(c.id) ? `<a class="review" href="review.html">Review check-in</a>` : ``}
 </div>`;
 listEl.appendChild(row);
+clientRows.push({ name: String(c.name || c.id).trim(), row });
 }
+setupClientFinder();
 
 // 3) per-client plan check (optional enrichment). Failures just leave the 'Standard' default.
 for (const c of clients) {
