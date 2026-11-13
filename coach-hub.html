@@ -77,6 +77,10 @@ font-weight:700; font-size:14px; cursor:pointer; }
 .cli-actions button.bklink { display:none; flex:1; padding:11px; border-radius:11px; font-weight:700; font-size:14px; cursor:pointer;
 background:rgba(14,165,233,.14); border:1px solid #0ea5e9; color:#7dd3fc; }
 body.tracks .cli-actions button.bklink { display:block; }
+/* Copy client link: the personal hub link for one client. Shown for every coach. */
+.cli-actions button.clink { flex:1; padding:11px; border-radius:11px; font-weight:700; font-size:14px; cursor:pointer;
+background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--muted); }
+.cli-actions button.clink:disabled { opacity:.6; cursor:default; }
 /* Send message: every client card, every coach */
 .cli-actions button.sendmsg { flex:1; padding:11px; border-radius:11px; font-weight:700; font-size:14px; cursor:pointer;
 background:rgba(139,124,246,.14); border:1px solid #8b7cf6; color:#c9c1ff; }
@@ -268,6 +272,7 @@ ${waiting.has(c.id) ? `<span class="badge waiting">Check-in waiting</span>` : ``
 <a class="meals" href="meal-plans.html">Meals</a>
 <button type="button" class="sendmsg" data-client="${esc(c.id)}">Send message</button>
 <button type="button" class="bklink" data-client="${esc(c.id)}">Copy booking link</button>
+<button type="button" class="clink" data-client="${esc(c.id)}">Copy client link</button>
 ${waiting.has(c.id) ? `<a class="review" href="review.html">Review check-in</a>` : ``}
 </div>`;
 listEl.appendChild(row);
@@ -399,6 +404,54 @@ listEl.addEventListener("click", (e) => {
     navigator.clipboard.write([new ClipboardItem({ "text/plain": bookingUrl.then((u) => new Blob([u], { type: "text/plain" })) })]).then(done, fail);
   } else {
     bookingUrl.then((u) => navigator.clipboard.writeText(u)).then(done, fail);
+  }
+});
+// ---- Copy client link: the client's existing personal hub link. Uses GET /coach/client/link (read-only; no token
+// rotation, no new endpoint). The link goes straight to the clipboard; it is never displayed, stored or logged.
+// Fails closed for archived clients, like the booking copy. Error text is fixed; no response body is shown.
+const CL_LABEL = "Copy client link";
+const CL_MSG = { 401: "Key rejected", 403: "Not allowed", 404: "Not found", 409: "No link yet", 500: "Not set up", archived: "Archived client", badlink: "Link unavailable" };
+// Copy-link destination rule. Independent of acCheckLink (Add Client is not changed). Strict: exact origin from the
+// list below, exact /client-hub/ path, no credentials or fragment, only one c (32 lowercase hex) and an optional track.
+const CL_ORIGINS = ["https://coachtremayne.com", "https://www.coachtremayne.com"];
+const CL_TRACKS = ["dd", "reset", "travel"];
+function clCheckLink(link) {
+  let u;
+  try { u = new URL(link); } catch (_) { return null; }
+  if (!CL_ORIGINS.includes(u.origin)) return null;
+  if (u.pathname !== "/client-hub" && u.pathname !== "/client-hub/") return null;
+  if (u.hash || u.username || u.password) return null;
+  for (const k of u.searchParams.keys()) { if (k !== "c" && k !== "track") return null; }
+  if (u.searchParams.getAll("c").length !== 1) return null;
+  if (u.searchParams.getAll("track").length > 1) return null;
+  if (!/^[0-9a-f]{32}$/.test(u.searchParams.get("c") || "")) return null;
+  const t = u.searchParams.get("track");
+  if (t !== null && !CL_TRACKS.includes(t)) return null;
+  return link; // the original string, unchanged
+}
+listEl.addEventListener("click", (e) => {
+  const b = e.target.closest && e.target.closest("button.clink");
+  if (!b) return;
+  const token = tokenEl.value.trim();
+  if (!token) return;
+  const flash = (t) => { b.textContent = t; setTimeout(() => { b.textContent = CL_LABEL; b.disabled = false; }, 2500); };
+  b.disabled = true; b.textContent = "Copying…";
+  const clientLink = (async () => {
+    const r = await fetch(`${API_BASE}/coach/client/link?client_id=${encodeURIComponent(b.dataset.client)}`, { headers: authH(token) });
+    if (!r.ok) throw Object.assign(new Error("status"), { status: r.status });
+    const d = await r.json().catch(() => null);
+    if (!d || d.ok !== true || typeof d.hub_link !== "string") throw Object.assign(new Error("badlink"), { status: 0, code: "badlink" });
+    if (d.archived !== false) throw Object.assign(new Error("archived"), { status: 0, code: "archived" });
+    const safe = clCheckLink(d.hub_link);
+    if (!safe) throw Object.assign(new Error("badlink"), { status: 0, code: "badlink" });
+    return safe;
+  })();
+  const done = () => flash("Copied ✓");
+  const fail = (err) => flash((err && err.code && CL_MSG[err.code]) || CL_MSG[err && err.status] || "Try again");
+  if (typeof ClipboardItem !== "undefined" && navigator.clipboard && navigator.clipboard.write) {
+    navigator.clipboard.write([new ClipboardItem({ "text/plain": clientLink.then((u) => new Blob([u], { type: "text/plain" })) })]).then(done, fail);
+  } else {
+    clientLink.then((u) => navigator.clipboard.writeText(u)).then(done, fail);
   }
 });
 // ---- Send message: one client, recipient chosen by the server, explicit confirmation ----
