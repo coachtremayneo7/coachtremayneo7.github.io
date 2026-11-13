@@ -68,8 +68,8 @@
     <section class="panel" aria-labelledby="s">
       <h2 id="s">Sessions</h2>
       <div class="row">
-        <label>From <input id="from" type="date" value="2026-11-09"></label>
-        <label>To <input id="to" type="date" value="2026-12-20"></label>
+        <label>From <input id="from" type="date"></label>
+        <label>To <input id="to" type="date"></label>
         <button id="load" class="secondary">Load</button>
       </div>
       <div class="row hidden" id="dayRow">
@@ -127,16 +127,30 @@
   const DAY_STORE = "ci_day_sel";
   function readDay() { try { return sessionStorage.getItem(DAY_STORE) || ""; } catch (_) { return ""; } }
   function writeDay(k) { try { if (k) sessionStorage.setItem(DAY_STORE, k); else sessionStorage.removeItem(DAY_STORE); } catch (_) { /* storage unavailable: selection only lasts this page view */ } }
-  let daySel = readDay();   // selected day (Chicago YYYY-MM-DD); kept across refreshes in this tab, falls back to the first day with sessions
+  let daySel = "";   // selected day (Chicago YYYY-MM-DD); set below from the saved day if it is today or later
   const dayKey = (iso) => { const c = chParts(new Date(iso)); return c.y + "-" + String(c.mo).padStart(2, "0") + "-" + String(c.d).padStart(2, "0"); };
   function show(ok) { app.classList.toggle("hidden", !ok); }
   function say(t, bad) { setMsg(msg, t, bad); }
-  $("cdate").value = "2026-11-09";
+  // Chicago date defaults on every page load. Manual changes after load are kept.
+  const todayKey = () => dayKey(new Date().toISOString());
+  const addDays = (k, n) => new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10) + n)).toISOString().slice(0, 10);
+  function pickDay(dayKeys) {
+    if (daySel && dayKeys.includes(daySel)) return daySel;
+    const t = todayKey();
+    if (dayKeys.includes(t)) return t;
+    return dayKeys.find((k) => k > t) || dayKeys[dayKeys.length - 1];
+  }
+  const TODAY = todayKey();
+  $("from").value = TODAY;
+  $("to").value = addDays(TODAY, 42);
+  $("cdate").value = TODAY;
+  // Saved day (sessionStorage): kept across refreshes only when it is today or later (Chicago). A past saved day is discarded.
+  { const saved = readDay(); if (saved && saved >= TODAY) daySel = saved; else writeDay(""); }
   $("key").value = key;
 
   async function validate() {
     if (!key) { $("keystate").textContent = "Enter your coach key to start."; show(false); return false; }
-    const r = await apiCall("GET", "/coach/schedule/sessions", { key, query: "from=2026-11-09&to=2026-11-09" });
+    const r = await apiCall("GET", "/coach/schedule/sessions", { key, query: "from=" + TODAY + "&to=" + TODAY });
     if (r.status === 401) { $("keystate").textContent = "That key wasn't accepted."; show(false); return false; }
     if (!r.ok) { say(msgFor(r.error || "network"), true); show(false); return false; }
     $("keystate").textContent = "Key accepted.";
@@ -159,7 +173,7 @@
     const sel = $("dayPick");
     sel.innerHTML = "";
     if (!dayKeys.length) { daySel = ""; writeDay(""); $("dayRow").classList.add("hidden"); box.innerHTML = '<p class="meta">No sessions in this range.</p>'; return; }
-    daySel = dayKeys.includes(daySel) ? daySel : dayKeys[0];
+    daySel = pickDay(dayKeys);
     writeDay(daySel);
     for (const k of dayKeys) {
       const o = document.createElement("option"); o.value = k;
