@@ -135,7 +135,7 @@ border:1px solid var(--line); border-radius:999px; padding:8px 16px; }
 
 <script>
 (function () {
-var API_BASE = "https://checkin-api.quantumflexpt.workers.dev";
+var API_BASE = "https://checkin-api.quantumflexpt.workers.dev"; // Production: checkin-api. Deploy only with owner approval.
 
 var params = new URLSearchParams(location.search);
 var token = (params.get("c") || "").trim();
@@ -313,7 +313,8 @@ not_an_image: "That file isn't a photo. Try again with a picture.",
 photo_too_large: "That photo is too large. Try a different one.",
 photo_limit_reached: "You've reached the photo limit. Ask Coach to clear out older ones.",
 unknown_client: "This link isn't working. Open the link Coach sent you.",
-photos_not_configured: "Photos aren't available right now. Let Coach know."
+photos_not_configured: "Photos aren't available right now. Let Coach know.",
+photos_disabled: "Photo uploads aren't turned on for your account yet. Ask your coach."
 };
 function photoUrl(id) {
 return API_BASE + "/photos/view?c=" + encodeURIComponent(token) + "&id=" + encodeURIComponent(id);
@@ -381,7 +382,7 @@ var sec = document.getElementById("photosec");
 if (sec) Array.prototype.forEach.call(sec.querySelectorAll("button"), function (b) { b.disabled = true; });
 }
 // Shrink on the phone before upload: max 1600px, JPEG ~0.82 quality (~200-400 KB).
-function shrinkPhoto(file) {
+function shrinkBlob(file) {
 return new Promise(function (resolve, reject) {
 var url = URL.createObjectURL(file);
 var img = new Image();
@@ -398,11 +399,46 @@ img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("decode")
 img.src = url;
 });
 }
+// HEIC/HEIF fallback. Only used when the browser cannot decode the file itself. The decoder is a locally hosted,
+// same-origin file (vendor/heic2any/heic2any.min.js) that the owner approved and vendored. If it is absent, HEIC fails
+// with the HEIC message exactly as before.
+function isHeic(file) { return /heic|heif/i.test(file.type || "") || /\.(heic|heif)$/i.test(file.name || ""); }
+function loadHeicDecoder() {
+if (window.heic2any) return Promise.resolve(window.heic2any);
+return new Promise(function (resolve, reject) {
+var s = document.createElement("script");
+s.src = "vendor/heic2any/heic2any.min.js";
+s.onload = function () { window.heic2any ? resolve(window.heic2any) : reject(new Error("heic")); };
+s.onerror = function () { reject(new Error("heic")); };
+document.head.appendChild(s);
+});
+}
+// Android often hides a camera file's type and name, so also check the header: an ISO-BMFF "ftyp" box with a HEIF brand.
+function sniffHeic(file) {
+return file.slice(0, 12).arrayBuffer().then(function (buf) {
+var b = new Uint8Array(buf);
+if (b.length < 12) return false;
+var ftyp = String.fromCharCode(b[4], b[5], b[6], b[7]);
+var brand = String.fromCharCode(b[8], b[9], b[10], b[11]);
+return ftyp === "ftyp" && /^(heic|heix|hevc|hevx|heim|heis|mif1|msf1)$/.test(brand);
+}, function () { return false; });
+}
+function shrinkPhoto(file) {
+return shrinkBlob(file).catch(function (e) {
+return Promise.resolve(isHeic(file) || sniffHeic(file)).then(function (heic) {
+if (!heic) throw e;
+return loadHeicDecoder()
+.then(function (decode) { return decode({ blob: file, toType: "image/jpeg", quality: 0.92 }); })
+.then(function (out) { return shrinkBlob(Array.isArray(out) ? out[0] : out); })
+.catch(function () { throw new Error("heic"); });
+});
+});
+}
 async function uploadPhoto(file) {
 setPhotoBusy("Preparing your photo…");
 var blob;
 try { blob = await shrinkPhoto(file); }
-catch (e) { return renderPhotos("That photo couldn't be opened. Try a different one.", true); }
+catch (e) { return renderPhotos(e && e.message === "heic" ? "This photo is in HEIC format, which this browser can't read. Change your camera's image format to JPEG or Most Compatible in its settings, retake the photo or re-save it, then try again." : "That photo couldn't be opened. Try a JPEG or PNG.", true); }
 setPhotoBusy("Uploading…");
 try {
 var r = await fetch(API_BASE + "/photos/upload?c=" + encodeURIComponent(token), {
