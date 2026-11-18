@@ -106,6 +106,18 @@ background:rgba(139,124,246,.14); border:1px solid #8b7cf6; color:#c9c1ff; }
 .ac-result b { display:block; margin-bottom:6px; }
 .ac-result input { width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:#fff; font-size:16px; }
 .ac-result button { margin-top:8px; width:100%; padding:11px; border:0; border-radius:12px; background:var(--blue); color:#fff; font-weight:700; cursor:pointer; }
+
+/* ---- Check-in visibility (read-only views) ---- */
+.ci-bar { display:flex; gap:8px; margin:10px 0 4px; }
+.ci-bar button { flex:1; padding:11px 10px; border-radius:12px; border:1px solid var(--line); background:var(--card); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+.ci-bar button.on { border-color:var(--blue); background:rgba(59,130,246,.16); color:#93b8fb; }
+.ci-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px; }
+.ci-card .who { font-size:16px; font-weight:700; }
+.ci-card .meta { font-size:12px; color:var(--muted); margin:4px 0 8px; }
+.ci-card dl { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:0; font-size:14px; }
+.ci-card dt { color:var(--muted); }
+.ci-card dd { margin:0; word-break:break-word; white-space:pre-wrap; }
+.ci-card a { display:inline-block; margin-top:10px; color:#93b8fb; font-weight:700; text-decoration:none; }
 </style>
 </head>
 <body>
@@ -164,6 +176,14 @@ background:rgba(139,124,246,.14); border:1px solid #8b7cf6; color:#c9c1ff; }
 <a class="calc reset" href="calculator-the-reset.html">Reset<small>The Reset</small></a>
 <a class="calc travel" href="calculator-travel.html">Travel<small>On the road</small></a>
 </div>
+
+<!-- ===== Check-in visibility (read-only: GET /coach/checkins and the existing GET /review) ===== -->
+<div class="section-label">Check-ins</div>
+<div class="ci-bar">
+<button type="button" id="ciAttn" class="on">Needs attention</button>
+<button type="button" id="ciAll">All check-ins</button>
+</div>
+<div id="ciList"><div class="cli-note">Tap Load to see check-ins.</div></div>
 
 <!-- ===== Clients section ===== -->
 <div class="section-label">Clients</div>
@@ -640,8 +660,58 @@ msgEl("msgGo").addEventListener("click", async () => {
     }
   }
 });
-document.getElementById("load").addEventListener("click", () => { loadMe(tokenEl.value.trim()); loadClients(); });
-if (tokenEl.value) { loadMe(tokenEl.value.trim()); loadClients(); } // auto-load if a key is already remembered
+// ==== CHECKIN VISIBILITY START ====
+// Read-only views. Needs attention = the existing pending-review queue (GET /review). All check-ins = GET /coach/checkins.
+// The Worker enforces auth (coach key) and ownership (only this coach's clients). Nothing here writes to the API.
+const ciEl = document.getElementById("ciList");
+const ciAttnBtn = document.getElementById("ciAttn");
+const ciAllBtn = document.getElementById("ciAll");
+let ciView = "attn";
+const ciNote = (t, err) => { ciEl.innerHTML = `<div class="cli-note${err ? " err" : ""}">${esc(t)}</div>`; };
+const ciSetView = (v) => { ciView = v; ciAttnBtn.classList.toggle("on", v === "attn"); ciAllBtn.classList.toggle("on", v === "all"); };
+const ciDate = (s) => (s ? esc(String(s).replace("T", " ").slice(0, 16)) : "-");
+const ciVal = (v) => (v === null || v === undefined || v === "" ? "-" : esc(v));
+const ciCard = (inner) => `<div class="ci-card">${inner}</div>`;
+async function ciLoad() {
+  const token = tokenEl.value.trim();
+  if (!token) return ciNote("Enter your coach token first.", true);
+  ciNote("Loading…");
+  const url = ciView === "attn" ? `${API_BASE}/review` : `${API_BASE}/coach/checkins`;
+  let r;
+  try { r = await fetch(url, { headers: authH(token) }); } catch (_) { return ciNote("Couldn't reach the API. Check your connection.", true); }
+  if (r.status === 401) return ciNote("Token rejected. Check it and try again.", true);
+  if (!r.ok) return ciNote("Couldn't load check-ins (HTTP " + r.status + ").", true);
+  let d;
+  try { d = await r.json(); } catch (_) { return ciNote("Unexpected response from the API.", true); }
+  if (ciView === "attn") return ciRenderAttn(d.pending || []);
+  return ciRenderAll(d.checkins || []);
+}
+function ciRenderAttn(list) {
+  if (!list.length) return ciNote("Nothing needs attention right now.");
+  ciEl.innerHTML = list.map((f) => ciCard(
+    `<div class="who">${esc(f.client_name || "Client")}</div>
+     <div class="meta">Week of ${ciVal(f.week_start)} · ${esc(f.severity || "")} · ${esc(f.type || "")}</div>
+     <div class="meta">Flagged ${ciDate(f.created_at)}</div>
+     <a href="review.html">Open review to act</a>`)).join("");
+}
+function ciRenderAll(list) {
+  if (!list.length) return ciNote("No check-ins saved yet.");
+  ciEl.innerHTML = list.map((c) => ciCard(
+    `<div class="who">${esc(c.client_name || "Client")}</div>
+     <div class="meta">Week of ${ciVal(c.week_start)} · submitted ${ciDate(c.submitted_at)}</div>
+     <dl>
+       <dt>Workouts done</dt><dd>${ciVal(c.workouts_done)}</dd>
+       <dt>Weight</dt><dd>${ciVal(c.weight)}</dd>
+       <dt>Energy</dt><dd>${ciVal(c.energy)}</dd>
+       <dt>Source</dt><dd>${ciVal(c.source)}</dd>
+       <dt>Notes</dt><dd>${ciVal(c.notes)}</dd>
+     </dl>`)).join("");
+}
+ciAttnBtn.addEventListener("click", () => { ciSetView("attn"); ciLoad(); });
+ciAllBtn.addEventListener("click", () => { ciSetView("all"); ciLoad(); });
+// ==== CHECKIN VISIBILITY END ====
+document.getElementById("load").addEventListener("click", () => { loadMe(tokenEl.value.trim()); loadClients(); ciLoad(); });
+if (tokenEl.value) { loadMe(tokenEl.value.trim()); loadClients(); ciLoad(); } // auto-load if a key is already remembered
 </script>
 </body>
 </html>
