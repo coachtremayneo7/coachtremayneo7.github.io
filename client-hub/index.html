@@ -11,9 +11,33 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Coach TreMayne">
 <meta name="theme-color" content="#0f1319">
+<link rel="manifest" href="/client-hub/manifest.json">
 <meta name="description" content="Your coaching tools — training, check-ins, tracking, and more, all in one place.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f1319'/%3E%3Ctext x='32' y='44' font-size='34' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
 
+<script>
+/* Installed-app support: remember this device's personal Hub link and reopen it,
+   and register the minimal service worker Android browsers need to offer install. */
+(function () {
+  try {
+    var KEY = "yight_client_hub_last";
+    var p = new URLSearchParams(location.search);
+    var c = (p.get("c") || "").trim();
+    var track = (p.get("track") || "").trim();
+    if (c) {
+      var qs = "?c=" + encodeURIComponent(c) + (track ? "&track=" + encodeURIComponent(track) : "");
+      localStorage.setItem(KEY, qs);
+    } else {
+      var saved = localStorage.getItem(KEY);
+      var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+      if (standalone && saved && /[?&]c=/.test(saved)) location.replace("/client-hub/" + saved);
+    }
+  } catch (e) {}
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/client-hub/sw.js", { scope: "/client-hub/" }).catch(function () {});
+  }
+})();
+</script>
 <style>
 :root{
 --bg:#0f1319; --card:#1a1f27; --card2:#20262f; --line:#2a303a;

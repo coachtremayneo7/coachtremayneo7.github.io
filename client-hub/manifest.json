@@ -1,0 +1,16 @@
+{
+  "name": "Coach TreMayne — Client Hub",
+  "short_name": "Coach TreMayne",
+  "description": "Your coaching tools — training, check-ins, tracking, and more, all in one place.",
+  "id": "/client-hub/",
+  "start_url": "/client-hub/",
+  "scope": "/client-hub/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1319",
+  "theme_color": "#0f1319",
+  "icons": [
+    { "src": "/client-hub/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/client-hub/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
