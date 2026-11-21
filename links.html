@@ -155,6 +155,18 @@ margin-top: 4px;
 .arrow { flex: 0 0 auto; color: var(--fog-dim); transition: transform .18s ease, color .18s ease; }
 .lane:hover .arrow, .lane:focus-visible .arrow { transform: translateX(3px); color: var(--c); }
 
+/* ---------- Primary coaching CTA (top of list) ---------- */
+.lane.primary {
+background: var(--lane);
+border-color: var(--lane);
+color: var(--asphalt);
+}
+.lane.primary::before { background: var(--asphalt); }
+.lane.primary:hover, .lane.primary:focus-visible { background: #f7d270; border-color: #f7d270; }
+.lane.primary .icon { background: rgba(13,15,18,0.12); color: var(--asphalt); border-color: rgba(13,15,18,0.35); }
+.lane.primary .lane-sub { color: #2a2e36; }
+.lane.primary .arrow { color: var(--asphalt); }
+
 /* ---------- Socials ---------- */
 .socials {
 margin-top: 30px;
@@ -203,6 +215,16 @@ font-size: 12px; color: var(--fog-dim); line-height: 1.7;
 </header>
 
 <nav class="lanes" aria-label="Where to go">
+<!-- Primary coaching CTA: first link on the page. -->
+<a class="lane primary anim" href="https://chat.coachtremayne.com">
+<span class="icon">CT</span>
+<span class="lane-txt">
+<span class="lane-name">EXPLORE COACHING WITH COACH TREMAYNE</span>
+<span class="lane-sub">Ready to lose fat, build strength, or get your energy back? Let’s talk.</span>
+</span>
+<svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+</a>
+
 
 <!-- Free tool — top of funnel. Points to the general Reset calculator (lose/maintain/gain). -->
 <a class="lane anim" style="--c: var(--lane)" href="calculator-the-reset.html">
