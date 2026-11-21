@@ -8,7 +8,7 @@
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0C0D0F">
 <title>Diesel &amp; Discipline | Coach TreMayne | Fitness For CDL Drivers</title>
-<meta name="description" content="Built by a former driver. Truck-stop workouts, cab strength, and real nutrition for CDL truck drivers. Start the 4-week free program.">
+<meta name="description" content="Built by a former driver. Truck-stop workouts, cab strength, and real nutrition for CDL truck drivers. Talk to Coach TreMayne about coaching options.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -106,6 +106,7 @@ margin-top:56px;border:1px solid var(--line);background:var(--line);border-radiu
 .gauge .num{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(30px,5vw,46px);color:#fff;line-height:1}
 .gauge .lbl{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--smoke);margin-top:10px}
 @media(max-width:720px){.cluster{grid-template-columns:repeat(2,1fr)}}
+.cluster .gauge:only-child{grid-column:1/-1;justify-self:center;width:100%;max-width:280px}
 
 /* ---------- sections ---------- */
 section{padding:88px 0}
@@ -312,7 +313,7 @@ section{padding:52px 0}
 <header class="bar">
 <div class="wrap bar-in">
 <div class="logo">DIESEL <b>&amp;</b> DISCIPLINE</div>
-<a class="bar-cta" href="https://coachtremayne.com/dd-program.html" target="_blank" rel="noopener">Start Free →</a>
+<a class="bar-cta" href="https://chat.coachtremayne.com" target="_blank" rel="noopener">Start Coaching →</a>
 </div>
 </header>
 
@@ -324,15 +325,13 @@ section{padding:52px 0}
 <h1>Keep your card.<br>Keep your <span class="amp">career.</span></h1>
 <p class="sub">Watching your weight creep up on the road? The plans you've tried weren't built for a 14-hour shift. <b>This one is</b> — no gym, no gear, built for the seat.</p>
 <div class="hero-cta">
-<a class="btn btn-solid" href="https://coachtremayne.com/dd-program.html" target="_blank" rel="noopener">Start the free 4-week program</a>
+<a class="btn btn-solid" href="https://chat.coachtremayne.com" target="_blank" rel="noopener">Start coaching with Coach TreMayne</a>
 <a class="btn btn-ghost" href="https://instagram.com/tremaynepillow" target="_blank" rel="noopener">Prefer to DM? Send me "DRIVER"</a>
 </div>
-<p class="mono" style="margin-top:14px;font-size:12px;letter-spacing:.1em;color:var(--smoke)">↑ NO GYM. NO GEAR. STARTS FREE — RIGHT NOW.</p>
+<p class="mono" style="margin-top:14px;font-size:12px;letter-spacing:.1em;color:var(--smoke)">↑ NO GYM. NO GEAR. TALK TO COACH TREMAYNE.</p>
 
 <div class="cluster">
-<div class="gauge"><div class="num" data-count="4">0</div><div class="lbl">Weeks free to start</div></div>
 <div class="gauge"><div class="num" data-count="10">0</div><div class="lbl">Min per truck-stop set</div></div>
-<div class="gauge"><div class="num">$0</div><div class="lbl">Cost to start</div></div>
 <div class="gauge"><div class="num">24/7</div><div class="lbl">AI coach access</div></div>
 </div>
 </div>
@@ -400,7 +399,7 @@ Your browser can't play this video.
 </div>
 
 <div class="hero-cta">
-<a class="btn btn-solid" href="https://coachtremayne.com/dd-program.html" target="_blank" rel="noopener">Get cleared — start free →</a>
+<a class="btn btn-solid" href="https://chat.coachtremayne.com" target="_blank" rel="noopener">Talk about coaching options.</a>
 </div>
 </div>
 </section>
@@ -457,25 +456,22 @@ Your browser can't play this video.
 <div class="wrap">
 <div class="sec-head">
 <span class="eyebrow">The route</span>
-<h2>12 weeks. Start free.</h2>
-<p>Four weeks free to build the habit. Eight paid to lock it in. You only keep going if it's working.</p>
+<h2>12 weeks. Built for the road.</h2>
+<p>Three phases over 12 weeks to build the habit and lock it in. You only keep going if it's working.</p>
 </div>
 <div class="ladder">
 <div class="rung hot">
 <div class="mile">MILE 01 · WEEKS 1–4</div>
-<span class="price free">FREE</span>
 <h3>The Reset</h3>
 <p>Build the habit. Movement that fits your route and your hours. Prove to yourself you can stay consistent on the road.</p>
 </div>
 <div class="rung">
 <div class="mile">MILE 02 · WEEKS 5–8</div>
-<span class="price paid">PAID</span>
 <h3>The Build</h3>
 <p>Add load and structure. We shape the week around your driving hours so training doesn't fight your logbook.</p>
 </div>
 <div class="rung">
 <div class="mile">MILE 03 · WEEKS 9–12</div>
-<span class="price paid">PAID</span>
 <h3>The Discipline</h3>
 <p>Lock it in so it holds when the miles get long and the schedule gets ugly. This is where it becomes who you are.</p>
 </div>
@@ -520,7 +516,7 @@ Your browser can't play this video.
 <button class="mode active" data-mode="workout">🏋️ Quick workout</button>
 <button class="mode" data-mode="food">🥗 Truck-stop meal</button>
 <button class="mode" data-mode="dot">🩺 DOT physical</button>
-<button class="mode" data-mode="start">⭐ Start free</button>
+<button class="mode" data-mode="start">⭐ Coaching options</button>
 </div>
 <div class="log" id="log">
 <div class="msg coach-msg">
@@ -540,10 +536,10 @@ Your browser can't play this video.
 <section class="final" id="start">
 <div class="wrap">
 <span class="eyebrow" style="justify-content:center">No excuses</span>
-<h2>Start the free<br>4-week program</h2>
+<h2>Start coaching<br>with Coach TreMayne</h2>
 <p>You don't need a gym, a coach next to you, or a single day off the road. You need a plan that fits the seat. Let's build it.</p>
 <div class="hero-cta">
-<a class="btn btn-solid" href="https://coachtremayne.com/dd-program.html" target="_blank" rel="noopener">Start the free 4-week program</a>
+<a class="btn btn-solid" href="https://chat.coachtremayne.com" target="_blank" rel="noopener">Start coaching with Coach TreMayne</a>
 <a class="btn btn-ghost" href="https://instagram.com/tremaynepillow" target="_blank" rel="noopener">Prefer to DM? Send me "DRIVER"</a>
 </div>
 <div class="pay">
@@ -591,8 +587,8 @@ document.querySelectorAll('.gauge .num[data-count]').forEach(el=>io.observe(el))
 const PLAYBOOK = {
 workout:"Here's a 10-minute rest-stop circuit, no gear:\n1) 20 bodyweight squats\n2) 15 incline push-ups (hands on the bumper)\n3) 20 walking lunges around the truck\n4) 30-sec catwalk step-ups each leg\n5) 40-sec plank in the sleeper\nRun it 2x. Done before your fuel finishes pumping.",
 food:"Truck-stop meal call: skip the fried case. Grab a rotisserie or grilled chicken, a bag of pre-cut veggies, and unsalted nuts. Water or black coffee over soda/energy drinks. Hungry late? Beef jerky + string cheese holds you without the crash.",
-dot:"DOT physical coming up? Three levers that move fast: cut the sugary drinks (blood pressure + weight), walk 10 min every fuel stop, and sleep on a real schedule in the sleeper. Do that 3–4 weeks out and your numbers show up better. Want a full pre-DOT plan? Tap Start free.",
-start:"Let's roll. The first 4 weeks are free — built for drivers, no gym, no gear. Easiest way in: DM me the word DRIVER on Instagram (@tremaynepillow) and I'll start you today. 10-4?"
+dot:"DOT physical coming up? Three levers that move fast: cut the sugary drinks (blood pressure + weight), walk 10 min every fuel stop, and sleep on a real schedule in the sleeper. Do that 3–4 weeks out and your numbers show up better. Want a full pre-DOT plan? Tap Coaching options.",
+start:"Let's talk coaching. Built for drivers, no gym, no gear. Best next step: chat about coaching at chat.coachtremayne.com. Prefer Instagram? DM me the word DRIVER (@tremaynepillow). 10-4?"
 };
 
 const log = document.getElementById('log');
@@ -613,13 +609,13 @@ function routeMode(text){
 const t = text.toLowerCase();
 if(/\b(eat|meal|food|hungry|snack|wendy|mcdonald|burger|breakfast|lunch|dinner|calorie|protein|drink)\b/.test(t)) return 'food';
 if(/\b(dot|physical|blood pressure|\bbp\b|medical card|exam|numbers)\b/.test(t)) return 'dot';
-if(/\b(start|begin|sign ?up|join|free program|enroll)\b/.test(t)) return 'start';
+if(/\b(start|begin|sign ?up|join|coaching|enroll)\b/.test(t)) return 'start';
 if(/\b(workout|exercise|train|push|squat|lunge|plank|move|sore|muscle|circuit|stretch)\b/.test(t)) return 'workout';
 return mode; // fall back to last-selected mode
 }
 
 // trucker-voice system prompt sent to the shared coach worker
-const DD_SYSTEM = "You are Coach TreMayne of Diesel & Discipline, a fitness coach for CDL truck drivers who drove the truck yourself. Give practical, motivating advice for life on the road: quick no-gym workouts a driver can do at a truck stop, smart truck-stop and fast-food eating, and DOT physical prep. Talk plain and direct like a driver, not a gym bro. Answer in 2-3 sentences. Never use markdown. When it fits naturally, add a short nudge that the first 4 weeks are free to start (DM DRIVER on Instagram @tremaynepillow) — do not pitch on every reply.";
+const DD_SYSTEM = "You are Coach TreMayne of Diesel & Discipline, a fitness coach for CDL truck drivers who drove the truck yourself. Give practical, motivating advice for life on the road: quick no-gym workouts a driver can do at a truck stop, smart truck-stop and fast-food eating, and DOT physical prep. Talk plain and direct like a driver, not a gym bro. Answer in 2-3 sentences. Never use markdown. When it fits naturally, add a short nudge that the primary next step is to chat about coaching at https://chat.coachtremayne.com; you may mention DM DRIVER on Instagram (@tremaynepillow) as an alternative — do not pitch on every reply.";
 
 async function ask(text){
 add(text,'you');
@@ -649,7 +645,7 @@ b.classList.add('active'); mode = b.dataset.mode;
 ask({workout:'Give me a 10-minute workout I can do right now at a truck stop.',
 food:'What should I eat at a truck stop today?',
 dot:'Help me get ready for my DOT physical.',
-start:"I'm ready to start the free 4 weeks — what's my first step?"}[mode]);
+start:"I'm interested in coaching options — what's my first step?"}[mode]);
 });
 document.getElementById('send').addEventListener('click',()=>{ if(input.value.trim()) ask(input.value.trim()); });
 input.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&input.value.trim()) ask(input.value.trim()); });
