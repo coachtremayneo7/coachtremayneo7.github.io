@@ -378,7 +378,7 @@ async function loadMe(token) {
     // Personal tools (DD/Reset/Travel calculators, Challenge Onboarding) are TreMayne-only.
     // Program tracks (DD/Reset/Travel programs) are the tracks coach only. Other coaches never see or get them.
     const personal = COACH.id === "coachtremayne" && COACH.skin === "tracks";
-    const isTracks = COACH.skin === "tracks";
+    const isTracks = COACH.id === "coachtremayne";
     document.getElementById("calcLabel").style.display = personal ? "" : "none";
     document.getElementById("calcRow").style.display = personal ? "" : "none";
     document.getElementById("onboardingTile").style.display = personal ? "" : "none";
@@ -515,7 +515,7 @@ listEl.addEventListener("click", (e) => {
   if (!COACH) { window.alert("Your coach profile hasn't loaded yet. Refresh and try again. No link was copied."); return; }
   // Program choice exists only for the tracks coach. Other coaches copy the plain client link.
   let chosenTrack = null;
-  if (COACH.skin === "tracks") {
+  if (COACH.id === "coachtremayne") {
     const choice = window.prompt("Choose this client's program:\n1 = Diesel & Discipline\n2 = The Reset\n3 = Travel\n\nEnter 1, 2, or 3 (Cancel to stop):");
     if (choice === null) return;
     chosenTrack = ({ "1": "dd", "2": "reset", "3": "travel" })[choice.trim()];
