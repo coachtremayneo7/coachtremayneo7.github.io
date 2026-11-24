@@ -24,7 +24,10 @@
     var p = new URLSearchParams(location.search);
     var c = (p.get("c") || "").trim();
     var track = (p.get("track") || "").trim();
-    if (c) {
+    var prevSaved = localStorage.getItem(KEY) || "";
+    var sameClientSaved = prevSaved.indexOf("?c=" + encodeURIComponent(c) + "&track=") === 0;
+    if (c && !track && sameClientSaved) { location.replace("/client-hub/" + prevSaved); }
+    else if (c) {
       var qs = "?c=" + encodeURIComponent(c) + (track ? "&track=" + encodeURIComponent(track) : "");
       localStorage.setItem(KEY, qs);
     } else {
@@ -236,7 +239,7 @@ var VALID = { dd:1, reset:1, travel:1, fatloss:1, muscle:1 };
 if (!c) return; // no token -> full fallback, nothing changes
 
 // Progress is brand-agnostic — it only needs the token, so upgrade it on ?c= alone.
-upgrade("progress", "/progress.html?c=" + encodeURIComponent(c),
+upgrade("progress", "/progress.html?c=" + encodeURIComponent(c) + ((params.get("track") || "").trim() ? "&track=" + encodeURIComponent((params.get("track") || "").trim()) : ""),
 "See your weight, consistency & check-ins");
 
 // Meal Plan + Grocery List are brand-agnostic like Progress: token only, plus the
